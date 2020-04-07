@@ -11,16 +11,17 @@
     "node": ">=10"
   },
   "scripts": {
+    "protobuf": "protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --js_out=import_style=commonjs,binary:. --ts_out=. proto/swap.proto",
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "lint": "tsdx lint",
+    "lint": "tsdx lint src test --ignore-pattern src/wallet.ts",
     "prepare": "tsdx build"
   },
   "peerDependencies": {},
   "husky": {
     "hooks": {
-      "pre-commit": "tsdx lint"
+      "pre-commit": "yarn lint"
     }
   },
   "prettier": {
@@ -41,8 +42,12 @@
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "husky": "^4.2.3",
+    "ts-protoc-gen": "^0.12.0",
     "tsdx": "^0.13.1",
     "tslib": "^1.11.1",
     "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "axios": "^0.19.2"
   }
 }
