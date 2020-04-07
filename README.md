@@ -4,6 +4,7 @@
 
 ## 🛣 Roadmap
 
-* [ ] Node support
+* [ ] Swap protocol
+* [ ] Trade protocol
 * [ ] Browser support
  
