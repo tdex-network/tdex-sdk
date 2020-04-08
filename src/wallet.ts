@@ -32,6 +32,13 @@ export default class Wallet implements WalletInterface {
   script: string;
   network: Network;
 
+
+  static createTx = createTx;
+  static fromWIF = fromWIF;
+  static coinselect = coinselect;
+  static decodePsbt = decodePsbt;
+
+
   constructor(args: any) {
     const { network, keyPair }: { network: string, keyPair: ECPairInterface | undefined } = args;
 
@@ -54,10 +61,6 @@ export default class Wallet implements WalletInterface {
     this.script = output!.toString('hex');
   }
 
-  static createTx = createTx;
-  static fromWIF = fromWIF;
-  static coinselect = coinselect;
-
   updateTx(
     psbtBase64: string,
     inputs: Array<any>,
@@ -66,12 +69,7 @@ export default class Wallet implements WalletInterface {
     inputAsset: string,
     outputAsset: string): string {
 
-    let psbt: Psbt
-    try {
-      psbt = Psbt.fromBase64(psbtBase64);
-    } catch (ignore) {
-      throw (new Error('Invalid psbt'));
-    }
+    let psbt = decodePsbt(psbtBase64);
 
     inputs = inputs.filter((utxo: any) => utxo.asset === inputAsset);
     const { unspents, change } = coinselect(inputs, inputAmount);
@@ -120,12 +118,7 @@ export default class Wallet implements WalletInterface {
   }
 
   sign(psbtBase64: string): string {
-    let psbt : Psbt;
-    try {
-      psbt = Psbt.fromBase64(psbtBase64);
-    } catch (ignore) {
-      throw (new Error('Invalid psbt'));
-    }
+    const psbt = decodePsbt(psbtBase64);
 
     const index = psbt.data.inputs.findIndex(p => p.witnessUtxo!.script.toString('hex') === this.script)
 
@@ -140,13 +133,8 @@ export default class Wallet implements WalletInterface {
   }
 
   toHex(psbtBase64: string): string {
-    let psbt : Psbt;
-    try {
-      psbt = Psbt.fromBase64(psbtBase64);
-    } catch (ignore) {
-      throw (new Error('Invalid psbt'));
-    }
-  
+    const psbt = decodePsbt(psbtBase64);
+
     return psbt.extractTransaction().toHex();
   }
   
@@ -173,6 +161,16 @@ function createTx(): string {
   let psbt = new Psbt();
 
   return psbt.toBase64()
+}
+
+function decodePsbt(psbtBase64:string) : Psbt {
+  let psbt: Psbt
+  try {
+    psbt = Psbt.fromBase64(psbtBase64);
+  } catch (ignore) {
+    throw new Error('Invalid psbt');
+  }
+  return psbt
 }
 
 export async function fetchUtxos(address: string, url: string): Promise<any> {
