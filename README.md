@@ -61,7 +61,7 @@ const swapCompleteMessage = swap.complete({
   psbtBase64: "..."
 });
 
-// Alica can send the tx to Bob or broadcast herself to the neteork
+// Alica can send the tx to Bob or broadcast directly
 
 ```
 
