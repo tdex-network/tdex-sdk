@@ -19,6 +19,9 @@
     "prepare": "tsdx build"
   },
   "peerDependencies": {},
+  "jest": {
+    "testEnvironment" : "node"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint"
