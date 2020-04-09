@@ -57,6 +57,31 @@ export class Swap extends Core {
 
     return msgAccept.serializeBinary();
   }
+
+  complete({
+    message,
+    psbtBase64,
+  }: {
+    message: Uint8Array;
+    psbtBase64: string;
+  }): Uint8Array {
+    //First validate signatures
+    const { psbt } = decodePsbt(psbtBase64);
+
+    if (!psbt.validateSignaturesOfAllInputs())
+      throw new Error('Signatures not valid');
+
+    const msgAccept = proto.SwapAccept.deserializeBinary(message);
+    //Build SwapComplete
+    const msgComplete = new proto.SwapComplete();
+    msgComplete.setId(makeid(8));
+    msgComplete.setAcceptId(msgAccept.getId());
+    msgComplete.setTransaction(psbtBase64);
+
+    if (this.verbose) console.log(msgAccept.toObject());
+
+    return msgComplete.serializeBinary();
+  }
 }
 
 function compareMessagesAndTransaction(
