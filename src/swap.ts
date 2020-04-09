@@ -1,5 +1,5 @@
 import Core from './core';
-import * as proto from '../proto/swap_pb';
+import * as proto from 'tdex-protobuf/js/swap_pb';
 import { makeid, toNumber, toSatoshi, toAssetHash, decodePsbt } from './utils';
 
 export class Swap extends Core {
