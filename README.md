@@ -38,7 +38,7 @@ const swapRequestMessage = swap.request({
 })
 
 //Bob parses the request and inspect the terms
-const json = swap.parse({
+const json = Swap.parse({
   message: swapRequestMessage,
   type: 'SwapRequest'
 });
@@ -49,19 +49,15 @@ const swapAcceptMessage = swap.accept({
   psbtBase64: "..."
 });
 
-// Alice can parse again the Bob's message to check if all is right
-const json = swap.parse({
-  message: swapAcceptMessage,
-  type: 'SwapAccept'
-});
-
 // Alice adds his signed inputs to the transaction
 const swapCompleteMessage = swap.complete({
   message: swapAcceptMessage,
   psbtBase64: "..."
 });
 
-// Alica can send the tx to Bob or broadcast directly
+// Alice can sends the completed swap to Bob 
+//Now Bob finalize the transaction
+
 
 ```
 
