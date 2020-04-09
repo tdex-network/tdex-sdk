@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { ECPair, networks, payments, Psbt, confidential } from 'liquidjs-lib';
+//Utils
+import { decodePsbt } from './utils';
 //Types
 import { ECPairInterface } from 'liquidjs-lib/types/ecpair';
 import { Network } from 'liquidjs-lib/types/networks';
+
 
 export interface WalletInterface {
   keyPair: ECPairInterface;
@@ -36,7 +39,6 @@ export default class Wallet implements WalletInterface {
   static createTx = createTx;
   static fromWIF = fromWIF;
   static coinselect = coinselect;
-  static decodePsbt = decodePsbt;
 
 
   constructor(args: any) {
@@ -69,7 +71,7 @@ export default class Wallet implements WalletInterface {
     inputAsset: string,
     outputAsset: string): string {
 
-    let psbt = decodePsbt(psbtBase64);
+    const { psbt } = decodePsbt(psbtBase64);
 
     inputs = inputs.filter((utxo: any) => utxo.asset === inputAsset);
     const { unspents, change } = coinselect(inputs, inputAmount);
@@ -118,7 +120,7 @@ export default class Wallet implements WalletInterface {
   }
 
   sign(psbtBase64: string): string {
-    const psbt = decodePsbt(psbtBase64);
+    const { psbt } = decodePsbt(psbtBase64);
 
     const index = psbt.data.inputs.findIndex(p => p.witnessUtxo!.script.toString('hex') === this.script)
 
@@ -133,7 +135,7 @@ export default class Wallet implements WalletInterface {
   }
 
   toHex(psbtBase64: string): string {
-    const psbt = decodePsbt(psbtBase64);
+    const { psbt } = decodePsbt(psbtBase64);
 
     return psbt.extractTransaction().toHex();
   }
@@ -163,15 +165,6 @@ function createTx(): string {
   return psbt.toBase64()
 }
 
-function decodePsbt(psbtBase64:string) : Psbt {
-  let psbt: Psbt
-  try {
-    psbt = Psbt.fromBase64(psbtBase64);
-  } catch (ignore) {
-    throw new Error('Invalid psbt');
-  }
-  return psbt
-}
 
 export async function fetchUtxos(address: string, url: string): Promise<any> {
   return (await axios.get(`${url}/address/${address}/utxo`)).data
