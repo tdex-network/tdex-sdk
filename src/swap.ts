@@ -11,15 +11,13 @@ export class Swap extends Core {
     assetToReceive,
     amountToReceive,
     psbtBase64,
-    opts,
   }: {
     assetToBeSent: string;
     amountToBeSent: number;
     assetToReceive: string;
     amountToReceive: number;
     psbtBase64: string;
-    opts?: Object;
-  }): Uint8Array | string {
+  }): Uint8Array {
     // Check amounts
     const amountToBeSentInSatoshi = toSatoshi(amountToBeSent);
     const amountToReceiveInSatoshi = toSatoshi(amountToReceive);
@@ -30,67 +28,86 @@ export class Swap extends Core {
     msg.setAssetP(assetToBeSent);
     msg.setAmountR(amountToReceiveInSatoshi);
     msg.setAssetR(assetToReceive);
-
-    compareMessagesAndTransaction(psbtBase64, msg);
     msg.setTransaction(psbtBase64);
 
-    if (this.verbose) console.log(msg.toObject());
+    compareMessagesAndTransaction(msg);
 
-    if (opts && (opts! as any).format === 'json')
-      return JSON.stringify(msg.toObject());
+    if (this.verbose) console.log(msg.toObject());
 
     return msg.serializeBinary();
   }
 
-  /* accept({
+  accept({
     message,
     psbtBase64,
-    opts,
   }: {
     message: Uint8Array;
     psbtBase64: string;
-    opts?: Object;
-  }): Uint8Array | string {
+  }): Uint8Array {
+    const msgRequest = proto.SwapRequest.deserializeBinary(message);
+    // Build Swap Accepr message
+    const msgAccept = new proto.SwapAccept();
+    msgAccept.setId(makeid(8));
+    msgAccept.setRequestId(msgRequest.getId());
+    msgAccept.setTransaction(psbtBase64);
 
-    const msg = proto.SwapRequest.deserializeBinary(message);
-    compareMessagesAndTransaction(psbtBase64, msg);
+    compareMessagesAndTransaction(msgRequest, msgAccept);
 
-    if (this.verbose) console.log(msg.toObject());
+    if (this.verbose) console.log(msgAccept.toObject());
 
-    if (opts && (opts! as any).format === 'json')
-      return JSON.stringify(msg.toObject());
-
-    return psbt.toBase64();
-  } */
+    return msgAccept.serializeBinary();
+  }
 }
 
 function compareMessagesAndTransaction(
-  psbtBase64: string,
   msgRequest: proto.SwapRequest,
   msgAccept?: proto.SwapAccept
 ) {
-  const { psbt, transaction } = decodePsbt(psbtBase64);
+  const decodedFromRequest = decodePsbt(msgRequest.getTransaction());
 
-  const total = countUtxos(psbt.data.inputs, msgRequest.getAssetP());
-  if (total < msgRequest.getAmountP())
+  const totalP = countUtxos(
+    decodedFromRequest.psbt.data.inputs,
+    msgRequest.getAssetP()
+  );
+  if (totalP < msgRequest.getAmountP())
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
 
-  const outputFound = outputFoundInTransaction(
-    transaction.outs,
+  const outputRFound = outputFoundInTransaction(
+    decodedFromRequest.transaction.outs,
     msgRequest.getAmountR(),
     msgRequest.getAssetR()
   );
-  if (!outputFound)
+  if (!outputRFound)
     throw new Error(
       'Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt'
     );
 
   if (msgAccept) {
+    const decodedFromAccept = decodePsbt(msgAccept.getTransaction());
     if (msgRequest.getId() !== msgAccept.getRequestId())
       throw new Error(
         'SwapRequest.id and SwapAccept.request_id are not the same'
+      );
+
+    const totalR = countUtxos(
+      decodedFromAccept.psbt.data.inputs,
+      msgRequest.getAssetR()
+    );
+    if (totalR < msgRequest.getAmountR())
+      throw new Error(
+        'Cumulative utxos count is not enough to cover SwapRequest.amount_r'
+      );
+
+    const outputPFound = outputFoundInTransaction(
+      decodedFromAccept.transaction.outs,
+      msgRequest.getAmountP(),
+      msgRequest.getAssetP()
+    );
+    if (!outputPFound)
+      throw new Error(
+        'Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt'
       );
   }
 }
