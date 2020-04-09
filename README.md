@@ -49,6 +49,13 @@ const swapAcceptMessage = swap.accept({
   psbtBase64: "..."
 });
 
+
+//Alice can parse again the message and inspect the terms (optional)
+const json = Swap.parse({
+  message: swapAcceptMessage,
+  type: 'SwapAccept'
+});
+
 // Alice adds his signed inputs to the transaction
 const swapCompleteMessage = swap.complete({
   message: swapAcceptMessage,
@@ -56,8 +63,7 @@ const swapCompleteMessage = swap.complete({
 });
 
 // Alice can sends the completed swap to Bob 
-//Now Bob finalize the transaction
-
+// Now Bob finalize the transaction and broadcast it 
 
 ```
 
