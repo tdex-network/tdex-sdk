@@ -70,7 +70,7 @@ const swapCompleteMessage = swap.complete({
 
 ## 🛣 Roadmap
 
-* [ ] Swap protocol
+* [x] Swap protocol
 * [ ] Trade protocol
 * [ ] Wallet support
 * [ ] Browser support

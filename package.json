@@ -11,7 +11,6 @@
     "node": ">=10"
   },
   "scripts": {
-    "protobuf": "protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --js_out=import_style=commonjs,binary:. --ts_out=. proto/swap.proto",
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
@@ -20,7 +19,7 @@
   },
   "peerDependencies": {},
   "jest": {
-    "testEnvironment" : "node"
+    "testEnvironment": "node"
   },
   "husky": {
     "hooks": {
@@ -52,6 +51,7 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "liquidjs-lib": "vulpemventures/liquidjs-lib"
+    "liquidjs-lib": "vulpemventures/liquidjs-lib",
+    "tdex-protobuf": "sevenlab/tdex-protobuf"
   }
 }
