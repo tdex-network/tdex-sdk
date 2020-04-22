@@ -8,7 +8,7 @@ import {
   fetchUtxos,
 } from './wallet';
 import { TraderClient } from './grpcClient';
-import { toSatoshi, calculateExpectedAmount, fromSatoshi } from './utils';
+import { calculateExpectedAmount, fromSatoshi, toSatoshi } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
 export interface MarketInterface {
@@ -56,13 +56,18 @@ export class Trade extends Core implements CoreInterface {
     privateKey,
   }: {
     market: MarketInterface;
-    amount: number;
-    address: string;
+    amount: number; //this is fractional amount
+    address?: string;
     privateKey?: string;
   }): Promise<Uint8Array | string> {
+    if (!privateKey && !address)
+      throw new Error(
+        'Either private key or native segwit address is required'
+      );
+
     if (!privateKey) {
       const watchOnlyWallet: WatchOnlyWalletInterface = WatchOnlyWallet.fromAddress(
-        address,
+        address!,
         this.chain!
       );
       const swapAccept = await this.marketOrderRequest(
@@ -97,13 +102,18 @@ export class Trade extends Core implements CoreInterface {
     privateKey,
   }: {
     market: MarketInterface;
-    amount: number;
-    address: string;
+    amount: number; // this is fractional amount
+    address?: string;
     privateKey?: string;
   }): Promise<Uint8Array | string> {
+    if (!privateKey && !address)
+      throw new Error(
+        'Either private key or native segwit address is required'
+      );
+
     if (!privateKey) {
       const watchOnlyWallet: WatchOnlyWalletInterface = WatchOnlyWallet.fromAddress(
-        address,
+        address!,
         this.chain!
       );
       const swapAccept = await this.marketOrderRequest(
@@ -129,7 +139,7 @@ export class Trade extends Core implements CoreInterface {
   async preview(
     market: MarketInterface,
     tradeType: TradeType,
-    amount: number
+    amountInSatoshis: number
   ): Promise<any> {
     const { baseAsset, quoteAsset } = market;
     const assetToBeSent = tradeType === TradeType.BUY ? quoteAsset : baseAsset;
@@ -139,7 +149,7 @@ export class Trade extends Core implements CoreInterface {
       baseAsset,
       quoteAsset,
     });
-    const amountToBeSent = toSatoshi(amount);
+    const amountToBeSent = amountInSatoshis;
     const amountToReceive = calculateExpectedAmount(
       balancesAndFee.balances[baseAsset],
       balancesAndFee.balances[quoteAsset],
@@ -158,7 +168,7 @@ export class Trade extends Core implements CoreInterface {
   private async marketOrderRequest(
     market: MarketInterface,
     tradeType: TradeType,
-    amount: number,
+    amountFractional: number,
     wallet: WalletInterface | WatchOnlyWalletInterface
   ): Promise<Uint8Array> {
     const {
@@ -166,7 +176,7 @@ export class Trade extends Core implements CoreInterface {
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-    } = await this.preview(market, tradeType, amount);
+    } = await this.preview(market, tradeType, toSatoshi(amountFractional));
 
     const traderUtxos = await fetchUtxos(wallet.address, this.explorerUrl!);
 
