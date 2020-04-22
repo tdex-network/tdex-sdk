@@ -126,12 +126,11 @@ export class Trade extends Core implements CoreInterface {
     }
   }
 
-  private async marketOrderRequest(
+  async preview(
     market: MarketInterface,
     tradeType: TradeType,
-    amount: number,
-    wallet: WalletInterface | WatchOnlyWalletInterface
-  ): Promise<Uint8Array> {
+    amount: number
+  ): Promise<any> {
     const { baseAsset, quoteAsset } = market;
     const assetToBeSent = tradeType === TradeType.BUY ? quoteAsset : baseAsset;
     const assetToReceive = tradeType === TradeType.BUY ? baseAsset : quoteAsset;
@@ -147,6 +146,27 @@ export class Trade extends Core implements CoreInterface {
       amountToBeSent,
       balancesAndFee.fee
     );
+
+    return {
+      assetToBeSent,
+      amountToBeSent,
+      assetToReceive,
+      amountToReceive,
+    };
+  }
+
+  private async marketOrderRequest(
+    market: MarketInterface,
+    tradeType: TradeType,
+    amount: number,
+    wallet: WalletInterface | WatchOnlyWalletInterface
+  ): Promise<Uint8Array> {
+    const {
+      assetToBeSent,
+      amountToBeSent,
+      assetToReceive,
+      amountToReceive,
+    } = await this.preview(market, tradeType, amount);
 
     const traderUtxos = await fetchUtxos(wallet.address, this.explorerUrl!);
 
