@@ -1,4 +1,3 @@
-//import Swap from './swap';
 export interface CoreInterface {
   verbose?: Boolean;
   chain?: string;
