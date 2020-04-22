@@ -14,7 +14,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "lint": "tsdx lint src test --ignore-pattern src/wallet.ts",
+    "lint": "tsdx lint src test",
     "prepare": "tsdx build"
   },
   "peerDependencies": {},
@@ -50,6 +50,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.0.1",
     "axios": "^0.19.2",
     "liquidjs-lib": "vulpemventures/liquidjs-lib",
     "tdex-protobuf": "sevenlab/tdex-protobuf"
