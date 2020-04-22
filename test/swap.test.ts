@@ -18,9 +18,9 @@ describe('Swap', () => {
     const psbtBase64 = initialPsbtOfAlice;
     const bytes = swap.request({
       assetToBeSent: USDT,
-      amountToBeSent: 300,
+      amountToBeSent: 30000000000,
       assetToReceive: LBTC,
-      amountToReceive: 0.05,
+      amountToReceive: 5000000,
       psbtBase64,
     });
 
@@ -30,9 +30,9 @@ describe('Swap', () => {
   test('Bob can import a SwapRequest and create a SwapAccept message', () => {
     const swapRequestMessage = swap.request({
       assetToBeSent: USDT,
-      amountToBeSent: 300,
+      amountToBeSent: 30000000000,
       assetToReceive: LBTC,
-      amountToReceive: 0.05,
+      amountToReceive: 5000000,
       psbtBase64: initialPsbtOfAlice,
     });
 
@@ -45,9 +45,9 @@ describe('Swap', () => {
   test('Alice can import a SwapAccept message and create a SwapComplete message', () => {
     const swapRequestMessage = swap.request({
       assetToBeSent: USDT,
-      amountToBeSent: 300,
+      amountToBeSent: 30000000000,
       assetToReceive: LBTC,
-      amountToReceive: 0.05,
+      amountToReceive: 5000000,
       psbtBase64: initialPsbtOfAlice,
     });
 

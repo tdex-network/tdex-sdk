@@ -1,6 +1,6 @@
 import Core from './core';
 import * as proto from 'tdex-protobuf/js/swap_pb';
-import { makeid, toNumber, toSatoshi, toAssetHash, decodePsbt } from './utils';
+import { makeid, toNumber, toAssetHash, decodePsbt } from './utils';
 
 export class Swap extends Core {
   static parse = parse;
@@ -19,14 +19,12 @@ export class Swap extends Core {
     psbtBase64: string;
   }): Uint8Array {
     // Check amounts
-    const amountToBeSentInSatoshi = toSatoshi(amountToBeSent);
-    const amountToReceiveInSatoshi = toSatoshi(amountToReceive);
 
     const msg = new proto.SwapRequest();
     msg.setId(makeid(8));
-    msg.setAmountP(amountToBeSentInSatoshi);
+    msg.setAmountP(amountToBeSent);
     msg.setAssetP(assetToBeSent);
-    msg.setAmountR(amountToReceiveInSatoshi);
+    msg.setAmountR(amountToReceive);
     msg.setAssetR(assetToReceive);
     msg.setTransaction(psbtBase64);
 

@@ -8,7 +8,7 @@ import {
   fetchUtxos,
 } from './wallet';
 import { TraderClient } from './grpcClient';
-import { calculateExpectedAmount, fromSatoshi, toSatoshi } from './utils';
+import { calculateExpectedAmount, toSatoshi } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
 export interface MarketInterface {
@@ -193,9 +193,9 @@ export class Trade extends Core implements CoreInterface {
     const swap = new Swap();
     const swapRequestSerialized = swap.request({
       assetToBeSent,
-      amountToBeSent: fromSatoshi(amountToBeSent),
+      amountToBeSent,
       assetToReceive,
-      amountToReceive: fromSatoshi(amountToReceive),
+      amountToReceive,
       psbtBase64,
     });
 
