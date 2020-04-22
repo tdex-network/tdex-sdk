@@ -1,8 +1,20 @@
 import * as TDEX from '../src/index';
 
 describe('TDEX SDK', () => {
-  it('Init', () => {
-    const swap = new TDEX.Swap();
-    expect(swap).toMatchObject({ chain: 'regtest', verbose: false });
+  it('Should throw if arguments not given', () => {
+    expect(() => new TDEX.Trade({})).toThrow();
+  });
+
+  it('Should not throw', () => {
+    const trade = new TDEX.Trade({
+      providerUrl: 'http://vulpem.com',
+      explorerUrl: 'http://nigiri.network',
+    });
+    expect(trade).toMatchObject({
+      chain: 'regtest',
+      verbose: false,
+      providerUrl: 'http://vulpem.com',
+      explorerUrl: 'http://nigiri.network',
+    });
   });
 });

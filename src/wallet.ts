@@ -162,7 +162,11 @@ function fromWIF(wif: string, network?: string): WalletInterface {
 
   try {
     const keyPair = ECPair.fromWIF(wif, _network);
-    return new Wallet({ keyPair });
+    const { address } = payments.p2wpkh({
+      pubkey: keyPair.publicKey,
+      network: _network,
+    });
+    return new Wallet({ keyPair, network: _network, address: address! });
   } catch (ignore) {
     throw new Error('Invalid keypair');
   }

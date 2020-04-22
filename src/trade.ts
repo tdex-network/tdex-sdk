@@ -1,4 +1,4 @@
-import Core from './core';
+import Core, { CoreInterface } from './core';
 import { Swap } from './swap';
 import {
   WalletInterface,
@@ -6,9 +6,9 @@ import {
   Wallet,
   WatchOnlyWallet,
   fetchUtxos,
-} from 'wallet';
-import TraderClient from 'grpc';
-import { toSatoshi, calculateExpectedAmount, fromSatoshi } from 'utils';
+} from './wallet';
+import TraderClient from './grpcClient';
+import { toSatoshi, calculateExpectedAmount, fromSatoshi } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
 export interface MarketInterface {
@@ -21,11 +21,11 @@ export enum TradeType {
   SELL = 1,
 }
 
-export class Trade extends Core {
+export class Trade extends Core implements CoreInterface {
   private grpcClient: TraderClient;
 
-  constructor() {
-    super();
+  constructor(args: CoreInterface) {
+    super(args);
 
     if (!this.chain)
       throw new Error(
