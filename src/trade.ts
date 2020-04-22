@@ -61,10 +61,10 @@ export class Trade extends Core implements CoreInterface {
     privateKey?: string;
   }): Promise<Uint8Array | string> {
     if (!privateKey) {
-      const watchOnlyWallet: WatchOnlyWalletInterface = new WatchOnlyWallet({
+      const watchOnlyWallet: WatchOnlyWalletInterface = WatchOnlyWallet.fromAddress(
         address,
-        network: this.chain!,
-      });
+        this.chain!
+      );
       const swapAccept = await this.marketOrderRequest(
         market,
         TradeType.BUY,
@@ -102,10 +102,10 @@ export class Trade extends Core implements CoreInterface {
     privateKey?: string;
   }): Promise<Uint8Array | string> {
     if (!privateKey) {
-      const watchOnlyWallet: WatchOnlyWalletInterface = new WatchOnlyWallet({
+      const watchOnlyWallet: WatchOnlyWalletInterface = WatchOnlyWallet.fromAddress(
         address,
-        network: this.chain!,
-      });
+        this.chain!
+      );
       const swapAccept = await this.marketOrderRequest(
         market,
         TradeType.SELL,

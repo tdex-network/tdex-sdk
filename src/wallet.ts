@@ -21,21 +21,18 @@ export interface WatchOnlyWalletInterface {
 }
 
 export class WatchOnlyWallet implements WatchOnlyWalletInterface {
-  network: networks.Network;
+  network: Network;
   address: string;
   script: string;
-  constructor({ address, network }: { address: string; network: string }) {
-    const currentNetwork: Network = network
-      ? (networks as any)[network]
-      : networks.liquid;
-    this.network = currentNetwork;
+  constructor({ address, network }: { address: string; network: Network }) {
+    const payment = payments.p2wpkh({ address, network });
 
-    const payment = payments.p2wpkh({ address, network: currentNetwork });
-
+    this.network = network;
     this.address = payment.address!;
     this.script = payment.output!.toString('hex');
   }
 
+  static fromAddress = fromAddress;
   static createTx = createTx;
   static toHex = toHex;
 
@@ -121,7 +118,7 @@ export class Wallet extends WatchOnlyWallet implements WalletInterface {
     address,
     keyPair,
   }: {
-    network: string;
+    network: Network;
     address: string;
     keyPair: ECPairInterface | undefined;
   }) {
@@ -157,6 +154,22 @@ export class Wallet extends WatchOnlyWallet implements WalletInterface {
   }
 }
 
+function fromAddress(
+  address: string,
+  network?: string
+): WatchOnlyWalletInterface {
+  const _network = network ? (networks as any)[network] : networks.liquid;
+
+  try {
+    return new WatchOnlyWallet({
+      address,
+      network: _network,
+    });
+  } catch (ignore) {
+    throw new Error('fromAddress: Invalid address or network');
+  }
+}
+
 function fromWIF(wif: string, network?: string): WalletInterface {
   const _network = network ? (networks as any)[network] : networks.liquid;
 
@@ -168,7 +181,7 @@ function fromWIF(wif: string, network?: string): WalletInterface {
     });
     return new Wallet({ keyPair, network: _network, address: address! });
   } catch (ignore) {
-    throw new Error('Invalid keypair');
+    throw new Error('fromWIF: Invalid keypair');
   }
 }
 
