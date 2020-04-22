@@ -1,4 +1,9 @@
-//import Swap from './swap';
+export interface CoreInterface {
+  verbose?: Boolean;
+  chain?: string;
+  providerUrl?: string;
+  explorerUrl?: string;
+}
 
 export default class Core {
   public verbose?: Boolean = false;
