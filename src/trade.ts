@@ -7,7 +7,7 @@ import {
   WatchOnlyWallet,
   fetchUtxos,
 } from './wallet';
-import TraderClient from './grpcClient';
+import { TraderClient } from './grpcClient';
 import { toSatoshi, calculateExpectedAmount, fromSatoshi } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
