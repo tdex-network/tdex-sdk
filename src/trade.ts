@@ -8,7 +8,7 @@ import {
   fetchUtxos,
 } from './wallet';
 import { TraderClient } from './grpcClient';
-import { calculateExpectedAmount, toSatoshi } from './utils';
+import { calculateExpectedAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
 export interface MarketInterface {
@@ -168,7 +168,7 @@ export class Trade extends Core implements CoreInterface {
   private async marketOrderRequest(
     market: MarketInterface,
     tradeType: TradeType,
-    amountFractional: number,
+    amountInSatoshis: number,
     wallet: WalletInterface | WatchOnlyWalletInterface
   ): Promise<Uint8Array> {
     const {
@@ -176,7 +176,7 @@ export class Trade extends Core implements CoreInterface {
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-    } = await this.preview(market, tradeType, toSatoshi(amountFractional));
+    } = await this.preview(market, tradeType, amountInSatoshis);
 
     const traderUtxos = await fetchUtxos(wallet.address, this.explorerUrl!);
 

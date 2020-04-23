@@ -27,4 +27,15 @@ describe('TDEX SDK', () => {
       '0014fd3291f773fc61ffff8732dd7af942108ee856e1'
     );
   });
+
+  test('Calculate expected amount', () => {
+    // balanceP, balanceR, amountP, fee
+    const expectedAmount = TDEX.calculateExpectedAmount(
+      100000000,
+      650000000000,
+      10000,
+      0.25
+    );
+    expect(expectedAmount).toStrictEqual(64831026);
+  });
 });

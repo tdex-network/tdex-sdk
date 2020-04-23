@@ -1,4 +1,8 @@
+import JSBI from 'jsbi';
 import { confidential, Psbt, Transaction } from 'liquidjs-lib';
+
+const HUNDRED = JSBI.BigInt(100);
+const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
 
 export function toAssetHash(x: Buffer): string {
   const withoutFirstByte = x.slice(1);
@@ -9,39 +13,28 @@ export function toNumber(x: Buffer): number {
   return confidential.confidentialValueToSatoshi(x);
 }
 
-export function toSatoshi(x: number): number {
-  return Math.floor(x * Math.pow(10, 8));
-}
-
-export function fromSatoshi(x: number): number {
-  return Number(
-    (x / Math.pow(10, 8))
-      .toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 8,
-      })
-      .replace(',', '')
-  );
-}
-
-export function minusFee(amount: number, fee: number): Array<any> {
-  const calculatedFee = Math.floor((amount / 100) * fee);
-  return [amount - calculatedFee, calculatedFee];
+function minusFee(amount: JSBI, fee: JSBI): Array<JSBI> {
+  const calculatedFee = JSBI.multiply(JSBI.divide(amount, TENTHOUSAND), fee);
+  return [JSBI.subtract(amount, calculatedFee), calculatedFee];
 }
 
 export function calculateExpectedAmount(
   proposeBalance: number,
   receiveBalance: number,
   proposedAmount: number,
-  fee: number
+  feeWithDecimals: number
 ): number {
-  const invariant = proposeBalance * receiveBalance;
+  const PBALANCE = JSBI.BigInt(proposeBalance);
+  const RBALANCE = JSBI.BigInt(receiveBalance);
+  const PAMOUNT = JSBI.BigInt(proposedAmount);
+  const FEE = JSBI.BigInt(feeWithDecimals * 100);
 
-  const newProposeBalance = proposeBalance + proposedAmount;
-  const newReceiveBalance = invariant / newProposeBalance;
-  const expectedAmount = receiveBalance - newReceiveBalance;
-  const [expectedAmountMinusFee] = minusFee(expectedAmount, fee);
-  return Math.floor(expectedAmountMinusFee);
+  const invariant = JSBI.multiply(PBALANCE, RBALANCE);
+  const newProposeBalance = JSBI.add(PBALANCE, PAMOUNT);
+  const newReceiveBalance = JSBI.divide(invariant, newProposeBalance);
+  const expectedAmount = JSBI.subtract(RBALANCE, newReceiveBalance);
+  const [expectedAmountMinusFee] = minusFee(expectedAmount, FEE);
+  return JSBI.toNumber(expectedAmountMinusFee);
 }
 
 export function makeid(length: number): string {

@@ -31,9 +31,9 @@ describe('TDEX SDK', () => {
         baseAsset:
           '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
         quoteAsset:
-          'e260df04e214d87d68f21006a3f260157701fe1e4d38fa28a258ebc475359b36',
+          'c3ebbd5d9a2f44c8f15a9d7a2eeba4da6f141a36a0e96524aeaebbb646df0ca0',
       },
-      amount: 0.0001,
+      amount: 10000,
       address: 'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
       privateKey: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
     };
