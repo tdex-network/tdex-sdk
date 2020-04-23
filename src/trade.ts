@@ -144,15 +144,16 @@ export class Trade extends Core implements CoreInterface {
     const { baseAsset, quoteAsset } = market;
     const assetToBeSent = tradeType === TradeType.BUY ? quoteAsset : baseAsset;
     const assetToReceive = tradeType === TradeType.BUY ? baseAsset : quoteAsset;
+    const amountToBeSent = tradeType === TradeType.BUY ? 0 : amountInSatoshis;
 
     const balancesAndFee = await this.grpcClient.balances({
       baseAsset,
       quoteAsset,
     });
-    const amountToBeSent = amountInSatoshis;
+
     const amountToReceive = calculateExpectedAmount(
-      balancesAndFee.balances[baseAsset],
-      balancesAndFee.balances[quoteAsset],
+      balancesAndFee.balances[assetToBeSent],
+      balancesAndFee.balances[assetToReceive],
       amountToBeSent,
       balancesAndFee.fee
     );

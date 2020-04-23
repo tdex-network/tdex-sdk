@@ -19,7 +19,7 @@ describe('TDEX SDK', () => {
     });
   });
 
-  it('Should buy some assets ', async () => {
+  it('Should sell some LBTCs', async () => {
     const trade = new Trade({
       chain: 'regtest',
       providerUrl: 'localhost:9945',
@@ -31,15 +31,15 @@ describe('TDEX SDK', () => {
         baseAsset:
           '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
         quoteAsset:
-          'c3ebbd5d9a2f44c8f15a9d7a2eeba4da6f141a36a0e96524aeaebbb646df0ca0',
+          'b9cc08ae352104c20f4b044153670b243537392acefd454cb8bca6dfdf962a40',
       },
-      amount: 10000,
-      address: 'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
+      amount: 50000,
+      //address: 'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
       privateKey: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
     };
 
     const txid = await trade.sell(params);
-
+    console.log(txid);
     expect(txid).toBeDefined();
-  }, 15000);
+  }, 25000);
 });
