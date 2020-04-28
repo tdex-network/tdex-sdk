@@ -18,6 +18,11 @@ function minusFee(amount: JSBI, fee: JSBI): Array<JSBI> {
   return [JSBI.subtract(amount, calculatedFee), calculatedFee];
 }
 
+function plusFee(amount: JSBI, fee: JSBI): Array<JSBI> {
+  const calculatedFee = JSBI.multiply(JSBI.divide(amount, TENTHOUSAND), fee);
+  return [JSBI.add(amount, calculatedFee), calculatedFee];
+}
+
 export function calculateExpectedAmount(
   proposeBalance: number,
   receiveBalance: number,
@@ -35,6 +40,25 @@ export function calculateExpectedAmount(
   const expectedAmount = JSBI.subtract(RBALANCE, newReceiveBalance);
   const [expectedAmountMinusFee] = minusFee(expectedAmount, FEE);
   return JSBI.toNumber(expectedAmountMinusFee);
+}
+
+export function calculateProposeAmount(
+  proposeBalance: number,
+  receiveBalance: number,
+  expectedAmount: number,
+  feeWithDecimals: number
+): number {
+  const PBALANCE = JSBI.BigInt(proposeBalance);
+  const RBALANCE = JSBI.BigInt(receiveBalance);
+  const RAMOUNT = JSBI.BigInt(expectedAmount);
+  const FEE = JSBI.BigInt(feeWithDecimals * 100);
+
+  const invariant = JSBI.multiply(PBALANCE, RBALANCE);
+  const newReceiveBalance = JSBI.subtract(RBALANCE, RAMOUNT);
+  const newProposeBalance = JSBI.divide(invariant, newReceiveBalance);
+  const proposeAmount = JSBI.subtract(newProposeBalance, PBALANCE);
+  const [proposeAmountPlusFee] = plusFee(proposeAmount, FEE);
+  return JSBI.toNumber(proposeAmountPlusFee);
 }
 
 export function makeid(length: number): string {
