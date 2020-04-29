@@ -202,7 +202,7 @@ export class Trade extends Core implements CoreInterface {
 
     const traderUtxos = await fetchUtxos(wallet.address, this.explorerUrl!);
 
-    const emptyPsbt = Wallet.createTx();
+    const emptyPsbt = Wallet.createTx(this.chain);
     const psbtBase64 = wallet.updateTx(
       emptyPsbt,
       traderUtxos,
