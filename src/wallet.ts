@@ -185,8 +185,9 @@ function fromWIF(wif: string, network?: string): WalletInterface {
   }
 }
 
-function createTx(): string {
-  const psbt = new Psbt();
+function createTx(network?: string): string {
+  const _network = network ? (networks as any)[network] : networks.liquid;
+  const psbt = new Psbt({ network: _network });
   return psbt.toBase64();
 }
 

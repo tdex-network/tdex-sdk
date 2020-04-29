@@ -28,7 +28,7 @@ describe('TDEX SDK', () => {
     );
   });
 
-  test('Calculate expected amount', () => {
+  test('Calculate expected amount given an amount_p', () => {
     // balanceP, balanceR, amountP, fee
     const expectedAmount = TDEX.calculateExpectedAmount(
       100000000,
@@ -37,5 +37,16 @@ describe('TDEX SDK', () => {
       0.25
     );
     expect(expectedAmount).toStrictEqual(64831026);
+  });
+
+  test('Calculate propose amount given an amount_r', () => {
+    // balanceP, balanceR, amountR, fee
+    const proposeAmount = TDEX.calculateProposeAmount(
+      650000000000,
+      100000000,
+      10000,
+      0.25
+    );
+    expect(proposeAmount).toStrictEqual(65169000);
   });
 });

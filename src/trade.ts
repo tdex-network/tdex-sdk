@@ -8,7 +8,7 @@ import {
   fetchUtxos,
 } from './wallet';
 import { TraderClient } from './grpcClient';
-import { calculateExpectedAmount } from './utils';
+import { calculateExpectedAmount, calculateProposeAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
 export interface MarketInterface {
@@ -142,28 +142,49 @@ export class Trade extends Core implements CoreInterface {
     amountInSatoshis: number
   ): Promise<any> {
     const { baseAsset, quoteAsset } = market;
-    const assetToBeSent = tradeType === TradeType.BUY ? quoteAsset : baseAsset;
-    const assetToReceive = tradeType === TradeType.BUY ? baseAsset : quoteAsset;
-    const amountToBeSent = tradeType === TradeType.BUY ? 0 : amountInSatoshis;
 
     const balancesAndFee = await this.grpcClient.balances({
       baseAsset,
       quoteAsset,
     });
 
-    const amountToReceive = calculateExpectedAmount(
-      balancesAndFee.balances[assetToBeSent],
-      balancesAndFee.balances[assetToReceive],
-      amountToBeSent,
-      balancesAndFee.fee
-    );
+    if (tradeType === TradeType.BUY) {
+      const assetToBeSent = quoteAsset;
+      const assetToReceive = baseAsset;
+      const amountToReceive = amountInSatoshis;
 
-    return {
-      assetToBeSent,
-      amountToBeSent,
-      assetToReceive,
-      amountToReceive,
-    };
+      const amountToBeSent = calculateProposeAmount(
+        balancesAndFee.balances[assetToBeSent],
+        balancesAndFee.balances[assetToReceive],
+        amountToReceive,
+        balancesAndFee.fee
+      );
+
+      return {
+        assetToBeSent,
+        amountToBeSent,
+        assetToReceive,
+        amountToReceive,
+      };
+    } else {
+      const assetToBeSent = baseAsset;
+      const assetToReceive = quoteAsset;
+      const amountToBeSent = amountInSatoshis;
+
+      const amountToReceive = calculateExpectedAmount(
+        balancesAndFee.balances[assetToBeSent],
+        balancesAndFee.balances[assetToReceive],
+        amountToBeSent,
+        balancesAndFee.fee
+      );
+
+      return {
+        assetToBeSent,
+        amountToBeSent,
+        assetToReceive,
+        amountToReceive,
+      };
+    }
   }
 
   private async marketOrderRequest(
@@ -181,7 +202,7 @@ export class Trade extends Core implements CoreInterface {
 
     const traderUtxos = await fetchUtxos(wallet.address, this.explorerUrl!);
 
-    const emptyPsbt = Wallet.createTx();
+    const emptyPsbt = Wallet.createTx(this.chain);
     const psbtBase64 = wallet.updateTx(
       emptyPsbt,
       traderUtxos,
