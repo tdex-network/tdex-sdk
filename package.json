@@ -38,6 +38,11 @@
       "name": "Marco Argentieri",
       "email": "marco@vulpem.com",
       "url": "https://vulpem.com"
+    },
+    {
+      "name": "Pietralberto Mazza",
+      "email": "pietro@vulpem.com",
+      "url": "https://vulpem.com"
     }
   ],
   "module": "dist/tdex-sdk.esm.js",
@@ -51,7 +56,7 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "google-protobuf": "^3.12.0-rc.1",
+    "google-protobuf": "^3.11.4",
     "grpc": "^1.24.2",
     "jsbi": "^3.1.2",
     "liquidjs-lib": "vulpemventures/liquidjs-lib",
