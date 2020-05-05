@@ -112,6 +112,7 @@ export class Wallet extends WatchOnlyWallet implements WalletInterface {
   publicKey: string;
 
   static fromWIF = fromWIF;
+  static fromRandom = fromRandom;
 
   constructor({
     network,
@@ -167,6 +168,20 @@ function fromAddress(
     });
   } catch (ignore) {
     throw new Error('fromAddress: Invalid address or network');
+  }
+}
+
+function fromRandom(network?: string): WalletInterface {
+  const _network = network ? (networks as any)[network] : networks.liquid;
+  try {
+    const keyPair = ECPair.makeRandom({ network: _network });
+    const { address } = payments.p2wpkh({
+      pubkey: keyPair.publicKey,
+      network: _network,
+    });
+    return new Wallet({ keyPair, network: _network, address: address! });
+  } catch (ignore) {
+    throw new Error('fromRandom: Failed to create wallet');
   }
 }
 
