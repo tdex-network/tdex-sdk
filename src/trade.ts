@@ -153,6 +153,9 @@ export class Trade extends Core implements CoreInterface {
       const assetToReceive = baseAsset;
       const amountToReceive = amountInSatoshis;
 
+      if (amountToReceive > balancesAndFee.balances[assetToReceive])
+        throw new Error('Amount exceeds market balance');
+
       const amountToBeSent = calculateProposeAmount(
         balancesAndFee.balances[assetToBeSent],
         balancesAndFee.balances[assetToReceive],
@@ -170,6 +173,9 @@ export class Trade extends Core implements CoreInterface {
       const assetToBeSent = baseAsset;
       const assetToReceive = quoteAsset;
       const amountToBeSent = amountInSatoshis;
+
+      if (amountToBeSent > balancesAndFee.balances[assetToBeSent])
+        throw new Error('Amount exceeds market balance');
 
       const amountToReceive = calculateExpectedAmount(
         balancesAndFee.balances[assetToBeSent],
