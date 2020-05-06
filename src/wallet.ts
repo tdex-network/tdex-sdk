@@ -142,14 +142,18 @@ export class Wallet extends WatchOnlyWallet implements WalletInterface {
       throw new Error('Invalid psbt');
     }
 
-    const index = psbt.data.inputs.findIndex(
-      p => p.witnessUtxo!.script.toString('hex') === this.script
-    );
+    let indexes: number[] = [];
+    psbt.data.inputs.forEach((p: any, i: number) => {
+      if (p.witnessUtxo!.script.toString('hex') === this.script)
+        indexes.push(i);
+    });
+    if (indexes.length <= 0) throw new Error('No input to sign');
 
-    psbt.signInput(index, this.keyPair);
-
-    if (!psbt.validateSignaturesOfInput(index))
-      throw new Error('Invalid signature');
+    indexes.forEach(index => {
+      psbt.signInput(index, this.keyPair);
+      if (!psbt.validateSignaturesOfInput(index))
+        throw new Error('Invalid signature');
+    });
 
     return psbt.toBase64();
   }
