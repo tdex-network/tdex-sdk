@@ -8,7 +8,11 @@ import {
   fetchUtxos,
 } from './wallet';
 import { TraderClient } from './grpcClient';
-import { calculateExpectedAmount, calculateProposeAmount } from './utils';
+import {
+  calculateExpectedAmount,
+  calculateProposeAmount,
+  isValidAmount,
+} from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
 
 export interface MarketInterface {
@@ -141,6 +145,9 @@ export class Trade extends Core implements CoreInterface {
     tradeType: TradeType,
     amountInSatoshis: number
   ): Promise<any> {
+    if (!isValidAmount(amountInSatoshis)) {
+      throw new Error('Amount is not valid');
+    }
     const { baseAsset, quoteAsset } = market;
 
     const balancesAndFee = await this.grpcClient.balances({
@@ -152,6 +159,9 @@ export class Trade extends Core implements CoreInterface {
       const assetToBeSent = quoteAsset;
       const assetToReceive = baseAsset;
       const amountToReceive = amountInSatoshis;
+
+      if (amountToReceive > balancesAndFee.balances[assetToReceive])
+        throw new Error('Amount exceeds market balance');
 
       const amountToBeSent = calculateProposeAmount(
         balancesAndFee.balances[assetToBeSent],
@@ -170,6 +180,9 @@ export class Trade extends Core implements CoreInterface {
       const assetToBeSent = baseAsset;
       const assetToReceive = quoteAsset;
       const amountToBeSent = amountInSatoshis;
+
+      if (amountToBeSent > balancesAndFee.balances[assetToBeSent])
+        throw new Error('Amount exceeds market balance');
 
       const amountToReceive = calculateExpectedAmount(
         balancesAndFee.balances[assetToBeSent],

@@ -123,3 +123,8 @@ export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
 
   return { unspents, change };
 }
+
+export function isValidAmount(amount: number): boolean {
+  if (amount <= 0 || !Number.isSafeInteger(amount)) return false;
+  return true;
+}
