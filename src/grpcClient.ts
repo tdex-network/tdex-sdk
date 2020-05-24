@@ -1,4 +1,4 @@
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 import * as services from 'tdex-protobuf/js/trade_grpc_pb';
 import * as messages from 'tdex-protobuf/js/trade_pb';
 import { SwapRequest, SwapComplete } from 'tdex-protobuf/js/swap_pb';
