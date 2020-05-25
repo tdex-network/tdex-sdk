@@ -55,10 +55,10 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.0.4",
     "@types/google-protobuf": "^3.7.2",
     "axios": "^0.19.2",
     "google-protobuf": "^3.11.4",
-    "grpc": "^1.24.2",
     "jsbi": "^3.1.2",
     "liquidjs-lib": "vulpemventures/liquidjs-lib",
     "tdex-protobuf": "sevenlab/tdex-protobuf"
