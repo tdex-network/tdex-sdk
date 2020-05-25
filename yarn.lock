@@ -5932,9 +5932,9 @@ table@^5.2.3:
     slice-ansi "^2.1.0"
     string-width "^3.0.0"
 
-tdex-protobuf@sevenlab/tdex-protobuf#grpc-js:
+tdex-protobuf@sevenlab/tdex-protobuf:
   version "1.0.0"
-  resolved "git+ssh://git@github.com/sevenlab/tdex-protobuf.git#f35e20463bde2e810c87925bf8fc4d5006d5594e"
+  resolved "git+ssh://git@github.com/sevenlab/tdex-protobuf.git#a9cfbc5a2588bde05a429152f9efbee415b82416"
 
 terser@^4.6.2:
   version "4.7.0"
