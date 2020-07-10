@@ -60,7 +60,7 @@
     "axios": "^0.19.2",
     "google-protobuf": "^3.11.4",
     "jsbi": "^3.1.2",
-    "liquidjs-lib": "vulpemventures/liquidjs-lib",
+    "liquidjs-lib": "provable-things/liquidjs-lib",
     "tdex-protobuf": "sevenlab/tdex-protobuf"
   }
 }
