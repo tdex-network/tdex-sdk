@@ -4177,9 +4177,9 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
-liquidjs-lib@vulpemventures/liquidjs-lib:
+liquidjs-lib@provable-things/liquidjs-lib:
   version "5.1.6"
-  resolved "git+ssh://git@github.com/vulpemventures/liquidjs-lib.git#97673986c4233dee61f98dc59b5256ed2a8f313d"
+  resolved "https://codeload.github.com/provable-things/liquidjs-lib/tar.gz/97673986c4233dee61f98dc59b5256ed2a8f313d"
   dependencies:
     axios "^0.19.2"
     bech32 "^1.1.2"
