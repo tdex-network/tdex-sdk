@@ -8,14 +8,14 @@ describe('TDEX SDK', () => {
 
   it('Should not throw', () => {
     const trade = new Trade({
-      providerUrl: 'http://vulpem.com',
-      explorerUrl: 'http://nigiri.network',
+      providerUrl: 'localhost:9945',
+      explorerUrl: 'https://nigiri.network',
     });
     expect(trade).toMatchObject({
       chain: 'regtest',
       verbose: false,
-      providerUrl: 'http://vulpem.com',
-      explorerUrl: 'http://nigiri.network',
+      providerUrl: 'localhost:9945',
+      explorerUrl: 'https://nigiri.network',
     });
   });
 

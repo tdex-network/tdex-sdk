@@ -5,11 +5,11 @@ JavaScript SDK for building trader-facing applications on top of TDEX
 
 * Install with **yarn**
 ```sh
-$ yarn add tdex-sdk
+$ yarn add tdex-network/tdex-sdk
 ```
 * Install with **npm**
 ```sh
-$ npm install --save tdex-sdk
+$ npm install --save tdex-network/tdex-sdk
 ```
 
 
