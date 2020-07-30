@@ -5826,7 +5826,7 @@ table@^5.2.3:
     slice-ansi "^2.1.0"
     string-width "^3.0.0"
 
-tdex-protobuf@tdex-network/tdex-protobuf:
+tdex-protobuf@tdex-network/tdex-protobuf#master:
   version "1.0.0"
   resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/1d7548f4a8a7db0a1b4c53a9e2e368c5bc79048f"
   dependencies:
