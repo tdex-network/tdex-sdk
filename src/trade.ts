@@ -7,7 +7,7 @@ import {
   WatchOnlyWallet,
   fetchUtxos,
 } from './wallet';
-import { TraderClient } from './grpcClient';
+import TraderClient from './grpcClient';
 import {
   calculateExpectedAmount,
   calculateProposeAmount,
