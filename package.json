@@ -2,16 +2,19 @@
   "version": "0.0.2",
   "license": "MIT",
   "main": "dist/index.js",
+  "browser": "dist-web/index.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "dist-web"
   ],
   "engines": {
     "node": ">=10"
   },
   "scripts": {
     "start": "tsdx watch",
-    "build": "tsdx build",
+    "build": "tsdx build --tsconfig tsconfig.json",
+    "build-web": "tsdx build --tsconfig tsconfig.web.json && mv dist dist-web",
     "test": "tsdx test",
     "lint": "tsdx lint src test",
     "prepare": "tsdx build"
@@ -44,7 +47,6 @@
       "url": "https://vulpem.com"
     }
   ],
-  "module": "dist/tdex-sdk.esm.js",
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "husky": "^4.2.3",

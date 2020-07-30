@@ -4,7 +4,9 @@
     "types"
   ],
   "exclude": [
-    "src/*.web.ts"
+    "src/trade.ts",
+    "src/index.ts",
+    "src/grpcClient.ts"
   ],
   "compilerOptions": {
     "module": "esnext",
@@ -29,7 +31,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "baseUrl": "./",
-    "outDir": "./dist",
+    "outDir": "./dist.web",
     "paths": {
       "*": [
         "src/*",
