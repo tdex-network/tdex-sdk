@@ -7,7 +7,8 @@ import {
   WatchOnlyWallet,
   fetchUtxos,
 } from './wallet';
-import TraderClient from './grpcClient';
+import { TraderClient } from './grpcClient';
+import TraderClientInterface from './grpcClientInterface';
 import {
   calculateExpectedAmount,
   calculateProposeAmount,
@@ -26,7 +27,7 @@ export enum TradeType {
 }
 
 export class Trade extends Core implements CoreInterface {
-  private grpcClient: TraderClient;
+  private grpcClient: TraderClientInterface;
 
   constructor(args: CoreInterface) {
     super(args);
