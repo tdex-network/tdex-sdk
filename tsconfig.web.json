@@ -4,9 +4,9 @@
     "types"
   ],
   "exclude": [
-    "src/trade.ts",
-    "src/index.ts",
-    "src/grpcClient.ts"
+    "./src/trade.ts",
+    "./src/index.ts",
+    "./src/grpcClient.ts"
   ],
   "compilerOptions": {
     "module": "esnext",
