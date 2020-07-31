@@ -1,5 +1,4 @@
-import * as grpc from '@grpc/grpc-js';
-import * as services from 'tdex-protobuf/js/trade_grpc_pb';
+import * as services from 'tdex-protobuf/js/TradeServiceClientPb';
 import * as messages from 'tdex-protobuf/js/trade_pb';
 import { SwapRequest, SwapComplete } from 'tdex-protobuf/js/swap_pb';
 
@@ -10,10 +9,7 @@ export class TraderClient implements TraderClientInterface {
   client: services.TradeClient;
   constructor(providerUrl: string) {
     this.providerUrl = providerUrl;
-    this.client = new services.TradeClient(
-      providerUrl,
-      grpc.credentials.createInsecure()
-    );
+    this.client = new services.TradeClient(providerUrl);
   }
 
   /**
@@ -75,17 +71,21 @@ export class TraderClient implements TraderClientInterface {
 
   markets(): Promise<Array<any>> {
     return new Promise((resolve, reject) => {
-      this.client.markets(new messages.MarketsRequest(), (err, response) => {
-        if (err) return reject(err);
-        const list = response!
-          .getMarketsList()
-          .map((item: any) => item!.getMarket())
-          .map((market: any) => ({
-            baseAsset: market!.getBaseAsset(),
-            quoteAsset: market!.getQuoteAsset(),
-          }));
-        resolve(list);
-      });
+      this.client.markets(
+        new messages.MarketsRequest(),
+        null,
+        (err, response) => {
+          if (err) return reject(err);
+          const list = response!
+            .getMarketsList()
+            .map((item: any) => item!.getMarket())
+            .map((market: any) => ({
+              baseAsset: market!.getBaseAsset(),
+              quoteAsset: market!.getQuoteAsset(),
+            }));
+          resolve(list);
+        }
+      );
     });
   }
 
@@ -103,7 +103,7 @@ export class TraderClient implements TraderClientInterface {
     request.setMarket(market);
 
     return new Promise((resolve, reject) => {
-      this.client.balances(request, (err, response) => {
+      this.client.balances(request, null, (err, response) => {
         if (err) return reject(err);
 
         const baseAmount: number = response

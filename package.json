@@ -2,16 +2,20 @@
   "version": "0.0.2",
   "license": "MIT",
   "main": "dist/index.js",
+  "browser": "dist-web/index.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "dist-web"
   ],
   "engines": {
     "node": ">=10"
   },
   "scripts": {
     "start": "tsdx watch",
-    "build": "tsdx build",
+    "build": "yarn build-web && yarn build-node",
+    "build-node": "tsdx build --tsconfig tsconfig.json --entry src/index.ts ",
+    "build-web": "tsdx build --tsconfig tsconfig.web.json --entry src/index.web.ts && rm -rf dist-web && mv dist dist-web",
     "test": "tsdx test",
     "lint": "tsdx lint src test",
     "prepare": "tsdx build"
@@ -44,7 +48,6 @@
       "url": "https://vulpem.com"
     }
   ],
-  "module": "dist/tdex-sdk.esm.js",
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "husky": "^4.2.3",
@@ -59,7 +62,7 @@
     "google-protobuf": "^3.11.4",
     "jsbi": "^3.1.2",
     "liquidjs-lib": "provable-things/liquidjs-lib",
-    "tdex-protobuf": "tdex-network/tdex-protobuf",
+    "tdex-protobuf": "tdex-network/tdex-protobuf#master",
     "tslib": "^2.0.0"
   }
 }
