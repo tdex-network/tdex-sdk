@@ -23,7 +23,7 @@ In-depth documentation for using the tdex-sdk is available at [docs.tdex.network
 * [x] Swap protocol
 * [x] Trade protocol
 * [x] Wallet support
-* [ ] Browser support
+* [x] Browser support
 
 
 ## 🖥 Local Development
@@ -36,7 +36,7 @@ Runs the project in development/watch mode. Your project will be rebuilt upon ch
 
 ### `yarn build`
 
-Bundles the package to the `dist` folder.
+Bundles the package to the `dist` and `dist-web` folder.
 The package is optimized and bundled with Rollup into multiple formats (CommonJS, UMD, and ES Module).
 
 
