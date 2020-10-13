@@ -127,7 +127,6 @@ export class Wallet extends WatchOnlyWallet implements WalletInterface {
 
     if (!keyPair) this.keyPair = ECPair.makeRandom({ network: this.network });
     else this.keyPair = keyPair;
-
     this.privateKey = this.keyPair.privateKey!.toString('hex');
     this.publicKey = this.keyPair.publicKey!.toString('hex');
   }

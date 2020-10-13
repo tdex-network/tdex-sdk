@@ -1,5 +1,7 @@
 import Core from './core';
 import * as proto from 'tdex-protobuf/js/swap_pb';
+import * as jspb from 'google-protobuf';
+
 import {
   makeid,
   toNumber,
@@ -8,7 +10,8 @@ import {
   isConfidentialOutput,
   unblindOutput,
 } from './utils';
-import { Output } from 'liquidjs-lib/types/transaction';
+import { Input, Output } from 'liquidjs-lib/types/transaction';
+import { TxInput } from 'liquidjs-lib';
 
 type BlindKeysMap = Record<string, Buffer>;
 
@@ -100,8 +103,10 @@ function compareMessagesAndTransaction(
 
   const totalP = countUtxos(
     decodedFromRequest.psbt.data.inputs,
-    msgRequest.getAssetP()
+    msgRequest.getAssetP(),
+    blindKeysMap(msgRequest.getInputBlindingKeyMap())
   );
+
   if (totalP < msgRequest.getAmountP())
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
@@ -110,7 +115,8 @@ function compareMessagesAndTransaction(
   const outputRFound = outputFoundInTransaction(
     decodedFromRequest.transaction.outs,
     msgRequest.getAmountR(),
-    msgRequest.getAssetR()
+    msgRequest.getAssetR(),
+    blindKeysMap(msgRequest.getOutputBlindingKeyMap())
   );
   if (!outputRFound)
     throw new Error(
@@ -176,11 +182,52 @@ function outputFoundInTransaction(
   });
 }
 
-function countUtxos(utxos: Array<any>, asset: string): number {
-  return utxos
-    .filter((i: any) => toAssetHash(i.witnessUtxo!.asset) === asset)
-    .map((i: any) => toNumber(i.witnessUtxo!.value))
-    .reduce((a: any, b: any) => a + b, 0);
+/**
+ * Returns the sum of the values of the given inputs' utxos.
+ * @param utxos the inputs.
+ * @param asset the asset to fetch value.
+ * @param inputBlindKeys optional, the blinding keys using to unblind witnessUtxo if blinded.
+ */
+function countUtxos(
+  utxos: Array<any>,
+  asset: string,
+  inputBlindKeys: BlindKeysMap = {}
+): number {
+  return (
+    utxos
+      // checks if witness utxo exists
+      .filter((i: any) => i.witnessUtxo != null)
+      // unblind confidential output.
+      .map((i: any) => {
+        if (isConfidentialOutput(i.witnessUtxo)) {
+          const blindKey = inputBlindKeys[i.witnessUtxo.script.toString('hex')];
+          if (blindKey === undefined) {
+            throw new Error(
+              'no blindKey for script: ' + i.witnessUtxo.script.toString('hex')
+            );
+          }
+          const { value: unblindValue, asset: unblindAsset } = unblindOutput(
+            i.witnessUtxo,
+            blindKey
+          );
+          i.witnessUtxo.asset = unblindAsset;
+          i.witnessUtxo.value = unblindValue;
+        }
+        return i;
+      })
+      // filter inputs by asset
+      .filter((i: any) => {
+        return toAssetHash(i.witnessUtxo!.asset) === asset;
+      })
+      // get the value
+      .map((i: any) =>
+        i.witnessUtxo.value instanceof Buffer
+          ? toNumber(i.witnessUtxo!.value)
+          : parseInt(i.witnessUtxo.value)
+      )
+      // apply reducer to values (add the values)
+      .reduce((a: any, b: any) => a + b, 0)
+  );
 }
 
 function parse({
@@ -198,4 +245,23 @@ function parse({
   }
 
   return JSON.stringify(msg.toObject(), undefined, 2);
+}
+
+/**
+ * Convert jspb's Map type to BlindKeysMap.
+ * @param jspbMap the map to convert.
+ */
+function blindKeysMap(
+  jspbMap: jspb.Map<string, string | Uint8Array>
+): BlindKeysMap {
+  const map: BlindKeysMap = {};
+  jspbMap.forEach((entry: string | Uint8Array, key: string) => {
+    const value: Buffer =
+      entry instanceof Uint8Array
+        ? Buffer.from(entry)
+        : Buffer.from(entry, 'hex');
+
+    map[key] = value;
+  });
+  return map;
 }
