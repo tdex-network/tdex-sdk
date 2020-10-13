@@ -10,8 +10,7 @@ import {
   isConfidentialOutput,
   unblindOutput,
 } from './utils';
-import { Input, Output } from 'liquidjs-lib/types/transaction';
-import { TxInput } from 'liquidjs-lib';
+import { Output } from 'liquidjs-lib/types/transaction';
 
 type BlindKeysMap = Record<string, Buffer>;
 
