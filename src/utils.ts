@@ -1,5 +1,7 @@
 import JSBI from 'jsbi';
 import { confidential, Psbt, Transaction } from 'liquidjs-lib';
+import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
+import { Output } from 'liquidjs-lib/types/transaction';
 
 const HUNDRED = JSBI.BigInt(100);
 const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
@@ -127,4 +129,38 @@ export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
 export function isValidAmount(amount: number): boolean {
   if (amount <= 0 || !Number.isSafeInteger(amount)) return false;
   return true;
+}
+
+/**
+ * The unblind output function's result interface.
+ */
+export interface UnblindResult {
+  asset: string;
+  value: string;
+}
+
+/**
+ * Unblind an output using confidential.unblindOutput function from liquidjs-lib.
+ * @param output the output to unblind.
+ * @param blindKey the private blinding key.
+ */
+export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
+  const result: UnblindResult = { asset: '', value: '' };
+
+  if (!output.rangeProof) {
+    throw new Error('The output does not contain rangeProof.');
+  }
+
+  const unblindedResult: UnblindOutputResult = confidential.unblindOutput(
+    output.nonce,
+    blindKey,
+    output.rangeProof,
+    output.value,
+    output.asset,
+    output.script
+  );
+
+  result.asset = toAssetHash(unblindedResult.asset);
+  result.value = unblindedResult.value;
+  return result;
 }
