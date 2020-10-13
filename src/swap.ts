@@ -1,6 +1,16 @@
 import Core from './core';
 import * as proto from 'tdex-protobuf/js/swap_pb';
-import { makeid, toNumber, toAssetHash, decodePsbt } from './utils';
+import {
+  makeid,
+  toNumber,
+  toAssetHash,
+  decodePsbt,
+  isConfidentialOutput,
+  unblindOutput,
+} from './utils';
+import { Output } from 'liquidjs-lib/types/transaction';
+
+type BlindKeysMap = Record<string, Buffer>;
 
 export class Swap extends Core {
   static parse = parse;
@@ -135,16 +145,35 @@ function compareMessagesAndTransaction(
   }
 }
 
+/**
+ * find an output in outputs corresponding to value and asset. Provide outputBlindKeys if output are blinded.
+ * @param outputs the outputs to search in.
+ * @param value value of the output.
+ * @param asset hex encoded asset of the output.
+ * @param outputBlindKeys optional, only if blinded outputs. Blinding keys map (scriptPukKey -> blindingKey).
+ */
 function outputFoundInTransaction(
-  outputs: Array<any>,
+  outputs: Array<Output>,
   value: number,
-  asset: string
-) {
-  const found = outputs.find(
-    (o: any) => toNumber(o.value) === value && toAssetHash(o.asset) === asset
-  );
-
-  return found !== undefined;
+  asset: string,
+  outputBlindKeys: BlindKeysMap = {}
+): boolean {
+  return outputs.some((o: Output) => {
+    // unblind first if confidential ouput
+    if (isConfidentialOutput(o)) {
+      const blindKey: Buffer = outputBlindKeys[o.script.toString('hex')];
+      if (blindKey === undefined)
+        throw new Error('no blindKey for script: ' + o.script.toString('hex'));
+      const { value: unblindValue, asset: unblindAsset } = unblindOutput(
+        o,
+        blindKey
+      );
+      // check unblind value and unblind asset
+      return parseInt(unblindValue, 10) === value && unblindAsset === asset;
+    }
+    // check value and asset
+    return toNumber(o.value) === value && toAssetHash(o.asset) === asset;
+  });
 }
 
 function countUtxos(utxos: Array<any>, asset: string): number {

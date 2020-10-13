@@ -164,3 +164,13 @@ export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
   result.value = unblindedResult.value;
   return result;
 }
+
+/**
+ * Checks if a given output is a confidential one.
+ * @param output the ouput to check.
+ */
+export function isConfidentialOutput(output: Output): boolean {
+  return (
+    output.rangeProof != null && output.nonce !== Buffer.from('0x00', 'hex')
+  );
+}
