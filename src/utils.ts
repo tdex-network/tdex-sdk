@@ -63,6 +63,10 @@ export function calculateProposeAmount(
   return JSBI.toNumber(proposeAmountPlusFee);
 }
 
+/**
+ * Generates a random id of a fixed length.
+ * @param length size of the string id.
+ */
 export function makeid(length: number): string {
   let result = '';
   const characters =

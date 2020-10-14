@@ -15,14 +15,23 @@ import { Output } from 'liquidjs-lib/types/transaction';
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
 
+// define the Swap.request arguments.
 interface requestOpts {
   assetToBeSent: string;
   amountToBeSent: number;
   assetToReceive: string;
   amountToReceive: number;
   psbtBase64: string;
-  inputBlindingKeys: BlindKeysMap;
-  outputBlindingKeys: BlindKeysMap;
+  inputBlindingKeys?: BlindKeysMap;
+  outputBlindingKeys?: BlindKeysMap;
+}
+
+// define the Swap.accept arguments.
+interface acceptOpts {
+  message: Buffer;
+  psbtBase64: string;
+  inputBlindingKeys?: BlindKeysMap;
+  outputBlindingKeys?: BlindKeysMap;
 }
 
 /**
@@ -34,7 +43,7 @@ export class Swap extends Core {
 
   /**
    * Create and serialize a SwapRequest Message.
-   * @param args the args of swap.request.
+   * @param args the args of swap.request see requestOpts.
    */
   request({
     amountToBeSent,
@@ -54,15 +63,19 @@ export class Swap extends Core {
     msg.setAssetR(assetToReceive);
     msg.setTransaction(psbtBase64);
 
-    // set the input blinding keys
-    Object.entries(inputBlindingKeys).forEach(([key, value]) => {
-      msg.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
-    });
+    if (inputBlindingKeys) {
+      // set the input blinding keys
+      Object.entries(inputBlindingKeys).forEach(([key, value]) => {
+        msg.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+      });
+    }
 
-    // set the output blinding keys
-    Object.entries(outputBlindingKeys).forEach(([key, value]) => {
-      msg.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
-    });
+    if (outputBlindingKeys) {
+      // set the output blinding keys
+      Object.entries(outputBlindingKeys).forEach(([key, value]) => {
+        msg.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+      });
+    }
 
     // check the message content and transaction.
     compareMessagesAndTransaction(msg);
@@ -72,24 +85,44 @@ export class Swap extends Core {
     return msg.serializeBinary();
   }
 
+  /**
+   * Create and serialize an accept message.
+   * @param args the Swap.accept args, see AcceptOpts.
+   */
   accept({
     message,
     psbtBase64,
-  }: {
-    message: Uint8Array;
-    psbtBase64: string;
-  }): Uint8Array {
+    inputBlindingKeys,
+    outputBlindingKeys,
+  }: acceptOpts): Uint8Array {
+    // deseriale message to get the the SwapRequest message.
     const msgRequest = proto.SwapRequest.deserializeBinary(message);
-    // Build Swap Accepr message
+    // Build Swap Accept message
     const msgAccept = new proto.SwapAccept();
     msgAccept.setId(makeid(8));
     msgAccept.setRequestId(msgRequest.getId());
     msgAccept.setTransaction(psbtBase64);
 
+    if (inputBlindingKeys) {
+      // set the input blinding keys
+      Object.entries(inputBlindingKeys).forEach(([key, value]) => {
+        msgAccept.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+      });
+    }
+
+    if (outputBlindingKeys) {
+      // set the output blinding keys
+      Object.entries(outputBlindingKeys).forEach(([key, value]) => {
+        msgAccept.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+      });
+    }
+
+    // compare messages and transaction data
     compareMessagesAndTransaction(msgRequest, msgAccept);
 
     if (this.verbose) console.log(msgAccept.toObject());
 
+    // serialize the SwapAccept message.
     return msgAccept.serializeBinary();
   }
 
@@ -296,7 +329,7 @@ function parse({
  */
 export function blindKeysMap(
   jspbMap: jspb.Map<string, string | Uint8Array>
-): BlindKeysMap {
+): BlindKeysMap | undefined {
   const map: BlindKeysMap = {};
   jspbMap.forEach((entry: string | Uint8Array, key: string) => {
     const value: Buffer =
