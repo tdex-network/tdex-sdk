@@ -15,30 +15,37 @@ import { Output } from 'liquidjs-lib/types/transaction';
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
 
-interface requestOpts {}
+interface requestOpts {
+  assetToBeSent: string;
+  amountToBeSent: number;
+  assetToReceive: string;
+  amountToReceive: number;
+  psbtBase64: string;
+  inputBlindingKeys: BlindKeysMap;
+  outputBlindingKeys: BlindKeysMap;
+}
 
 /**
- * The Swap class implements the Swap TDEX protocol
+ * The Swap class implements the Swap TDEX protocol i.e swap.request, swap.accept and swap.complete.
  * @see https://github.com/TDex-network/tdex-specs/blob/master/03-swap-protocol.md
  */
 export class Swap extends Core {
   static parse = parse;
 
+  /**
+   * Create and serialize a SwapRequest Message.
+   * @param args the args of swap.request.
+   */
   request({
-    assetToBeSent,
     amountToBeSent,
-    assetToReceive,
+    assetToBeSent,
     amountToReceive,
+    assetToReceive,
     psbtBase64,
-  }: {
-    assetToBeSent: string;
-    amountToBeSent: number;
-    assetToReceive: string;
-    amountToReceive: number;
-    psbtBase64: string;
-  }): Uint8Array {
+    inputBlindingKeys,
+    outputBlindingKeys,
+  }: requestOpts): Uint8Array {
     // Check amounts
-
     const msg = new proto.SwapRequest();
     msg.setId(makeid(8));
     msg.setAmountP(amountToBeSent);
@@ -47,6 +54,17 @@ export class Swap extends Core {
     msg.setAssetR(assetToReceive);
     msg.setTransaction(psbtBase64);
 
+    // set the input blinding keys
+    Object.entries(inputBlindingKeys).forEach(([key, value]) => {
+      msg.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+    });
+
+    // set the output blinding keys
+    Object.entries(outputBlindingKeys).forEach(([key, value]) => {
+      msg.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+    });
+
+    // check the message content and transaction.
     compareMessagesAndTransaction(msg);
 
     if (this.verbose) console.log(msg.toObject());
@@ -276,7 +294,7 @@ function parse({
  * Convert jspb's Map type to BlindKeysMap.
  * @param jspbMap the map to convert.
  */
-function blindKeysMap(
+export function blindKeysMap(
   jspbMap: jspb.Map<string, string | Uint8Array>
 ): BlindKeysMap {
   const map: BlindKeysMap = {};
