@@ -169,12 +169,16 @@ export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
   return result;
 }
 
+const emptyNonce: Buffer = Buffer.from('0x00', 'hex');
+
+function bufferNotEmptyOrNull(buffer?: Buffer): boolean {
+  return buffer != null && buffer.length > 0;
+}
+
 /**
  * Checks if a given output is a confidential one.
  * @param output the ouput to check.
  */
 export function isConfidentialOutput(output: Output): boolean {
-  return (
-    output.rangeProof != null && output.nonce !== Buffer.from('0x00', 'hex')
-  );
+  return bufferNotEmptyOrNull(output.rangeProof) && output.nonce !== emptyNonce;
 }
