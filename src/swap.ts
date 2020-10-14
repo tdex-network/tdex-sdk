@@ -28,7 +28,7 @@ interface requestOpts {
 
 // define the Swap.accept arguments.
 interface acceptOpts {
-  message: Buffer;
+  message: Uint8Array;
   psbtBase64: string;
   inputBlindingKeys?: BlindKeysMap;
   outputBlindingKeys?: BlindKeysMap;
@@ -126,6 +126,10 @@ export class Swap extends Core {
     return msgAccept.serializeBinary();
   }
 
+  /**
+   * create and serialize a SwapComplete message.
+   * @param args contains the SwapAccept message + the base64 encoded transaction.
+   */
   complete({
     message,
     psbtBase64,
