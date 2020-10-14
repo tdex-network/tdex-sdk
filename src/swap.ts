@@ -12,8 +12,15 @@ import {
 } from './utils';
 import { Output } from 'liquidjs-lib/types/transaction';
 
+// type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
 
+interface requestOpts {}
+
+/**
+ * The Swap class implements the Swap TDEX protocol
+ * @see https://github.com/TDex-network/tdex-specs/blob/master/03-swap-protocol.md
+ */
 export class Swap extends Core {
   static parse = parse;
 
@@ -94,12 +101,21 @@ export class Swap extends Core {
   }
 }
 
+/**
+ * Take a swap messages and check if the message's data is corresponding to the  msg's transaction.
+ * @param msgRequest the swap request message.
+ * @param msgAccept the swap accept message.
+ */
 function compareMessagesAndTransaction(
   msgRequest: proto.SwapRequest,
   msgAccept?: proto.SwapAccept
-) {
+): void {
+  // msg Request
+
+  // decode the transaction.
   const decodedFromRequest = decodePsbt(msgRequest.getTransaction());
 
+  // check the amount of the transaction
   const totalP = countUtxos(
     decodedFromRequest.psbt.data.inputs,
     msgRequest.getAssetP(),
@@ -111,38 +127,48 @@ function compareMessagesAndTransaction(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
 
-  const outputRFound = outputFoundInTransaction(
+  // check if the output if found in the transaction
+  const outputRFound: boolean = outputFoundInTransaction(
     decodedFromRequest.transaction.outs,
     msgRequest.getAmountR(),
     msgRequest.getAssetR(),
     blindKeysMap(msgRequest.getOutputBlindingKeyMap())
   );
+
   if (!outputRFound)
     throw new Error(
       'Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt'
     );
 
+  // msg accept
   if (msgAccept) {
+    // decode the tx and check the msg's ids
     const decodedFromAccept = decodePsbt(msgAccept.getTransaction());
     if (msgRequest.getId() !== msgAccept.getRequestId())
       throw new Error(
         'SwapRequest.id and SwapAccept.request_id are not the same'
       );
 
+    // check the amount of utxos.
     const totalR = countUtxos(
       decodedFromAccept.psbt.data.inputs,
-      msgRequest.getAssetR()
+      msgRequest.getAssetR(),
+      blindKeysMap(msgAccept.getInputBlindingKeyMap())
     );
+
     if (totalR < msgRequest.getAmountR())
       throw new Error(
         'Cumulative utxos count is not enough to cover SwapRequest.amount_r'
       );
 
+    // check if there is an output found in the transaction.
     const outputPFound = outputFoundInTransaction(
       decodedFromAccept.transaction.outs,
       msgRequest.getAmountP(),
-      msgRequest.getAssetP()
+      msgRequest.getAssetP(),
+      blindKeysMap(msgAccept.getOutputBlindingKeyMap())
     );
+
     if (!outputPFound)
       throw new Error(
         'Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt'
