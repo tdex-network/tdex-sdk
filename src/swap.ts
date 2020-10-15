@@ -248,17 +248,22 @@ function outputFoundInTransaction(
     // unblind first if confidential ouput
     if (isConfidentialOutput(o)) {
       const blindKey: Buffer = outputBlindKeys[o.script.toString('hex')];
-      if (blindKey === undefined)
-        throw new Error('no blindKey for script: ' + o.script.toString('hex'));
-      const { value: unblindValue, asset: unblindAsset } = unblindOutput(
-        o,
-        blindKey
-      );
-      // check unblind value and unblind asset
-      return parseInt(unblindValue, 10) === value && unblindAsset === asset;
+      // if no blinding keys for the confidential ouput --> return false
+      if (blindKey === undefined) return false;
+      try {
+        const { value: unblindValue, asset: unblindAsset } = unblindOutput(
+          o,
+          blindKey
+        );
+        // check unblind value and unblind asset
+        return parseInt(unblindValue, 10) === value && unblindAsset === asset;
+      } catch (_) {
+        // if unblind fail --> return false
+        return false;
+      }
     }
     // check value and asset
-    return toNumber(o.value) === value && toAssetHash(o.asset) === asset;
+    return toNumber(o.value) == value && toAssetHash(o.asset) === asset;
   });
 }
 
