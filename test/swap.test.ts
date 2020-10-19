@@ -40,15 +40,15 @@ export function toAssetBuffer(x: string): Buffer {
 }
 
 function updateTx(
-  base64RequestTx: string,
+  psbt: Psbt,
   utxo: fixtureUtxo,
   asset: string,
   script: string,
   addFee?: boolean
-): { base64tx: string; blindingKeys: Record<string, Buffer> } {
+): { psbt: Psbt; blindingKeys: Record<string, Buffer> } {
   const witnessOut: Output = toOutputWitness(utxo);
 
-  const tx = Psbt.fromBase64(base64RequestTx)
+  const tx = psbt
     .addInput({
       hash: utxo.hash,
       index: utxo.vout,
@@ -81,16 +81,16 @@ function updateTx(
   );
 
   return {
-    base64tx: tx.toBase64(),
+    psbt: tx,
     blindingKeys: keys,
   };
 }
 
 function blindOutputs(
-  base64: string,
+  psbt: Psbt,
   inputBlindingKeys: Buffer[],
   numberOfOutput: number
-): { base64tx: string; blindingKeys: Buffer[] } {
+): { psbt: Psbt; blindingKeys: Buffer[] } {
   const keypairs: { priv: Buffer; pub: Buffer }[] = [];
   for (let j = 0; j < numberOfOutput; j++) {
     const keys = ECPair.makeRandom({ network: networks.regtest });
@@ -100,15 +100,14 @@ function blindOutputs(
     });
   }
 
-  const tx = Psbt.fromBase64(base64);
-  const base64tx = tx
-    .blindOutputs(
-      inputBlindingKeys,
-      keypairs.map(keypair => keypair.pub)
-    )
-    .toBase64();
+  console.log(psbt);
 
-  return { base64tx, blindingKeys: keypairs.map(k => k.priv) };
+  const res = psbt.blindOutputs(
+    inputBlindingKeys,
+    keypairs.map(keypair => keypair.pub)
+  );
+
+  return { psbt: res, blindingKeys: keypairs.map(k => k.priv) };
 }
 
 function createConfidentialRequestTx(
@@ -117,12 +116,12 @@ function createConfidentialRequestTx(
   utxoR: fixtureUtxo,
   assetR: string
 ): {
-  base64: string;
+  psbt: Psbt;
   outBlindKeys: Record<string, Buffer>;
   inBlindKeys: Record<string, Buffer>;
 } {
   const first = updateTx(
-    new Psbt({ network: networks.regtest }).toBase64(),
+    new Psbt({ network: networks.regtest }),
     utxoP,
     assetR,
     'aaaaaaaa97080b51ef22c59bd7469afacffbeec0da12e18ab',
@@ -130,7 +129,7 @@ function createConfidentialRequestTx(
   );
 
   const second = updateTx(
-    first.base64tx,
+    first.psbt,
     utxoR,
     assetP,
     'bbbbbbbb97080b51ef22c59bd7469afacffbeec0da12e18ab'
@@ -142,7 +141,7 @@ function createConfidentialRequestTx(
   };
 
   const blind = blindOutputs(
-    second.base64tx,
+    second.psbt,
     [
       ...Object.values(first.blindingKeys),
       ...Object.values(second.blindingKeys),
@@ -155,7 +154,7 @@ function createConfidentialRequestTx(
     bbbbbbbb97080b51ef22c59bd7469afacffbeec0da12e18ab: blind.blindingKeys[1],
   };
 
-  return { base64: blind.base64tx, inBlindKeys, outBlindKeys };
+  return { psbt: blind.psbt, inBlindKeys, outBlindKeys };
 }
 
 describe('Swap', () => {
@@ -185,7 +184,7 @@ describe('Swap', () => {
       const utxoA: fixtureUtxo = fixtures.utxos.alice[0];
       const utxoB: fixtureUtxo = fixtures.utxos.bob[0];
 
-      const { base64, inBlindKeys, outBlindKeys } = createConfidentialRequestTx(
+      const { psbt, inBlindKeys, outBlindKeys } = createConfidentialRequestTx(
         utxoA,
         utxoB.asset,
         utxoB,
@@ -198,7 +197,7 @@ describe('Swap', () => {
           amountToBeSent: ONE,
           assetToReceive: utxoB.asset,
           amountToReceive: ONE,
-          psbtBase64: base64,
+          psbtBase64: psbt.toBase64(),
           inputBlindingKeys: inBlindKeys,
           outputBlindingKeys: outBlindKeys,
         });
