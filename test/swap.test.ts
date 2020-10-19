@@ -32,6 +32,13 @@ function toOutputWitness(fixture: fixtureUtxo): Output {
   return tx.outs[fixture.vout];
 }
 
+export function toAssetBuffer(x: string): Buffer {
+  return Buffer.concat([
+    Buffer.from('01', 'hex'),
+    Buffer.from(x, 'hex').reverse(),
+  ]);
+}
+
 function updateTx(
   base64RequestTx: string,
   utxo: fixtureUtxo,
@@ -40,14 +47,15 @@ function updateTx(
   addFee?: boolean
 ): { base64tx: string; blindingKeys: Record<string, Buffer> } {
   const witnessOut: Output = toOutputWitness(utxo);
+
   const tx = Psbt.fromBase64(base64RequestTx)
     .addInput({
       hash: utxo.hash,
       index: utxo.vout,
-      witnessUtxo: witnessOut,
+      nonWitnessUtxo: Buffer.from(utxo.witnessUtxo, 'hex'),
     })
     .addOutput({
-      asset: asset,
+      asset: toAssetBuffer(asset),
       nonce: Buffer.from('00', 'hex'),
       value: confidential.satoshiToConfidentialValue(utxo.value),
       // fake script: doesn't matter to test SWAP
@@ -60,9 +68,9 @@ function updateTx(
 
   if (addFee) {
     tx.addOutput({
-      asset: utxo.asset,
+      asset: toAssetBuffer(utxo.asset),
       nonce: Buffer.from('00', 'hex'),
-      value: confidential.satoshiToConfidentialValue(0),
+      value: confidential.satoshiToConfidentialValue(10),
       script: Buffer.from('00', 'hex'),
     });
   }
@@ -85,12 +93,14 @@ function blindOutputs(
 ): { base64tx: string; blindingKeys: Buffer[] } {
   const keypairs: { priv: Buffer; pub: Buffer }[] = [];
   for (let j = 0; j < numberOfOutput; j++) {
-    const b = ECPair.makeRandom({ network: networks.regtest });
-    keypairs.push({ priv: b.privateKey!, pub: b.publicKey! });
+    const keys = ECPair.makeRandom({ network: networks.regtest });
+    keypairs.push({
+      priv: keys.privateKey!,
+      pub: keys.publicKey,
+    });
   }
 
   const tx = Psbt.fromBase64(base64);
-
   const base64tx = tx
     .blindOutputs(
       inputBlindingKeys,
@@ -131,7 +141,14 @@ function createConfidentialRequestTx(
     ...second.blindingKeys,
   };
 
-  const blind = blindOutputs(second.base64tx, Object.values(inBlindKeys), 2);
+  const blind = blindOutputs(
+    second.base64tx,
+    [
+      ...Object.values(first.blindingKeys),
+      ...Object.values(second.blindingKeys),
+    ],
+    2
+  );
 
   const outBlindKeys: Record<string, Buffer> = {
     aaaaaaaa97080b51ef22c59bd7469afacffbeec0da12e18ab: blind.blindingKeys[0],
