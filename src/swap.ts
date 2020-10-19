@@ -263,7 +263,7 @@ function outputFoundInTransaction(
       }
     }
     // check value and asset
-    return toNumber(o.value) == value && toAssetHash(o.asset) === asset;
+    return toNumber(o.value) === value && toAssetHash(o.asset) === asset;
   });
 }
 
