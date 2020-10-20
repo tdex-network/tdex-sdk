@@ -7,8 +7,10 @@ const HUNDRED = JSBI.BigInt(100);
 const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
 
 export function toAssetHash(x: Buffer): string {
-  const withoutFirstByte = x.slice(1);
-  return withoutFirstByte.reverse().toString('hex');
+  return x
+    .slice(1)
+    .reverse()
+    .toString('hex');
 }
 
 export function toNumber(x: Buffer): number {
@@ -139,7 +141,7 @@ export function isValidAmount(amount: number): boolean {
  * The unblind output function's result interface.
  */
 export interface UnblindResult {
-  asset: string;
+  asset: Buffer;
   value: string;
 }
 
@@ -149,7 +151,7 @@ export interface UnblindResult {
  * @param blindKey the private blinding key.
  */
 export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
-  const result: UnblindResult = { asset: '', value: '' };
+  const result: UnblindResult = { asset: Buffer.alloc(0), value: '' };
 
   if (!output.rangeProof) {
     throw new Error('The output does not contain rangeProof.');
@@ -164,7 +166,7 @@ export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
     output.script
   );
 
-  result.asset = toAssetHash(unblindedResult.asset);
+  result.asset = unblindedResult.asset;
   result.value = unblindedResult.value;
   return result;
 }
