@@ -1,3 +1,4 @@
+import { Psbt } from 'liquidjs-lib';
 import { Swap } from '../src/swap';
 // import * as assert from 'assert';
 
@@ -27,32 +28,29 @@ describe('Swap', () => {
     });
 
     test('should create a valid SwapRequest message if the transaction is confidential.', () => {
+      const fixture = fixtures.confidentialSwaps[0];
+      const decodedRequestPsbt = Psbt.fromBase64(fixture.request.psbt);
+      // init blind keys maps
       const inKeys: Record<string, Buffer> = {};
+      // no blinded outputs at the request step
       const outKeys: Record<string, Buffer> = {};
 
-      fixtures.confidentialSwaps[0].inputBlindingKeys.scripts.forEach(
-        (script: string, index: number) => {
-          const key =
-            fixtures.confidentialSwaps[0].inputBlindingKeys.keys[index];
+      fixture.request.inputBlindingKeys.forEach(
+        (key: string, index: number) => {
+          const script: string = decodedRequestPsbt.data.inputs[
+            index
+          ].witnessUtxo!.script.toString('hex');
           inKeys[script] = Buffer.from(key, 'hex');
-        }
-      );
-
-      fixtures.confidentialSwaps[0].outputBlindingKeys.scripts.forEach(
-        (script: string, index: number) => {
-          const key =
-            fixtures.confidentialSwaps[0].outputBlindingKeys.keys[index];
-          outKeys[script] = Buffer.from(key, 'hex');
         }
       );
 
       // assert.doesNotThrow(() => {
       swap.request({
-        assetToBeSent: fixtures.confidentialSwaps[0].toBeSent.asset,
-        amountToBeSent: fixtures.confidentialSwaps[0].toBeSent.amount,
-        assetToReceive: fixtures.confidentialSwaps[0].toReceive.asset,
-        amountToReceive: fixtures.confidentialSwaps[0].toReceive.amount,
-        psbtBase64: fixtures.confidentialSwaps[0].psbt,
+        assetToBeSent: fixture.toBeSent.asset,
+        amountToBeSent: fixture.toBeSent.amount,
+        assetToReceive: fixture.toReceive.asset,
+        amountToReceive: fixture.toReceive.amount,
+        psbtBase64: fixture.request.psbt,
         inputBlindingKeys: inKeys,
         outputBlindingKeys: outKeys,
       });
