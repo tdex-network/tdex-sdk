@@ -1,161 +1,7 @@
-import {
-  ECPair,
-  Psbt,
-  Transaction,
-  networks,
-  confidential,
-} from 'liquidjs-lib';
-import { Output } from 'liquidjs-lib/types/transaction';
 import { Swap } from '../src/swap';
-import * as assert from 'assert';
-// import { decodePsbt } from '../src/utils';
+// import * as assert from 'assert';
 
 import * as fixtures from './fixtures/swap.json';
-
-// create the keypairs from WIF.
-// const alice = ECPair.fromWIF(fixtures.wif.alice, networks.regtest);
-// const bob = ECPair.fromWIF(fixtures.wif.bob, networks.regtest);
-
-interface fixtureUtxo {
-  witnessUtxo: string;
-  hash: string;
-  vout: number;
-  blindingKey: string;
-  value: number;
-  asset: string;
-}
-
-const ONE = 100000000;
-
-function toOutputWitness(fixture: fixtureUtxo): Output {
-  const tx = Transaction.fromHex(fixture.witnessUtxo);
-  return tx.outs[fixture.vout];
-}
-
-export function toAssetBuffer(x: string): Buffer {
-  return Buffer.concat([
-    Buffer.from('01', 'hex'),
-    Buffer.from(x, 'hex').reverse(),
-  ]);
-}
-
-function updateTx(
-  psbt: Psbt,
-  utxo: fixtureUtxo,
-  asset: string,
-  script: string,
-  addFee?: boolean
-): { psbt: Psbt; blindingKeys: Record<string, Buffer> } {
-  const witnessOut: Output = toOutputWitness(utxo);
-
-  const tx = psbt
-    .addInput({
-      hash: utxo.hash,
-      index: utxo.vout,
-      nonWitnessUtxo: Buffer.from(utxo.witnessUtxo, 'hex'),
-    })
-    .addOutput({
-      asset: toAssetBuffer(asset),
-      nonce: Buffer.from('00', 'hex'),
-      value: confidential.satoshiToConfidentialValue(utxo.value),
-      // fake script: doesn't matter to test SWAP
-      script: Buffer.from(
-        // 'aaaaaaaaa97080b51ef22c59bd7469afacffbeec0da12e18ab',
-        script,
-        'hex'
-      ),
-    });
-
-  if (addFee) {
-    tx.addOutput({
-      asset: toAssetBuffer(utxo.asset),
-      nonce: Buffer.from('00', 'hex'),
-      value: confidential.satoshiToConfidentialValue(10),
-      script: Buffer.from('00', 'hex'),
-    });
-  }
-  const keys: Record<string, Buffer> = {};
-  keys[witnessOut.script.toString('hex')] = Buffer.from(
-    utxo.blindingKey,
-    'hex'
-  );
-
-  return {
-    psbt: tx,
-    blindingKeys: keys,
-  };
-}
-
-function blindOutputs(
-  psbt: Psbt,
-  inputBlindingKeys: Buffer[],
-  numberOfOutput: number
-): { psbt: Psbt; blindingKeys: Buffer[] } {
-  const keypairs: { priv: Buffer; pub: Buffer }[] = [];
-  for (let j = 0; j < numberOfOutput; j++) {
-    const keys = ECPair.makeRandom({ network: networks.regtest });
-    keypairs.push({
-      priv: keys.privateKey!,
-      pub: keys.publicKey,
-    });
-  }
-
-  console.log(psbt);
-
-  const res = psbt.blindOutputs(
-    inputBlindingKeys,
-    keypairs.map(keypair => keypair.pub)
-  );
-
-  return { psbt: res, blindingKeys: keypairs.map(k => k.priv) };
-}
-
-function createConfidentialRequestTx(
-  utxoP: fixtureUtxo,
-  assetP: string,
-  utxoR: fixtureUtxo,
-  assetR: string
-): {
-  psbt: Psbt;
-  outBlindKeys: Record<string, Buffer>;
-  inBlindKeys: Record<string, Buffer>;
-} {
-  const first = updateTx(
-    new Psbt({ network: networks.regtest }),
-    utxoP,
-    assetR,
-    'aaaaaaaa97080b51ef22c59bd7469afacffbeec0da12e18ab',
-    true
-  );
-
-  const second = updateTx(
-    first.psbt,
-    utxoR,
-    assetP,
-    'bbbbbbbb97080b51ef22c59bd7469afacffbeec0da12e18ab'
-  );
-
-  const inBlindKeys: Record<string, Buffer> = {
-    ...first.blindingKeys,
-    ...second.blindingKeys,
-  };
-
-  const blind = blindOutputs(
-    second.psbt,
-    [
-      ...Object.values(first.blindingKeys),
-      ...Object.values(second.blindingKeys),
-    ],
-    2
-  );
-
-  const outBlindKeys: Record<string, Buffer> = {
-    aaaaaaaa97080b51ef22c59bd7469afacffbeec0da12e18ab: blind.blindingKeys[0],
-    bbbbbbbb97080b51ef22c59bd7469afacffbeec0da12e18ab: blind.blindingKeys[1],
-  };
-
-  return { psbt: blind.psbt, inBlindKeys, outBlindKeys };
-}
 
 describe('Swap', () => {
   const swap = new Swap();
@@ -181,27 +27,36 @@ describe('Swap', () => {
     });
 
     test('should create a valid SwapRequest message if the transaction is confidential.', () => {
-      const utxoA: fixtureUtxo = fixtures.utxos.alice[0];
-      const utxoB: fixtureUtxo = fixtures.utxos.bob[0];
+      const inKeys: Record<string, Buffer> = {};
+      const outKeys: Record<string, Buffer> = {};
 
-      const { psbt, inBlindKeys, outBlindKeys } = createConfidentialRequestTx(
-        utxoA,
-        utxoB.asset,
-        utxoB,
-        utxoA.asset
+      fixtures.confidentialSwaps[0].inputBlindingKeys.scripts.forEach(
+        (script: string, index: number) => {
+          const key =
+            fixtures.confidentialSwaps[0].inputBlindingKeys.keys[index];
+          inKeys[script] = Buffer.from(key, 'hex');
+        }
       );
 
-      assert.doesNotThrow(() => {
-        swap.request({
-          assetToBeSent: utxoA.asset,
-          amountToBeSent: ONE,
-          assetToReceive: utxoB.asset,
-          amountToReceive: ONE,
-          psbtBase64: psbt.toBase64(),
-          inputBlindingKeys: inBlindKeys,
-          outputBlindingKeys: outBlindKeys,
-        });
+      fixtures.confidentialSwaps[0].outputBlindingKeys.scripts.forEach(
+        (script: string, index: number) => {
+          const key =
+            fixtures.confidentialSwaps[0].outputBlindingKeys.keys[index];
+          outKeys[script] = Buffer.from(key, 'hex');
+        }
+      );
+
+      // assert.doesNotThrow(() => {
+      swap.request({
+        assetToBeSent: fixtures.confidentialSwaps[0].toBeSent.asset,
+        amountToBeSent: fixtures.confidentialSwaps[0].toBeSent.amount,
+        assetToReceive: fixtures.confidentialSwaps[0].toReceive.asset,
+        amountToReceive: fixtures.confidentialSwaps[0].toReceive.amount,
+        psbtBase64: fixtures.confidentialSwaps[0].psbt,
+        inputBlindingKeys: inKeys,
+        outputBlindingKeys: outKeys,
       });
+      // });
       // expect(msg).toBeDefined();
     });
 

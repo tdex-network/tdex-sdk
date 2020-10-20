@@ -95,7 +95,7 @@ export class Swap extends Core {
     inputBlindingKeys,
     outputBlindingKeys,
   }: acceptOpts): Uint8Array {
-    // deseriale message to get the the SwapRequest message.
+    // deserialize message parameter to get the SwapRequest message.
     const msgRequest = proto.SwapRequest.deserializeBinary(message);
     // Build Swap Accept message
     const msgAccept = new proto.SwapAccept();
@@ -256,14 +256,18 @@ function outputFoundInTransaction(
           blindKey
         );
         // check unblind value and unblind asset
-        return parseInt(unblindValue, 10) === value && unblindAsset === asset;
+        console.log('unblind val | val', unblindValue, value);
+        console.log('unblind asset | asset', toAssetHash(unblindAsset), asset);
+        return unblindValue === value && toAssetHash(unblindAsset) === asset;
       } catch (_) {
         // if unblind fail --> return false
         return false;
       }
     }
     // check value and asset
-    return toNumber(o.value) === value && toAssetHash(o.asset) === asset;
+    const isAsset: boolean = toAssetHash(o.asset) === asset;
+    const isValue: boolean = toNumber(o.value) === value;
+    return isAsset && isValue;
   });
 }
 
@@ -295,21 +299,21 @@ function countUtxos(
             i.witnessUtxo,
             blindKey
           );
-          i.witnessUtxo.asset = unblindAsset;
           i.witnessUtxo.value = unblindValue;
+          i.witnessUtxo.asset = unblindAsset;
         }
         return i;
       })
       // filter inputs by asset
-      .filter((i: any) => {
-        return toAssetHash(i.witnessUtxo!.asset) === asset;
-      })
+      .filter((i: any) => toAssetHash(i.witnessUtxo.asset) === asset)
       // get the value
-      .map((i: any) =>
-        i.witnessUtxo.value instanceof Buffer
-          ? toNumber(i.witnessUtxo!.value)
-          : parseInt(i.witnessUtxo.value)
-      )
+      .map((i: any) => {
+        const valAsNumber: number =
+          i.witnessUtxo.value instanceof Buffer
+            ? toNumber(i.witnessUtxo!.value)
+            : i.witnessUtxo!.value;
+        return valAsNumber;
+      })
       // apply reducer to values (add the values)
       .reduce((a: any, b: any) => a + b, 0)
   );

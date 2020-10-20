@@ -142,7 +142,8 @@ export function isValidAmount(amount: number): boolean {
  */
 export interface UnblindResult {
   asset: Buffer;
-  value: string;
+  // in satoshis
+  value: Number;
 }
 
 /**
@@ -151,7 +152,7 @@ export interface UnblindResult {
  * @param blindKey the private blinding key.
  */
 export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
-  const result: UnblindResult = { asset: Buffer.alloc(0), value: '' };
+  const result: UnblindResult = { asset: Buffer.alloc(0), value: 0 };
 
   if (!output.rangeProof) {
     throw new Error('The output does not contain rangeProof.');
@@ -167,7 +168,7 @@ export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
   );
 
   result.asset = unblindedResult.asset;
-  result.value = unblindedResult.value;
+  result.value = parseInt(unblindedResult.value, 10);
   return result;
 }
 
@@ -182,5 +183,9 @@ function bufferNotEmptyOrNull(buffer?: Buffer): boolean {
  * @param output the ouput to check.
  */
 export function isConfidentialOutput(output: Output): boolean {
-  return bufferNotEmptyOrNull(output.rangeProof) && output.nonce !== emptyNonce;
+  return (
+    bufferNotEmptyOrNull(output.rangeProof) &&
+    bufferNotEmptyOrNull(output.surjectionProof) &&
+    output.nonce !== emptyNonce
+  );
 }
