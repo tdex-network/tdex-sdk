@@ -167,7 +167,11 @@ export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
     output.script
   );
 
-  result.asset = unblindedResult.asset;
+  result.asset = Buffer.concat([
+    // add the prefix a the beginning (confidential.unblindOutput remove it)
+    Buffer.alloc(1, 10),
+    unblindedResult.asset,
+  ]);
   result.value = parseInt(unblindedResult.value, 10);
   return result;
 }
