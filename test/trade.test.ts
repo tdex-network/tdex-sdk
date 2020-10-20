@@ -1,5 +1,5 @@
 import * as TDEX from '../src/index';
-import { Trade } from '../src/index';
+import { Trade, IdentityType } from '../src/index';
 
 describe('TDEX SDK', () => {
   it('Should throw if arguments not given', () => {
@@ -10,6 +10,11 @@ describe('TDEX SDK', () => {
     const trade = new Trade({
       providerUrl: 'localhost:9945',
       explorerUrl: 'https://nigiri.network',
+      identity: {
+        chain: 'regtest',
+        type: IdentityType.PrivateKey,
+        value: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
+      },
     });
     expect(trade).toMatchObject({
       chain: 'regtest',
