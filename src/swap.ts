@@ -5,7 +5,6 @@ import * as jspb from 'google-protobuf';
 import {
   makeid,
   toNumber,
-  toAssetHash,
   decodePsbt,
   isConfidentialOutput,
   unblindOutput,
@@ -226,7 +225,7 @@ function compareMessagesAndTransaction(
 
     if (!outputPFound)
       throw new Error(
-        'Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt'
+        `Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt amount=${msgRequest.getAmountP()} asset=${msgRequest.getAssetP()}`
       );
   }
 }
@@ -244,26 +243,31 @@ function outputFoundInTransaction(
   asset: string,
   outputBlindKeys: BlindKeysMap = {}
 ): boolean {
+  const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
   return outputs.some((o: Output) => {
     // unblind first if confidential ouput
-    if (isConfidentialOutput(o)) {
+    const isConfidential = isConfidentialOutput(o);
+    if (isConfidential === true) {
       const blindKey: Buffer = outputBlindKeys[o.script.toString('hex')];
       // if no blinding keys for the confidential ouput --> return false
-      if (blindKey === undefined) return false;
+      if (blindKey === undefined)
+        throw new Error(`no blind key for ${o.script.toString('hex')}`);
       try {
         const { value: unblindValue, asset: unblindAsset } = unblindOutput(
           o,
           blindKey
         );
         // check unblind value and unblind asset
-        return unblindValue === value && toAssetHash(unblindAsset) === asset;
+        return (
+          unblindValue === value && assetBuffer.equals(unblindAsset.slice(1))
+        );
       } catch (_) {
         // if unblind fail --> return false
         return false;
       }
     }
     // check value and asset
-    const isAsset: boolean = toAssetHash(o.asset).trim() === asset.trim();
+    const isAsset: boolean = assetBuffer.equals(o.asset.slice(1));
     const isValue: boolean = toNumber(o.value) === value;
     return isAsset && isValue;
   });
@@ -280,6 +284,7 @@ function countUtxos(
   asset: string,
   inputBlindKeys: BlindKeysMap = {}
 ): number {
+  const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
   return (
     utxos
       // checks if witness utxo exists
@@ -303,7 +308,9 @@ function countUtxos(
         return i;
       })
       // filter inputs by asset
-      .filter((i: any) => toAssetHash(i.witnessUtxo.asset) === asset)
+      .filter((i: any) => {
+        return assetBuffer.equals(i.witnessUtxo.asset.slice(1));
+      })
       // get the value
       .map((i: any) => {
         const valAsNumber: number =

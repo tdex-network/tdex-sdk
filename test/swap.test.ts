@@ -1,6 +1,6 @@
 import { Psbt } from 'liquidjs-lib';
 import { Swap } from '../src/swap';
-// import * as assert from 'assert';
+import * as assert from 'assert';
 
 import * as fixtures from './fixtures/swap.json';
 
@@ -26,39 +26,6 @@ describe('Swap', () => {
 
       expect(bytes).toBeDefined();
     });
-
-    test('should create a valid SwapRequest message if the transaction is confidential.', () => {
-      const fixture = fixtures.confidentialSwaps[0];
-      const decodedRequestPsbt = Psbt.fromBase64(fixture.request.psbt);
-      // init blind keys maps
-      const inKeys: Record<string, Buffer> = {};
-      // no blinded outputs at the request step
-      const outKeys: Record<string, Buffer> = {};
-
-      fixture.request.inputBlindingKeys.forEach(
-        (key: string, index: number) => {
-          const script: string = decodedRequestPsbt.data.inputs[
-            index
-          ].witnessUtxo!.script.toString('hex');
-          inKeys[script] = Buffer.from(key, 'hex');
-        }
-      );
-
-      // assert.doesNotThrow(() => {
-      swap.request({
-        assetToBeSent: fixture.toBeSent.asset,
-        amountToBeSent: fixture.toBeSent.amount,
-        assetToReceive: fixture.toReceive.asset,
-        amountToReceive: fixture.toReceive.amount,
-        psbtBase64: fixture.request.psbt,
-        inputBlindingKeys: inKeys,
-        outputBlindingKeys: outKeys,
-      });
-      // });
-      // expect(msg).toBeDefined();
-    });
-
-    test('should create a valid SwapAccept message if the transaction is confidential.', () => {});
   });
 
   test('Bob can import a SwapRequest and create a SwapAccept message', () => {
@@ -96,5 +63,81 @@ describe('Swap', () => {
     });
 
     expect(bytes).toBeDefined();
+  });
+
+  describe('Confidential Swap', () => {
+    let requestMessage: Uint8Array;
+    let acceptMessage: Uint8Array;
+
+    test('should create a valid SwapRequest message if the transaction is confidential.', () => {
+      const fixture = fixtures.confidentialSwaps[0];
+      const decodedRequestPsbt = Psbt.fromBase64(fixture.request.psbt);
+      // init blind keys maps
+      const inKeys: Record<string, Buffer> = {};
+      // no blinded outputs at the request step
+      const outKeys: Record<string, Buffer> = {};
+
+      fixture.request.inputBlindingKeys.forEach(
+        (key: string, index: number) => {
+          const script: string = decodedRequestPsbt.data.inputs[
+            index
+          ].witnessUtxo!.script.toString('hex');
+          inKeys[script] = Buffer.from(key, 'hex');
+        }
+      );
+
+      assert.doesNotThrow(() => {
+        requestMessage = swap.request({
+          assetToBeSent: fixture.toBeSent.asset,
+          amountToBeSent: fixture.toBeSent.amount,
+          assetToReceive: fixture.toReceive.asset,
+          amountToReceive: fixture.toReceive.amount,
+          psbtBase64: fixture.request.psbt,
+          inputBlindingKeys: inKeys,
+          outputBlindingKeys: outKeys,
+        });
+      });
+    });
+
+    test('should create a valid SwapAccept message if the transaction is confidential.', () => {
+      const fixture = fixtures.confidentialSwaps[0];
+      const decodedAcceptPsbt = Psbt.fromBase64(fixture.accept.psbt);
+      // init blind keys maps
+      const inKeys: Record<string, Buffer> = {};
+      const outKeys: Record<string, Buffer> = {};
+
+      fixture.accept.inputBlindingKeys.forEach((key: string, index: number) => {
+        const script: string = decodedAcceptPsbt.data.inputs[
+          index
+        ].witnessUtxo!.script.toString('hex');
+        inKeys[script] = Buffer.from(key, 'hex');
+      });
+
+      fixture.accept.outputBlindingKeys.forEach(
+        (key: string, index: number) => {
+          const script: string = fixture.accept.outputScripts[index];
+          outKeys[script] = Buffer.from(key, 'hex');
+        }
+      );
+
+      // assertions
+      assert.doesNotThrow(() => {
+        acceptMessage = swap.accept({
+          psbtBase64: fixture.accept.psbt,
+          message: requestMessage,
+          inputBlindingKeys: inKeys,
+          outputBlindingKeys: outKeys,
+        });
+      });
+    });
+
+    test('should create a valid SwapComplete message if the transaction is confidential.', () => {
+      assert.doesNotThrow(() => {
+        swap.complete({
+          message: acceptMessage,
+          psbtBase64: fixtures.confidentialSwaps[0].complete.psbt,
+        });
+      });
+    });
   });
 });
