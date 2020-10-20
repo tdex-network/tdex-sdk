@@ -192,7 +192,7 @@ function compareMessagesAndTransaction(
 
   if (!outputRFound)
     throw new Error(
-      'Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt'
+      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.getAmountR()}, asset: ${msgRequest.getAssetR()})`
     );
 
   // msg accept
@@ -256,8 +256,6 @@ function outputFoundInTransaction(
           blindKey
         );
         // check unblind value and unblind asset
-        console.log('unblind val | val', unblindValue, value);
-        console.log('unblind asset | asset', toAssetHash(unblindAsset), asset);
         return unblindValue === value && toAssetHash(unblindAsset) === asset;
       } catch (_) {
         // if unblind fail --> return false
@@ -265,7 +263,7 @@ function outputFoundInTransaction(
       }
     }
     // check value and asset
-    const isAsset: boolean = toAssetHash(o.asset) === asset;
+    const isAsset: boolean = toAssetHash(o.asset).trim() === asset.trim();
     const isValue: boolean = toNumber(o.value) === value;
     return isAsset && isValue;
   });
