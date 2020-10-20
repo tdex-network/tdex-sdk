@@ -12,18 +12,17 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     }
 
     this.keyPair = ECPair.fromWIF(args.value, this.network);
-    console.log(this.keyPair)
-
+    console.log(this.keyPair);
   }
 
   blindPset(psetBase64: string): string {
-    console.log(psetBase64)
+    console.log(psetBase64);
 
     return '';
   }
 
   signPset(psetBase64: string): string {
-    console.log(psetBase64)
+    console.log(psetBase64);
 
     return '';
   }

@@ -12,16 +12,16 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     }
 
     this.words = (args.value as string).split(' ');
-    console.log(this.words)
+    console.log(this.words);
   }
 
   blindPset(psetBase64: string): string {
-    console.log(psetBase64)
+    console.log(psetBase64);
     return '';
   }
 
   signPset(psetBase64: string): string {
-    console.log(psetBase64)
+    console.log(psetBase64);
     return '';
   }
 }

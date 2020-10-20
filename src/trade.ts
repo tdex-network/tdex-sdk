@@ -19,7 +19,6 @@ import { IdentityInterface, IdentityType } from './identity';
 import PrivateKey from './identities/privatekey';
 import Mnemonic from './identities/mnemonic';
 
-
 export interface MarketInterface {
   baseAsset: string;
   quoteAsset: string;
