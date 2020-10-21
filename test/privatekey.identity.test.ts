@@ -1,9 +1,15 @@
 import { AddressInterface, IdentityOpts, IdentityType } from '../src/identity';
 import PrivateKey from './../src/identities/privatekey';
 import * as assert from 'assert';
-import { payments, ECPair, networks, Psbt, confidential, Transaction } from 'liquidjs-lib';
+import {
+  payments,
+  ECPair,
+  networks,
+  Psbt,
+  confidential,
+  Transaction,
+} from 'liquidjs-lib';
 import { faucet, fetchUtxos, fetchTxHex } from './_regtest';
-
 
 const network = networks.regtest;
 
@@ -38,10 +44,7 @@ const unvalidWIF: IdentityOpts = {
 };
 
 const keypair = ECPair.fromWIF(validOpts.value.signingKeyWIF, network);
-const keypair2 = ECPair.fromWIF(
-  validOpts.value.blindingKeyWIF,
-  network
-);
+const keypair2 = ECPair.fromWIF(validOpts.value.blindingKeyWIF, network);
 const p2wpkh = payments.p2wpkh({
   pubkey: keypair.publicKey!,
   blindkey: keypair2.publicKey!,
@@ -70,23 +73,22 @@ describe('Identity: Private key', () => {
 
   describe('PrivateKey.signPset', () => {
     it("should sign all the inputs with scriptPubKey = PrivateKey instance p2wpkh's scriptPubKey", async () => {
-      console.log(p2wpkh.output!.toString('hex'))
+      console.log(p2wpkh.output!.toString('hex'));
       await faucet(p2wpkh.confidentialAddress!);
       const utxo = (await fetchUtxos(p2wpkh.confidentialAddress!))[0];
       const prevoutHex = await fetchTxHex(utxo.txid);
       const prevout = Transaction.fromHex(prevoutHex).outs[utxo.vout];
 
       const unblindedUtxo = confidential.unblindOutput(
-        Buffer.from(utxo.noncecommitment, "hex"),
+        Buffer.from(utxo.noncecommitment, 'hex'),
         keypair2.privateKey!,
         prevout.rangeProof!,
-        Buffer.from(utxo.valuecommitment, "hex"),
-        Buffer.from(utxo.assetcommitment, "hex"),
+        Buffer.from(utxo.valuecommitment, 'hex'),
+        Buffer.from(utxo.assetcommitment, 'hex'),
         p2wpkh.output!
       );
 
-      console.log(unblindedUtxo)
-
+      console.log(unblindedUtxo);
 
       const pset: Psbt = new Psbt({ network })
         .addInput({
@@ -94,10 +96,12 @@ describe('Identity: Private key', () => {
           index: utxo.vout,
           witnessUtxo: {
             nonce: Buffer.from('00', 'hex'),
-            value: confidential.satoshiToConfidentialValue(parseInt(unblindedUtxo.value, 10)),
+            value: confidential.satoshiToConfidentialValue(
+              parseInt(unblindedUtxo.value, 10)
+            ),
             asset: unblindedUtxo.asset,
-            script: p2wpkh.output!
-          }
+            script: p2wpkh.output!,
+          },
         })
         .addOutputs([
           {
