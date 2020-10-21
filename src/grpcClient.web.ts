@@ -37,6 +37,7 @@ export class TraderClient implements TraderClientInterface {
       );
 
       const call = this.client.tradePropose(request);
+
       let data: Uint8Array;
       call.on('data', (reply: messages.TradeProposeReply) => {
         const swapAcceptMsg = reply!.getSwapAccept();
