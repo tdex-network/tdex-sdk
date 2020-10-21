@@ -1,6 +1,7 @@
-import { IdentityOpts, IdentityType } from '../src/identity';
+import { AddressInterface, IdentityOpts, IdentityType } from '../src/identity';
 import PrivateKey from './../src/identities/privatekey';
 import * as assert from 'assert';
+import { payments, ECPair, networks } from 'liquidjs-lib';
 
 const validOpts: IdentityOpts = {
   chain: 'regtest',
@@ -46,6 +47,43 @@ describe('Identity: Private key', () => {
 
     it('should throw an error if signingKey AND/OR blindingKey are not WIF encoded string', () => {
       assert.throws(() => new PrivateKey(unvalidWIF));
+    });
+  });
+
+  describe('PrivateKey.blindPset', () => {
+    it('should returns the blinded pset', () => {});
+    it('should throw an error if the base54 pset cannot be blinded', () => {});
+    it('should throw an error if the base64 pset encoding is not valid', () => {});
+  });
+
+  describe('PrivateKey.signPset', () => {
+    it("should sign all the inputs with scriptPubKey = PrivateKey instance p2wpkh's scriptPubKey", () => {});
+  });
+
+  describe('PrivateKey.getAddresses', () => {
+    it("should return the PrivateKey instance p2wpkh's address and blindPrivKey", () => {
+      const privateKey = new PrivateKey(validOpts);
+      const keypair = ECPair.fromWIF(
+        validOpts.value.signingKeyWIF,
+        networks.regtest
+      );
+      const keypair2 = ECPair.fromWIF(
+        validOpts.value.blindingKeyWIF,
+        networks.regtest
+      );
+      const p2wpkh = payments.p2wpkh({
+        pubkey: keypair.publicKey!,
+        blindkey: keypair2.publicKey!,
+        network: networks.regtest,
+      });
+
+      const addr: AddressInterface = privateKey.getAddresses()[0];
+
+      assert.deepStrictEqual(p2wpkh.confidentialAddress, addr.address);
+      assert.deepStrictEqual(
+        keypair2.privateKey!,
+        Buffer.from(addr.blindPrivKey!, 'hex')
+      );
     });
   });
 });
