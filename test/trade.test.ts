@@ -13,7 +13,11 @@ describe('TDEX SDK', () => {
       identity: {
         chain: 'regtest',
         type: IdentityType.PrivateKey,
-        value: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
+        value: {
+          signingKeyWIF: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
+          blindingKeyWIF:
+            'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
+        },
       },
     });
     expect(trade).toMatchObject({

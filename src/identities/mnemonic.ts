@@ -1,5 +1,9 @@
 import * as bip39 from 'bip39';
-import Identity, { IdentityInterface, IdentityOpts } from '../identity';
+import Identity, {
+  AddressInterface,
+  IdentityInterface,
+  IdentityOpts,
+} from '../identity';
 
 export default class Mnemonic extends Identity implements IdentityInterface {
   private words: Array<string>;
@@ -23,5 +27,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   signPset(psetBase64: string): string {
     console.log(psetBase64);
     return '';
+  }
+
+  getAddresses(): AddressInterface[] {
+    return [{ address: '', blindPrivKey: '' }];
   }
 }

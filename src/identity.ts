@@ -8,12 +8,18 @@ export enum IdentityType {
   Trezor,
 }
 
+export interface AddressInterface {
+  address: string;
+  // in case of unconfidential address: blindPrivKey = undefined.
+  blindPrivKey?: string;
+}
+
 export interface IdentityInterface {
   network: Network;
   type: IdentityType;
   blindPset(psetBase64: string): string;
   signPset(psetBase64: string): string;
-  getAddresses(): Array<{ address: string; blindPrivKey?: string }>;
+  getAddresses(): AddressInterface[];
 }
 
 export interface IdentityOpts {
