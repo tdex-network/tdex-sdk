@@ -19,7 +19,12 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: "12"
+          node-version: '12'
+      - name: Install Nigiri
+        run: |
+          mkdir -p tmp; cd tmp
+          curl https://travis.nigiri.network | bash; cd ..
+          docker-compose -f  tmp/docker-compose.yml up -d
       - run: yarn
       - run: yarn build
       - run: yarn lint
