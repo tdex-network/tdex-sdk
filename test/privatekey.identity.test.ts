@@ -1,14 +1,7 @@
 import { AddressInterface, IdentityOpts, IdentityType } from '../src/identity';
 import PrivateKey from './../src/identities/privatekey';
 import * as assert from 'assert';
-import {
-  payments,
-  ECPair,
-  networks,
-  Psbt,
-  Transaction,
-  confidential,
-} from 'liquidjs-lib';
+import { payments, ECPair, networks, Psbt, confidential } from 'liquidjs-lib';
 import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
 
 // increase default timeout of jest
@@ -77,13 +70,13 @@ describe('Identity: Private key', () => {
       await faucet(p2wpkh.confidentialAddress!);
       const utxo = (await fetchUtxos(p2wpkh.confidentialAddress!))[0];
       const prevoutHex = await fetchTxHex(utxo.txid);
-      const witnessUtxo = Transaction.fromHex(prevoutHex).outs[utxo.vout];
+      // const witnessUtxo = Transaction.fromHex(prevoutHex).outs[utxo.vout];
 
       const pset: Psbt = new Psbt({ network: networks.regtest })
         .addInput({
           hash: utxo.txid,
           index: utxo.vout,
-          witnessUtxo,
+          nonWitnessUtxo: Buffer.from(prevoutHex, 'hex'),
         })
         .addOutputs([
           {
