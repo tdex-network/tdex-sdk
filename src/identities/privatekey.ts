@@ -20,8 +20,10 @@ function instanceOfPrivateKeyOptsValue(
 export default class PrivateKey extends Identity implements IdentityInterface {
   private signingKeyPair: ECPairInterface;
   private blindingKeyPair: ECPairInterface;
+
   private address: string;
   private blindPrivKey: string;
+  private scriptPubKey: Buffer;
 
   constructor(args: IdentityOpts) {
     super(args);
@@ -60,16 +62,17 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     // store data inside private fields.
     this.address = p2wpkh.confidentialAddress!;
     this.blindPrivKey = this.blindingKeyPair.privateKey!.toString('hex');
+    this.scriptPubKey = p2wpkh.output!;
   }
 
   blindPset(psetBase64: string): string {
     console.log(psetBase64);
-
     return '';
   }
 
   signPset(psetBase64: string): string {
     console.log(psetBase64);
+    console.log(this.scriptPubKey);
 
     return '';
   }
