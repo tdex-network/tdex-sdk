@@ -46,6 +46,11 @@
       "name": "Pietralberto Mazza",
       "email": "pietro@vulpem.com",
       "url": "https://vulpem.com"
+    },
+    {
+      "name": "Louis Singer",
+      "email": "louis@vulpem.com",
+      "url": "https://vulpem.com"
     }
   ],
   "devDependencies": {
