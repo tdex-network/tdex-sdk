@@ -13,6 +13,7 @@ export interface IdentityInterface {
   type: IdentityType;
   blindPset(psetBase64: string): string;
   signPset(psetBase64: string): string;
+  getAddresses(): Array<{ address: string; blindPrivKey?: string }>;
 }
 
 export interface IdentityOpts {
