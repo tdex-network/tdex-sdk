@@ -1,8 +1,11 @@
 import { AddressInterface, IdentityOpts, IdentityType } from '../src/identity';
 import PrivateKey from './../src/identities/privatekey';
 import * as assert from 'assert';
-import { payments, ECPair, networks, Psbt, confidential } from 'liquidjs-lib';
-import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
+import { payments, ECPair, networks, Psbt, confidential, Transaction } from 'liquidjs-lib';
+import { faucet, fetchUtxos, fetchTxHex } from './_regtest';
+
+
+const network = networks.regtest;
 
 // increase default timeout of jest
 jest.setTimeout(15000);
@@ -34,15 +37,15 @@ const unvalidWIF: IdentityOpts = {
   },
 };
 
-const keypair = ECPair.fromWIF(validOpts.value.signingKeyWIF, networks.regtest);
+const keypair = ECPair.fromWIF(validOpts.value.signingKeyWIF, network);
 const keypair2 = ECPair.fromWIF(
   validOpts.value.blindingKeyWIF,
-  networks.regtest
+  network
 );
 const p2wpkh = payments.p2wpkh({
   pubkey: keypair.publicKey!,
   blindkey: keypair2.publicKey!,
-  network: networks.regtest,
+  network: network,
 });
 
 describe('Identity: Private key', () => {
@@ -67,29 +70,47 @@ describe('Identity: Private key', () => {
 
   describe('PrivateKey.signPset', () => {
     it("should sign all the inputs with scriptPubKey = PrivateKey instance p2wpkh's scriptPubKey", async () => {
+      console.log(p2wpkh.output!.toString('hex'))
       await faucet(p2wpkh.confidentialAddress!);
       const utxo = (await fetchUtxos(p2wpkh.confidentialAddress!))[0];
       const prevoutHex = await fetchTxHex(utxo.txid);
-      // const witnessUtxo = Transaction.fromHex(prevoutHex).outs[utxo.vout];
+      const prevout = Transaction.fromHex(prevoutHex).outs[utxo.vout];
 
-      const pset: Psbt = new Psbt({ network: networks.regtest })
+      const unblindedUtxo = confidential.unblindOutput(
+        Buffer.from(utxo.noncecommitment, "hex"),
+        keypair2.privateKey!,
+        prevout.rangeProof!,
+        Buffer.from(utxo.valuecommitment, "hex"),
+        Buffer.from(utxo.assetcommitment, "hex"),
+        p2wpkh.output!
+      );
+
+      console.log(unblindedUtxo)
+
+
+      const pset: Psbt = new Psbt({ network })
         .addInput({
           hash: utxo.txid,
           index: utxo.vout,
-          nonWitnessUtxo: Buffer.from(prevoutHex, 'hex'),
+          witnessUtxo: {
+            nonce: Buffer.from('00', 'hex'),
+            value: confidential.satoshiToConfidentialValue(parseInt(unblindedUtxo.value, 10)),
+            asset: unblindedUtxo.asset,
+            script: p2wpkh.output!
+          }
         })
         .addOutputs([
           {
             nonce: Buffer.from('00', 'hex'),
             value: confidential.satoshiToConfidentialValue(49999500),
             script: p2wpkh.output!,
-            asset: networks.regtest.assetHash,
+            asset: network.assetHash,
           },
           {
             nonce: Buffer.from('00', 'hex'),
             value: confidential.satoshiToConfidentialValue(60000000),
             script: Buffer.alloc(0),
-            asset: networks.regtest.assetHash,
+            asset: network.assetHash,
           },
         ]);
 
