@@ -1,4 +1,4 @@
-import { ECPair, ECPairInterface, payments } from 'liquidjs-lib';
+import { ECPair, ECPairInterface, payments, Psbt } from 'liquidjs-lib';
 import Identity, {
   AddressInterface,
   IdentityInterface,
@@ -65,19 +65,57 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     this.scriptPubKey = p2wpkh.output!;
   }
 
-  blindPset(psetBase64: string): string {
-    console.log(psetBase64);
-    return '';
+  /**
+   * iterate through inputs and sign when it's possible, then returns the signed pset (base64 encoded).
+   * @param psetBase64 the base64 encoded pset.
+   */
+  async signPset(psetBase64: string): Promise<string> {
+    const pset = Psbt.fromBase64(psetBase64);
+    // get the index of the inputs to sign.
+    const indexOfInputs: number[] = [];
+
+    console.log(this.scriptPubKey!);
+    console.log(pset.data.inputs[0].witnessUtxo!.script);
+
+    for (let index = 0; index < pset.data.inputs.length; index++) {
+      if (pset.data.inputs[index].witnessUtxo!.script.equals(this.scriptPubKey))
+        indexOfInputs.push(index);
+    }
+
+    console.log('toSign', indexOfInputs);
+
+    // sign all the inputs asynchronously
+    await Promise.all(
+      indexOfInputs.map((inputIndex: number) =>
+        pset.signInputAsync(inputIndex, this.signingKeyPair)
+      )
+    );
+
+    // validate all the signature
+    const notValidSignatures: number[] = indexOfInputs
+      .map((inputIndex: number) =>
+        pset.validateSignaturesOfInput(
+          inputIndex,
+          this.signingKeyPair.publicKey
+        )
+          ? -1
+          : inputIndex
+      )
+      .filter((i: number) => i !== -1);
+
+    // throw an error if the signature is invalid for at least one of the input to sign.
+    if (notValidSignatures.length > 0) {
+      throw new Error(
+        `At least 1 input signature is unvalid. Invalid signature input index: ${notValidSignatures}`
+      );
+    }
+    // return the base64 encoded pset.
+    return pset.toBase64();
   }
 
-  signPset(psetBase64: string): string {
-    console.log(psetBase64);
-    console.log(this.scriptPubKey);
-
-    return '';
-  }
-
-  // for private key: only returns one confidential address & the associated blindingPrivKey.
+  /**
+   * for private key: only returns one confidential address & the associated blindingPrivKey.
+   */
   getAddresses(): AddressInterface[] {
     return [{ address: this.address, blindPrivKey: this.blindPrivKey }];
   }

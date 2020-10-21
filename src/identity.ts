@@ -17,8 +17,7 @@ export interface AddressInterface {
 export interface IdentityInterface {
   network: Network;
   type: IdentityType;
-  blindPset(psetBase64: string): string;
-  signPset(psetBase64: string): string;
+  signPset(psetBase64: string): string | Promise<string>;
   getAddresses(): AddressInterface[];
 }
 
