@@ -1,5 +1,8 @@
 import { Network, networks } from 'liquidjs-lib';
 
+/**
+ * Enumeration of all the Identity types.
+ */
 export enum IdentityType {
   PrivateKey = 1,
   Mnemonic,
@@ -8,12 +11,22 @@ export enum IdentityType {
   Trezor,
 }
 
+/**
+ * Defines the shape of the object returned by the getAdresses's method.
+ */
 export interface AddressInterface {
   address: string;
   // in case of unconfidential address: blindPrivKey = undefined.
   blindPrivKey?: string;
 }
 
+/**
+ * The identity interface.
+ * @member network the network type (regtest, liquid...)
+ * @member type the Identity type @see IdentityType
+ * @method signPset take a base64 pset, sign it, and returns the result base64 encoded.
+ * @method getAddresses returns all the generated addresses (and their blindkey if confidential).
+ */
 export interface IdentityInterface {
   network: Network;
   type: IdentityType;
