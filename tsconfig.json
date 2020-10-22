@@ -1,6 +1,7 @@
 {
   "include": [
-    "src",
+    "src", 
+    "src/identities/*.ts", 
     "types"
   ],
   "exclude": [
@@ -15,7 +16,6 @@
     "importHelpers": true,
     "declaration": true,
     "sourceMap": true,
-    "rootDir": "./src",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
