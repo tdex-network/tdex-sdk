@@ -9,7 +9,7 @@
     "dist-web"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">10"
   },
   "scripts": {
     "start": "tsdx watch",
