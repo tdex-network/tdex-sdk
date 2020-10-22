@@ -9,12 +9,8 @@ import {
 } from './wallet';
 import { TraderClient } from './grpcClient.web';
 import TraderClientInterface from './grpcClientInterface';
-import {
-  calculateExpectedAmount,
-  calculateProposeAmount,
-  isValidAmount,
-} from './utils';
-import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
+import { isValidAmount } from './utils';
+import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
 
 export interface MarketInterface {
   baseAsset: string;
@@ -151,54 +147,30 @@ export class Trade extends Core implements CoreInterface {
     }
     const { baseAsset, quoteAsset } = market;
 
-    const balancesAndFee = await this.grpcClient.balances({
-      baseAsset,
-      quoteAsset,
-    });
+    const prices = await this.grpcClient.marketPrice(
+      {
+        baseAsset,
+        quoteAsset,
+      },
+      tradeType,
+      amountInSatoshis
+    );
 
     if (tradeType === TradeType.BUY) {
-      const assetToBeSent = quoteAsset;
-      const assetToReceive = baseAsset;
-      const amountToReceive = amountInSatoshis;
-
-      if (amountToReceive > balancesAndFee.balances[assetToReceive])
-        throw new Error('Amount exceeds market balance');
-
-      const amountToBeSent = calculateProposeAmount(
-        balancesAndFee.balances[assetToBeSent],
-        balancesAndFee.balances[assetToReceive],
-        amountToReceive,
-        balancesAndFee.fee
-      );
-
       return {
-        assetToBeSent,
-        amountToBeSent,
-        assetToReceive,
-        amountToReceive,
-      };
-    } else {
-      const assetToBeSent = baseAsset;
-      const assetToReceive = quoteAsset;
-      const amountToBeSent = amountInSatoshis;
-
-      if (amountToBeSent > balancesAndFee.balances[assetToBeSent])
-        throw new Error('Amount exceeds market balance');
-
-      const amountToReceive = calculateExpectedAmount(
-        balancesAndFee.balances[assetToBeSent],
-        balancesAndFee.balances[assetToReceive],
-        amountToBeSent,
-        balancesAndFee.fee
-      );
-
-      return {
-        assetToBeSent,
-        amountToBeSent,
-        assetToReceive,
-        amountToReceive,
+        assetToBeSent: quoteAsset,
+        amountToBeSent: prices[0].amount,
+        assetToReceive: baseAsset,
+        amountToReceive: amountInSatoshis,
       };
     }
+
+    return {
+      assetToBeSent: baseAsset,
+      amountToBeSent: amountInSatoshis,
+      assetToReceive: quoteAsset,
+      amountToReceive: prices[0].amount,
+    };
   }
 
   private async marketOrderRequest(

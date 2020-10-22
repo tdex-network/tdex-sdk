@@ -1,5 +1,5 @@
 import Core from './core';
-import * as proto from 'tdex-protobuf/js/swap_pb';
+import * as proto from 'tdex-protobuf/generated/js/swap_pb';
 import * as jspb from 'google-protobuf';
 
 import {
