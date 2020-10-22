@@ -18,6 +18,7 @@
     "build-web": "tsdx build --tsconfig tsconfig.web.json --entry src/index.web.ts && rm -rf dist-web && mv dist dist-web",
     "test": "tsdx test",
     "lint": "tsdx lint src test",
+    "lint-fix": "tsdx lint src test --fix",
     "prepare": "tsdx build"
   },
   "peerDependencies": {},
