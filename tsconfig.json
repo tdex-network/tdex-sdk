@@ -15,6 +15,10 @@
     "importHelpers": true,
     "declaration": true,
     "sourceMap": true,
+    "rootDirs": [
+      "./src",
+      "./test"
+    ],
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
