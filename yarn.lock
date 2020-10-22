@@ -4409,9 +4409,9 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
-liquidjs-lib@provable-things/liquidjs-lib:
+liquidjs-lib@vulpemventures/liquidjs-lib:
   version "5.1.6"
-  resolved "https://codeload.github.com/provable-things/liquidjs-lib/tar.gz/97673986c4233dee61f98dc59b5256ed2a8f313d"
+  resolved "https://codeload.github.com/vulpemventures/liquidjs-lib/tar.gz/9f9ba39fbffc8c4501b0d890ca7cb07219ad7b2e"
   dependencies:
     axios "^0.19.2"
     bech32 "^1.1.2"
@@ -6197,9 +6197,9 @@ table@^5.2.3:
     slice-ansi "^2.1.0"
     string-width "^3.0.0"
 
-tdex-protobuf@tdex-network/tdex-protobuf#master:
-  version "1.0.0"
-  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/d732c073ee90425463f6a5f4478761d74a409af4"
+tdex-protobuf@tdex-network/tdex-protobuf#beta:
+  version "2.0.0"
+  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/11f5e04803936184d1718498ffb3246a64a345ca"
   dependencies:
     grpc-web "1.2.0"
 

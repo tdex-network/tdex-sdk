@@ -1,7 +1,8 @@
 import * as grpc from '@grpc/grpc-js';
-import * as services from 'tdex-protobuf/js/trade_grpc_pb';
-import * as messages from 'tdex-protobuf/js/trade_pb';
-import { SwapRequest, SwapComplete } from 'tdex-protobuf/js/swap_pb';
+import * as services from 'tdex-protobuf/generated/js/trade_grpc_pb';
+import * as messages from 'tdex-protobuf/generated/js/trade_pb';
+import * as types from 'tdex-protobuf/generated/js/types_pb';
+import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 
 import TraderClientInterface from './grpcClientInterface';
 
@@ -29,7 +30,7 @@ export class TraderClient implements TraderClientInterface {
     swapRequestSerialized: Uint8Array
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      const market = new messages.Market();
+      const market = new types.Market();
       market.setBaseAsset(baseAsset);
       market.setQuoteAsset(quoteAsset);
 
@@ -89,6 +90,38 @@ export class TraderClient implements TraderClientInterface {
     });
   }
 
+  marketPrice(
+    {
+      baseAsset,
+      quoteAsset,
+    }: {
+      baseAsset: string;
+      quoteAsset: string;
+    },
+    tradeType: number,
+    amount: number
+  ): Promise<Array<any>> {
+    const market = new types.Market();
+    market.setBaseAsset(baseAsset);
+    market.setQuoteAsset(quoteAsset);
+    const request = new messages.MarketPriceRequest();
+    request.setMarket(market);
+    request.setType(tradeType);
+    request.setAmount(amount);
+
+    return new Promise((resolve, reject) => {
+      this.client.marketPrice(request, (err, response) => {
+        if (err) return reject(err);
+
+        const list = response
+          .getPricesList()
+          .map((priceWithFee: types.PriceWithFee) => priceWithFee.toObject());
+
+        resolve(list);
+      });
+    });
+  }
+
   balances({
     baseAsset,
     quoteAsset,
@@ -96,7 +129,7 @@ export class TraderClient implements TraderClientInterface {
     baseAsset: string;
     quoteAsset: string;
   }): Promise<any> {
-    const market = new messages.Market();
+    const market = new types.Market();
     market.setBaseAsset(baseAsset);
     market.setQuoteAsset(quoteAsset);
     const request = new messages.BalancesRequest();
@@ -106,23 +139,32 @@ export class TraderClient implements TraderClientInterface {
       this.client.balances(request, (err, response) => {
         if (err) return reject(err);
 
-        const baseAmount: number = response
+        const reply = response
           .getBalancesList()
-          .find(b => b.getAsset() === baseAsset)!
-          .getAmount();
-        const quoteAmount: number = response
-          .getBalancesList()
-          .find(b => b.getAsset() === quoteAsset)!
-          .getAmount();
-        const reply = {
-          fee: response!.getFee(),
-          balances: {
-            [baseAsset]: baseAmount,
-            [quoteAsset]: quoteAmount,
-          },
-        };
+          .map((balanceWithFee: types.BalanceWithFee) =>
+            balanceWithFee.toObject()
+          );
+
         resolve(reply);
       });
     });
   }
 }
+
+/*      return {
+       balances: {
+         [baseAsset]: balanceWithFee!.getBalance,
+         [quoteAsset]: quoteAmount,
+       }
+       fee: {
+         asset: balanceWithFee!.getFee()!.getAsset(),
+         basisPoint: balanceWithFee!.get
+       },
+     }
+   }) {
+     fee: response!.getFee(),
+     balances: {
+       [baseAsset]: baseAmount,
+       [quoteAsset]: quoteAmount,
+     },
+   }; */
