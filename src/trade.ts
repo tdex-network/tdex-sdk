@@ -181,16 +181,16 @@ export class Trade extends Core implements TradeInterface {
     if (tradeType === TradeType.BUY) {
       return {
         assetToBeSent: quoteAsset,
-        amountToBeSent: baseAsset,
-        assetToReceive: amountInSatoshis,
-        amountToReceive: prices[0].amount,
+        amountToBeSent: prices[0].amount,
+        assetToReceive: baseAsset,
+        amountToReceive: amountInSatoshis,
       };
     }
 
     return {
       assetToBeSent: baseAsset,
-      amountToBeSent: quoteAsset,
-      assetToReceive: amountInSatoshis,
+      amountToBeSent: amountInSatoshis,
+      assetToReceive: quoteAsset,
       amountToReceive: prices[0].amount,
     };
   }
