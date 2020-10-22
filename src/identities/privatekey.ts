@@ -105,7 +105,7 @@ export default class PrivateKey extends Identity implements IdentityInterface {
 
     // sign all the inputs asynchronously
     await Promise.all(
-      pset.data.inputs.map((_, index: number) =>
+      indexOfInputs.map((index: number) =>
         pset.signInputAsync(index, this.signingKeyPair)
       )
     );
