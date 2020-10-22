@@ -1,17 +1,12 @@
 import axios from 'axios';
-import {
-  Network,
-  Payment,
-  networks,
-  payments,
-  Psbt,
-  confidential,
-} from 'liquidjs-lib';
+import { Network, networks, payments, Psbt, confidential } from 'liquidjs-lib';
 //Libs
 import { AddressInterface } from './identity';
 
 export interface WalletInterface {
   network: Network;
+  addresses: AddressInterface[];
+  scripts: string[];
   createTx(): string;
   updateTx(
     psetBase64: string,
@@ -23,7 +18,7 @@ export interface WalletInterface {
   ): string;
 }
 
-export default class Wallet implements WalletInterface {
+export class Wallet implements WalletInterface {
   network: Network;
   addresses: AddressInterface[];
   scripts: string[];
@@ -131,7 +126,7 @@ export default class Wallet implements WalletInterface {
   }
 }
 
-export function fromAddresses(
+export function walletFromAddresses(
   addresses: AddressInterface[],
   network?: string
 ): WalletInterface {
