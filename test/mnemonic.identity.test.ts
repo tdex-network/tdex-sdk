@@ -3,18 +3,13 @@ import Mnemonic from './../src/identities/mnemonic';
 import { fromSeed as slip77fromSeed } from 'slip77';
 import { fromSeed as bip32fromSeed } from 'bip32';
 import * as assert from 'assert';
-import {
-  // confidential,
-  // ECPair,
-  networks,
-  // payments,
-  // Psbt,
-  // Transaction,
-} from 'liquidjs-lib';
-// import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
+import { confidential, networks, Psbt, Transaction } from 'liquidjs-lib';
+import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
 import { mnemonicToSeedSync } from 'bip39';
 
 const network = networks.regtest;
+
+jest.setTimeout(15000);
 
 const validOpts: IdentityOpts = {
   chain: 'regtest',
@@ -68,14 +63,6 @@ const unvalidMnemonicOpts: IdentityOpts = {
   },
 };
 
-// const keypair = ECPair.fromWIF(validOpts.value.signingKeyWIF, network);
-// const keypair2 = ECPair.fromWIF(validOpts.value.blindingKeyWIF, network);
-// const p2wpkh = payments.p2wpkh({
-//   pubkey: keypair.publicKey!,
-//   blindkey: keypair2.publicKey!,
-//   network: network,
-// });
-
 describe('Identity: Private key', () => {
   describe('Constructor', () => {
     const validMnemonic = new Mnemonic(validOpts);
@@ -86,11 +73,11 @@ describe('Identity: Private key', () => {
 
     it('should generate a slip77 master blinding key and a bip32 master private key from the mnemonic', () => {
       assert.deepStrictEqual(
-        validMnemonic.masterBlindingKey,
+        validMnemonic.masterBlindingKeyNode,
         masterBlindingKeyFromValidMnemonic
       );
       assert.deepStrictEqual(
-        validMnemonic.masterPrivateKey,
+        validMnemonic.masterPrivateKeyNode,
         masterPrivateKeyFromValidMnemonic
       );
     });
@@ -117,51 +104,55 @@ describe('Identity: Private key', () => {
     });
   });
 
-  // describe('Mnemonic.signPset', () => {
-  //   it("should sign all the inputs with scriptPubKey = PrivateKey instance p2wpkh's scriptPubKey", async () => {
-  //     await faucet(p2wpkh.confidentialAddress!);
-  //     const utxo = (await fetchUtxos(p2wpkh.confidentialAddress!))[0];
-  //     const prevoutHex = await fetchTxHex(utxo.txid);
-  //     const prevout = Transaction.fromHex(prevoutHex).outs[utxo.vout];
+  describe('Mnemonic.signPset', () => {
+    it('should sign the inputs of the previously generated addresses', async () => {
+      const mnemonic = new Mnemonic(validOpts);
+      const generated = mnemonic.getNextConfidentialAddress();
 
-  //     const unblindedUtxo = confidential.unblindOutput(
-  //       Buffer.from(utxo.noncecommitment, 'hex'),
-  //       keypair2.privateKey!,
-  //       prevout.rangeProof!,
-  //       Buffer.from(utxo.valuecommitment, 'hex'),
-  //       Buffer.from(utxo.assetcommitment, 'hex'),
-  //       p2wpkh.output!
-  //     );
+      await faucet(generated.address.confidentialAddress);
+      const utxo = (await fetchUtxos(generated.address.confidentialAddress))[0];
 
-  //     const pset: Psbt = new Psbt({ network })
-  //       .addInput({
-  //         hash: utxo.txid,
-  //         index: utxo.vout,
-  //         witnessUtxo: {
-  //           nonce: Buffer.from('00', 'hex'),
-  //           value: confidential.satoshiToConfidentialValue(
-  //             parseInt(unblindedUtxo.value, 10)
-  //           ),
-  //           asset: unblindedUtxo.asset,
-  //           script: p2wpkh.output!,
-  //         },
-  //       })
-  //       .addOutputs([
-  //         {
-  //           nonce: Buffer.from('00', 'hex'),
-  //           value: confidential.satoshiToConfidentialValue(49999500),
-  //           script: p2wpkh.output!,
-  //           asset: network.assetHash,
-  //         },
-  //         {
-  //           nonce: Buffer.from('00', 'hex'),
-  //           value: confidential.satoshiToConfidentialValue(60000000),
-  //           script: Buffer.alloc(0),
-  //           asset: network.assetHash,
-  //         },
-  //       ]);
-  //   });
-  // });
+      const prevoutHex = await fetchTxHex(utxo.txid);
+      const prevout = Transaction.fromHex(prevoutHex).outs[utxo.vout];
+      const unblindedUtxo = mnemonic.unblindUtxo(prevout);
+
+      const pset: Psbt = new Psbt({ network })
+        .addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: {
+            nonce: Buffer.from('00', 'hex'),
+            value: confidential.satoshiToConfidentialValue(
+              parseInt(unblindedUtxo.value, 10)
+            ),
+            asset: unblindedUtxo.asset,
+            script: generated.scriptPubKey,
+          },
+        })
+        .addOutputs([
+          {
+            nonce: Buffer.from('00', 'hex'),
+            value: confidential.satoshiToConfidentialValue(49999500),
+            script: generated.scriptPubKey,
+            asset: network.assetHash,
+          },
+          {
+            nonce: Buffer.from('00', 'hex'),
+            value: confidential.satoshiToConfidentialValue(60000000),
+            script: Buffer.alloc(0),
+            asset: network.assetHash,
+          },
+        ]);
+
+      const signedBase64 = await mnemonic.signPset(pset.toBase64());
+      const signedPsbt = Psbt.fromBase64(signedBase64);
+      let isValid: boolean = false;
+      assert.doesNotThrow(
+        () => (isValid = signedPsbt.validateSignaturesOfAllInputs())
+      );
+      assert.deepStrictEqual(isValid, true);
+    });
+  });
 
   describe('Mnemonic.getAddresses', () => {
     it("should return the PrivateKey instance p2wpkh's address and blindPrivKey", () => {});

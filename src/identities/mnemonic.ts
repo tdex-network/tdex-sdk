@@ -1,4 +1,4 @@
-import { IdentityType } from './../identity';
+import { confidential, ECPair, payments, Psbt } from 'liquidjs-lib';
 import * as bip39 from 'bip39';
 import { fromSeed as slip77fromSeed, Slip77Interface } from 'slip77';
 import { fromSeed as bip32fromSeed, BIP32Interface } from 'bip32';
@@ -6,7 +6,10 @@ import Identity, {
   AddressInterface,
   IdentityInterface,
   IdentityOpts,
+  IdentityType,
 } from '../identity';
+import { Output } from 'liquidjs-lib/types/transaction';
+import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
 
 export interface MnemonicOptsValue {
   mnemonic: string;
@@ -18,10 +21,24 @@ function instanceOfMnemonicOptsValue(value: any): value is MnemonicOptsValue {
   return 'mnemonic' in value;
 }
 
+interface AddressInterfaceExtended {
+  address: AddressInterface;
+  signingPrivateKey: string;
+  derivationPath: string;
+  scriptPubKey: Buffer;
+}
+
 export default class Mnemonic extends Identity implements IdentityInterface {
+  static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
+  static INITIAL_INDEX: number = 0;
+
+  private derivationPath: string = Mnemonic.INITIAL_BASE_PATH;
+  private index: number = Mnemonic.INITIAL_INDEX;
+  private confidentialAddresses: AddressInterfaceExtended[] = [];
   private walletSeed: Buffer;
-  readonly masterPrivateKey: BIP32Interface;
-  readonly masterBlindingKey: Slip77Interface;
+
+  readonly masterPrivateKeyNode: BIP32Interface;
+  readonly masterBlindingKeyNode: Slip77Interface;
 
   constructor(args: IdentityOpts) {
     super(args);
@@ -40,6 +57,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     // the "language exists check" is delegated to `bip39.setDefaultWordlist` function.
     if (args.value.language) {
       bip39.setDefaultWordlist(args.value.language);
+    } else {
+      bip39.setDefaultWordlist('english');
     }
 
     // validate the mnemonic
@@ -53,17 +72,106 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       args.value.passphrase
     );
     // generate the master private key from the wallet seed
-    this.masterPrivateKey = bip32fromSeed(this.walletSeed, this.network);
+    this.masterPrivateKeyNode = bip32fromSeed(this.walletSeed, this.network);
     // generate the master blinding key from the seed
-    this.masterBlindingKey = slip77fromSeed(this.walletSeed);
+    this.masterBlindingKeyNode = slip77fromSeed(this.walletSeed);
   }
 
-  signPset(psetBase64: string): string {
-    console.log(psetBase64);
-    return '';
+  private getNextKeypair(): { publicKey: Buffer; privateKey: Buffer } {
+    const baseNode = this.masterPrivateKeyNode.derivePath(this.derivationPath);
+    const wif: string = baseNode.deriveHardened(this.index).toWIF();
+    const { publicKey, privateKey } = ECPair.fromWIF(wif, this.network);
+    this.index += 1;
+    return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
+  private getBlindingKeyPair(
+    scriptPubKey: Buffer
+  ): { publicKey: Buffer; privateKey: Buffer } {
+    const { publicKey, privateKey } = this.masterBlindingKeyNode.derive(
+      scriptPubKey
+    );
+    return { publicKey: publicKey!, privateKey: privateKey! };
+  }
+
+  getNextConfidentialAddress(): AddressInterfaceExtended {
+    const currentIndex = this.index;
+    // get the next key pair
+    const keyPair = this.getNextKeypair();
+    // use the public key to compute the scriptPubKey
+    const script: Buffer = payments.p2wpkh({
+      pubkey: keyPair.publicKey!,
+      network: this.network,
+    }).output!;
+    // generate the blindKeyPair from the scriptPubKey
+    const blindingKeyPair = this.getBlindingKeyPair(script);
+    // with blindingPublicKey & signingPublicKey, generate the confidential address
+    const { confidentialAddress } = payments.p2wpkh({
+      pubkey: keyPair.publicKey!,
+      blindkey: blindingKeyPair.publicKey!,
+      network: this.network,
+    });
+    // create the address generation object
+    const newAddressGeneration: AddressInterfaceExtended = {
+      address: {
+        confidentialAddress: confidentialAddress!,
+        blindingPrivateKey: blindingKeyPair.privateKey!.toString('hex'),
+      },
+      derivationPath: `${this.derivationPath}/${currentIndex}`,
+      signingPrivateKey: keyPair.privateKey!.toString('hex'),
+      scriptPubKey: script,
+    };
+    // store the generation inside local cache
+    this.confidentialAddresses.push(newAddressGeneration);
+    // return the generation data
+    return newAddressGeneration;
+  }
+
+  unblindUtxo(blindedUtxo: Output): UnblindOutputResult {
+    const blindingPrivKey: Buffer = this.masterBlindingKeyNode.derive(
+      blindedUtxo.script
+    ).privateKey!;
+
+    return confidential.unblindOutput(
+      blindedUtxo.nonce,
+      blindingPrivKey,
+      blindedUtxo.rangeProof!,
+      blindedUtxo.value,
+      blindedUtxo.asset,
+      blindedUtxo.script
+    );
+  }
+
+  async signPset(psetBase64: string): Promise<string> {
+    const pset = Psbt.fromBase64(psetBase64);
+    const signInputPromises: Array<Promise<void>> = [];
+    const findInAddresses = (script: Buffer) =>
+      this.confidentialAddresses.find(addr => addr.scriptPubKey.equals(script));
+
+    for (let index = 0; index < pset.data.inputs.length; index++) {
+      const input = pset.data.inputs[index];
+      if (input.witnessUtxo) {
+        const addressGeneration = findInAddresses(input.witnessUtxo.script);
+        if (addressGeneration) {
+          // if there is an address generated for the input script: build the signing key pair.
+          const privateKeyBuffer = Buffer.from(
+            addressGeneration.signingPrivateKey,
+            'hex'
+          );
+          const signingKeyPair = ECPair.fromPrivateKey(privateKeyBuffer);
+          // add the promise to array
+          signInputPromises.push(pset.signInputAsync(index, signingKeyPair));
+        }
+      }
+    }
+    // wait that all signing promise resolved
+    await Promise.all(signInputPromises);
+    // return the signed pset, base64 encoded.
+    return pset.toBase64();
+  }
+
+  // returns all the addresses generated
   getAddresses(): AddressInterface[] {
-    return [{ confidentialAddress: '', blindingPrivateKey: '' }];
+    return this.confidentialAddresses.map(addr => addr.address);
   }
 }
