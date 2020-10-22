@@ -155,6 +155,11 @@ describe('Identity: Private key', () => {
   });
 
   describe('Mnemonic.getAddresses', () => {
-    it("should return the PrivateKey instance p2wpkh's address and blindPrivKey", () => {});
+    it('should return all the generated addresses', () => {
+      const mnemonic = new Mnemonic(validOpts);
+      const generated1 = mnemonic.getNextConfidentialAddress().address;
+      const generated2 = mnemonic.getNextConfidentialAddress().address;
+      assert.deepStrictEqual([generated1, generated2], mnemonic.getAddresses());
+    });
   });
 });
