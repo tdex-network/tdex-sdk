@@ -7,10 +7,8 @@ const HUNDRED = JSBI.BigInt(100);
 const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
 
 export function toAssetHash(x: Buffer): string {
-  return x
-    .slice(1)
-    .reverse()
-    .toString('hex');
+  const withoutFirstByte = x.slice(1);
+  return (withoutFirstByte.reverse() as Buffer).toString('hex');
 }
 
 export function toNumber(x: Buffer): number {

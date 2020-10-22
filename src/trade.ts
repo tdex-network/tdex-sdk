@@ -15,10 +15,17 @@ import {
   isValidAmount,
 } from './utils';
 import { SwapAccept } from 'tdex-protobuf/js/swap_pb';
+import { IdentityInterface, IdentityType } from './identity';
+import PrivateKey from './identities/privatekey';
+import Mnemonic from './identities/mnemonic';
 
 export interface MarketInterface {
   baseAsset: string;
   quoteAsset: string;
+}
+
+export interface TradeInterface extends CoreInterface {
+  identity: IdentityInterface;
 }
 
 export enum TradeType {
@@ -26,16 +33,12 @@ export enum TradeType {
   SELL = 1,
 }
 
-export class Trade extends Core implements CoreInterface {
+export class Trade extends Core implements TradeInterface {
   private grpcClient: TraderClientInterface;
+  identity: IdentityInterface;
 
-  constructor(args: CoreInterface) {
+  constructor(args: any) {
     super(args);
-
-    if (!this.chain)
-      throw new Error(
-        'To be able to trade you need to select the network via { chain }'
-      );
 
     if (!this.providerUrl)
       throw new Error(
@@ -47,7 +50,26 @@ export class Trade extends Core implements CoreInterface {
         'To be able to trade you need to select an explorer via { explorerUrl }'
       );
 
+    if (!args.identity || !args.identity.chain)
+      throw new Error(
+        'To be able to trade you need to select an identity via { identity }'
+      );
+
     this.grpcClient = new TraderClient(this.providerUrl);
+    switch (args.identity.type) {
+      case IdentityType.PrivateKey:
+        this.identity = new PrivateKey(args.identity);
+        break;
+
+      case IdentityType.Mnemonic:
+        this.identity = new Mnemonic(args.identity);
+        break;
+
+      default:
+        throw new Error('Selected identity type not supported');
+    }
+
+    this.chain = args.identity.chain;
   }
 
   /**
