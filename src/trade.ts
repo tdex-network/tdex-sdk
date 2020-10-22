@@ -1,11 +1,20 @@
 import Core, { CoreInterface } from './core';
 import { Swap } from './swap';
-import { WalletInterface, fetchUtxos, walletFromAddresses } from './wallet';
+import {
+  WalletInterface,
+  fetchAndUnblindUtxos,
+  walletFromAddresses,
+} from './wallet';
 import { TraderClient } from './grpcClient';
 import TraderClientInterface from './grpcClientInterface';
 import { isValidAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
-import { IdentityInterface, IdentityOpts, IdentityType } from './identity';
+import {
+  AddressInterface,
+  IdentityInterface,
+  IdentityOpts,
+  IdentityType,
+} from './identity';
 import PrivateKey from './identities/privatekey';
 import Mnemonic from './identities/mnemonic';
 
@@ -186,21 +195,32 @@ export class Trade extends Core implements TradeInterface {
       amountToReceive,
     } = await this.preview(market, tradeType, amountInSatoshis);
 
-    const [firstAddress] = wallet.addresses;
-    //TODO do actual fetching from list of addresses instead of single one.
-    const traderUtxos = await fetchUtxos(
-      firstAddress.confidentialAddress,
-      this.explorerUrl!
+    const traderUnblindedUtxos = await Promise.all(
+      wallet.addresses.map((a: AddressInterface) => {
+        return fetchAndUnblindUtxos(
+          a.confidentialAddress,
+          a.blindingPrivateKey,
+          this.explorerUrl!
+        );
+      })
     );
+
+    // TODO this will need to call the identity class to get the next address, for now we hardcode the first one from cache.
+    const firstAddress = wallet.addresses[0].confidentialAddress;
+
+    const addressForOutput = firstAddress; //this.identity.getNextAddress(),
+    const addressForChange = firstAddress; //this.identity.getNextChangeAddress()
 
     const emptyPsbt = wallet.createTx();
     const psetBase64 = wallet.updateTx(
       emptyPsbt,
-      traderUtxos,
+      traderUnblindedUtxos,
       amountToBeSent,
       amountToReceive,
       assetToBeSent,
-      assetToReceive
+      assetToReceive,
+      addressForOutput,
+      addressForChange
     );
 
     const swap = new Swap();
