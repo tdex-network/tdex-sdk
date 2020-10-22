@@ -49,7 +49,7 @@ export default class PrivateKey extends Identity implements IdentityInterface {
 
     // checks the args type.
     if (args.type !== IdentityType.PrivateKey) {
-      throw new Error('The identity arguments has not the PrivateKey type.');
+      throw new Error('The identity arguments have not the PrivateKey type.');
     }
 
     // checks if args.value is an instance of PrivateKeyOptsValue interface.
