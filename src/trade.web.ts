@@ -10,6 +10,9 @@ export class Trade extends TradeNode {
   constructor(args: any) {
     super(args);
 
-    this.grpcClient = new TraderClient(this.providerUrl);
+    this.validate(args);
+    this.setIdentity(args.identity);
+
+    this.grpcClient = new TraderClient(this.providerUrl!);
   }
 }

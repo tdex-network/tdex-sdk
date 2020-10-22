@@ -5,7 +5,7 @@ import { TraderClient } from './grpcClient';
 import TraderClientInterface from './grpcClientInterface';
 import { isValidAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
-import { IdentityInterface, IdentityType } from './identity';
+import { IdentityInterface, IdentityOpts, IdentityType } from './identity';
 import PrivateKey from './identities/privatekey';
 import Mnemonic from './identities/mnemonic';
 
@@ -25,11 +25,18 @@ export enum TradeType {
 
 export class Trade extends Core implements TradeInterface {
   grpcClient: TraderClientInterface;
-  identity: IdentityInterface;
+  identity!: IdentityInterface;
 
   constructor(args: any) {
     super(args);
 
+    this.validate(args);
+    this.setIdentity(args.identity);
+
+    this.grpcClient = new TraderClient(this.providerUrl!);
+  }
+
+  validate(args: any) {
     if (!this.providerUrl)
       throw new Error(
         'To be able to trade you need to select a liquidity provider via { providerUrl }'
@@ -44,22 +51,23 @@ export class Trade extends Core implements TradeInterface {
       throw new Error(
         'To be able to trade you need to select an identity via { identity }'
       );
+  }
 
-    this.grpcClient = new TraderClient(this.providerUrl);
-    switch (args.identity.type) {
+  setIdentity(identity: IdentityOpts) {
+    switch (identity.type) {
       case IdentityType.PrivateKey:
-        this.identity = new PrivateKey(args.identity);
+        this.identity = new PrivateKey(identity);
         break;
 
       case IdentityType.Mnemonic:
-        this.identity = new Mnemonic(args.identity);
+        this.identity = new Mnemonic(identity);
         break;
 
       default:
         throw new Error('Selected identity type not supported');
     }
 
-    this.chain = args.identity.chain;
+    this.chain = identity.chain;
   }
 
   /**
@@ -82,15 +90,8 @@ export class Trade extends Core implements TradeInterface {
         'Either private key or native segwit address is required'
       );
 
-    const wallet: WalletInterface = walletFromAddresses(
-      [
-        {
-          confidentialAddress: 'foo',
-          blindingPrivateKey: 'bar',
-        },
-      ],
-      this.chain!
-    );
+    const addresses = this.identity.getAddresses();
+    const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
     const swapAccept = await this.marketOrderRequest(
       market,
@@ -123,15 +124,8 @@ export class Trade extends Core implements TradeInterface {
         'Either private key or native segwit address is required'
       );
 
-    const wallet: WalletInterface = walletFromAddresses(
-      [
-        {
-          confidentialAddress: 'foo',
-          blindingPrivateKey: 'bar',
-        },
-      ],
-      this.chain!
-    );
+    const addresses = this.identity.getAddresses();
+    const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
     const swapAccept = await this.marketOrderRequest(
       market,
@@ -193,6 +187,7 @@ export class Trade extends Core implements TradeInterface {
     } = await this.preview(market, tradeType, amountInSatoshis);
 
     const [firstAddress] = wallet.addresses;
+    //TODO do actual fetching from list of addresses instead of single one.
     const traderUtxos = await fetchUtxos(
       firstAddress.confidentialAddress,
       this.explorerUrl!
