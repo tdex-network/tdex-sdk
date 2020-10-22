@@ -150,21 +150,3 @@ export class TraderClient implements TraderClientInterface {
     });
   }
 }
-
-/*      return {
-       balances: {
-         [baseAsset]: balanceWithFee!.getBalance,
-         [quoteAsset]: quoteAmount,
-       }
-       fee: {
-         asset: balanceWithFee!.getFee()!.getAsset(),
-         basisPoint: balanceWithFee!.get
-       },
-     }
-   }) {
-     fee: response!.getFee(),
-     balances: {
-       [baseAsset]: baseAmount,
-       [quoteAsset]: quoteAmount,
-     },
-   }; */
