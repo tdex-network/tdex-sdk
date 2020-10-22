@@ -73,7 +73,6 @@ describe('Identity: Private key', () => {
 
   describe('PrivateKey.signPset', () => {
     it("should sign all the inputs with scriptPubKey = PrivateKey instance p2wpkh's scriptPubKey", async () => {
-      console.log(p2wpkh.output!.toString('hex'));
       await faucet(p2wpkh.confidentialAddress!);
       const utxo = (await fetchUtxos(p2wpkh.confidentialAddress!))[0];
       const prevoutHex = await fetchTxHex(utxo.txid);
@@ -87,8 +86,6 @@ describe('Identity: Private key', () => {
         Buffer.from(utxo.assetcommitment, 'hex'),
         p2wpkh.output!
       );
-
-      console.log(unblindedUtxo);
 
       const pset: Psbt = new Psbt({ network })
         .addInput({
@@ -133,10 +130,13 @@ describe('Identity: Private key', () => {
     it("should return the PrivateKey instance p2wpkh's address and blindPrivKey", () => {
       const privateKey = new PrivateKey(validOpts);
       const addr: AddressInterface = privateKey.getAddresses()[0];
-      assert.deepStrictEqual(p2wpkh.confidentialAddress, addr.address);
+      assert.deepStrictEqual(
+        p2wpkh.confidentialAddress,
+        addr.confidentialAddress
+      );
       assert.deepStrictEqual(
         keypair2.privateKey!,
-        Buffer.from(addr.blindPrivKey!, 'hex')
+        Buffer.from(addr.blindingPrivateKey, 'hex')
       );
     });
   });

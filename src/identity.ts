@@ -13,11 +13,12 @@ export enum IdentityType {
 
 /**
  * Defines the shape of the object returned by the getAdresses's method.
+ * @member confidentialAddress the confidential address.
+ * @member blindingPrivateKey the blinding private key associated to the confidential address.
  */
 export interface AddressInterface {
-  address: string;
-  // in case of unconfidential address: blindPrivKey = undefined.
-  blindPrivKey?: string;
+  confidentialAddress: string;
+  blindingPrivateKey: string;
 }
 
 /**
@@ -34,12 +35,21 @@ export interface IdentityInterface {
   getAddresses(): AddressInterface[];
 }
 
+/**
+ * Identity constructors options.
+ * @member chain the blockchain type of the identity.
+ * @member type the identity type @see IdentityType .
+ * @member value the data used to create the Identity. depends of the type.
+ */
 export interface IdentityOpts {
   chain: string;
   type: number;
   value: any;
 }
 
+/**
+ * Abstract class for Identity.
+ */
 export default class Identity {
   network: Network;
   type: IdentityType;

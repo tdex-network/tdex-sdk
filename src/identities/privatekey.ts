@@ -6,23 +6,42 @@ import Identity, {
   IdentityType,
 } from '../identity';
 
+/**
+ * This interface describes the shape of the value arguments used in contructor.
+ * @member signingKeyWIF a valid private key WIF encoded.
+ * @member blindingKeyWIF a valid private key WIF encoded.
+ */
 export interface PrivateKeyOptsValue {
   signingKeyWIF: string;
   blindingKeyWIF: string;
 }
 
+/**
+ * A type guard function for PrivateKeyOptsValue
+ * @see PrivateKeyOptsValue
+ */
 function instanceOfPrivateKeyOptsValue(
   value: any
 ): value is PrivateKeyOptsValue {
   return 'signingKeyWIF' in value && 'blindingKeyWIF' in value;
 }
 
+/**
+ * The PrivateKey Identity take WIF and modelize a user using his private key.
+ * @member signingKeyPair private, the key pair used to sign inputs.
+ * @member blindingKeyPair private, the key pair used to blind outputs.
+ * @member confidentialAddress private, the confidential address generated from keypairs.
+ * @member blindingPrivateKey private, the blinding private key associated with the confidential address.
+ * @member scriptPubKey private, the scriptPubKey associated to the confidential address.
+ * @method signPset sign all the inputs when it's possible (scriptPubKey = input's script).
+ * @method getAddresses return an array of one element containing the blindingPrivateKey & the confidentialAddress.
+ */
 export default class PrivateKey extends Identity implements IdentityInterface {
   private signingKeyPair: ECPairInterface;
   private blindingKeyPair: ECPairInterface;
 
-  private address: string;
-  private blindPrivKey: string;
+  private confidentialAddress: string;
+  private blindingPrivateKey: string;
   private scriptPubKey: Buffer;
 
   constructor(args: IdentityOpts) {
@@ -60,8 +79,8 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     });
 
     // store data inside private fields.
-    this.address = p2wpkh.confidentialAddress!;
-    this.blindPrivKey = this.blindingKeyPair.privateKey!.toString('hex');
+    this.confidentialAddress = p2wpkh.confidentialAddress!;
+    this.blindingPrivateKey = this.blindingKeyPair.privateKey!.toString('hex');
     this.scriptPubKey = p2wpkh.output!;
   }
 
@@ -91,25 +110,6 @@ export default class PrivateKey extends Identity implements IdentityInterface {
       )
     );
 
-    // validate all the signature
-    // const notValidSignatures: number[] = indexOfInputs
-    //   .map((inputIndex: number) =>
-    //     pset.validateSignaturesOfInput(
-    //       inputIndex,
-    //       this.signingKeyPair.publicKey
-    //     )
-    //       ? -1
-    //       : inputIndex
-    //   )
-    //   .filter((i: number) => i !== -1);
-
-    // throw an error if the signature is invalid for at least one of the input to sign.
-    // if (notValidSignatures.length > 0) {
-    //   throw new Error(
-    //     `At least 1 input signature is unvalid. Invalid signature input index: ${notValidSignatures}`
-    //   );
-    // }
-    // return the base64 encoded pset.
     return pset.toBase64();
   }
 
@@ -117,6 +117,11 @@ export default class PrivateKey extends Identity implements IdentityInterface {
    * for private key: only returns one confidential address & the associated blindingPrivKey.
    */
   getAddresses(): AddressInterface[] {
-    return [{ address: this.address, blindPrivKey: this.blindPrivKey }];
+    return [
+      {
+        confidentialAddress: this.confidentialAddress,
+        blindingPrivateKey: this.blindingPrivateKey,
+      },
+    ];
   }
 }

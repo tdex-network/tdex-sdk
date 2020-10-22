@@ -25,6 +25,6 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   }
 
   getAddresses(): AddressInterface[] {
-    return [{ address: '', blindPrivKey: '' }];
+    return [{ confidentialAddress: '', blindingPrivateKey: '' }];
   }
 }
