@@ -9,9 +9,11 @@ import {
   Transaction,
 } from 'liquidjs-lib';
 import { fromAssetHash, toAssetHash } from './utils';
-//Libs
 import { AddressInterface } from './identity';
 
+/**
+ * Wallet abstraction.
+ */
 export interface WalletInterface {
   network: Network;
   addresses: AddressInterface[];
@@ -29,6 +31,14 @@ export interface WalletInterface {
   ): any;
 }
 
+/**
+ * Implementation of Wallet Interface.
+ * @member network type of network (regtest...)
+ * @member addresses list of AddressInterface.
+ * @member blindingByScript a map scriptPubKey --> blindingPrivateKey.
+ * @method createTx init empty PSET.
+ * @method updateTx update a PSET with outputs and inputs (for Swap tx).
+ */
 export class Wallet implements WalletInterface {
   network: Network;
   addresses: AddressInterface[] = [];
@@ -57,11 +67,25 @@ export class Wallet implements WalletInterface {
     });
   }
 
+  /**
+   * Returns an empty liquidjs lib Psbt instance.
+   */
   createTx(): string {
     const pset = new Psbt({ network: this.network });
     return pset.toBase64();
   }
 
+  /**
+   *
+   * @param psetBase64 the Pset to update, base64 encoded.
+   * @param unspents unspent that will be used to found the transaction.
+   * @param inputAmount the amount to found with unspents.
+   * @param inputAsset the assetHash of inputs.
+   * @param outputAmount the amount to send via output.
+   * @param outputAsset the asset hash of output.
+   * @param outputAddress the address that will receive the `outputAmount` of `outputAsset`.
+   * @param changeAddress the change address.
+   */
   updateTx(
     psetBase64: string,
     unspents: Array<UtxoInterface>,
@@ -164,6 +188,11 @@ export class Wallet implements WalletInterface {
   }
 }
 
+/**
+ * Factory: list of addresses --to--> Wallet
+ * @param addresses a list of addressInterface.
+ * @param network network type
+ */
 export function walletFromAddresses(
   addresses: AddressInterface[],
   network?: string
@@ -264,6 +293,13 @@ export async function fetchBalances(
   ); // {} is the initial value of the storage
 }
 
+/**
+ * Select a set of unspent in `utxos` such as sum(utxo.value) >= `amount` && where utxo.asset = `asset`.
+ * Returns change and selected unspent outputs.
+ * @param utxos the unspents to search in.
+ * @param amount the amount of coin to search.
+ * @param asset the asset hash.
+ */
 export function coinselect(
   utxos: Array<UtxoInterface>,
   amount: number,
