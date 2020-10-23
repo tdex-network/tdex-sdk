@@ -206,10 +206,7 @@ export class Trade extends Core implements TradeInterface {
       )
     );
 
-    let traderUnblindedUtxos: UtxoInterface[] = [];
-    arrayOfArrayOfUtxos.forEach((a: UtxoInterface[]) => {
-      traderUnblindedUtxos = traderUnblindedUtxos.concat(a);
-    });
+    let traderUnblindedUtxos: UtxoInterface[] = arrayOfarrayOfUtxos.flat();
 
     //TODO replace with this
     //const addressForOutput = this.identity.getNextAddress();
