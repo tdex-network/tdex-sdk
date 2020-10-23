@@ -8,6 +8,7 @@ import Identity, {
   IdentityOpts,
   IdentityType,
 } from '../identity';
+import { BufferMap } from '../utils';
 
 export interface MnemonicOptsValue {
   mnemonic: string;
@@ -24,15 +25,15 @@ interface AddressInterfaceExtended {
   derivationPath: string;
 }
 
-type AddressCacheMap = { [script: string]: AddressInterfaceExtended };
-
 export default class Mnemonic extends Identity implements IdentityInterface {
   static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
   static INITIAL_INDEX: number = 0;
 
   private derivationPath: string = Mnemonic.INITIAL_BASE_PATH;
   private index: number = Mnemonic.INITIAL_INDEX;
-  private scriptToAddressCache: AddressCacheMap = {};
+  private scriptToAddressCache: BufferMap<
+    AddressInterfaceExtended
+  > = new BufferMap();
 
   readonly masterPrivateKeyNode: BIP32Interface;
   readonly masterBlindingKeyNode: Slip77Interface;
@@ -115,9 +116,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       signingPrivateKey: keyPair.privateKey!.toString('hex'),
     };
     // store the generation inside local cache
-    this.scriptToAddressCache[
-      script.toString('hex').valueOf()
-    ] = newAddressGeneration;
+    this.scriptToAddressCache.set(script, newAddressGeneration);
     // return the generation data
     return newAddressGeneration.address;
   }
@@ -129,9 +128,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     for (let index = 0; index < pset.data.inputs.length; index++) {
       const input = pset.data.inputs[index];
       if (input.witnessUtxo) {
-        const addressGeneration = this.scriptToAddressCache[
-          input.witnessUtxo.script.toString('hex').valueOf()
-        ];
+        const addressGeneration = this.scriptToAddressCache.get(
+          input.witnessUtxo.script
+        );
 
         if (addressGeneration) {
           // if there is an address generated for the input script: build the signing key pair.
@@ -153,8 +152,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
   // returns all the addresses generated
   getAddresses(): AddressInterface[] {
-    return Object.values(this.scriptToAddressCache).map(
-      addrExtended => addrExtended.address
-    );
+    return this.scriptToAddressCache
+      .values()
+      .map(addrExtended => addrExtended.address);
   }
 }
