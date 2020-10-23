@@ -208,13 +208,8 @@ export class Trade extends Core implements TradeInterface {
 
     const traderUnblindedUtxos: UtxoInterface[] = arrayOfArrayOfUtxos.flat();
 
-    //TODO replace with this
-    //const addressForOutput = this.identity.getNextAddress();
-    //const addressForChange = this.identity.getNextChangeAddress();
-    const firstAddress = wallet.addresses[0];
-
-    const addressForOutput = firstAddress; //this.identity.getNextAddress(),
-    const addressForChange = firstAddress; //this.identity.getNextChangeAddress()
+    const addressForOutput = this.identity.getNextAddress();
+    const addressForChange = this.identity.getNextChangeAddress();
 
     const emptyPsbt = wallet.createTx();
     const {
