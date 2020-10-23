@@ -16,7 +16,7 @@ import { AddressInterface } from 'types';
 export interface WalletInterface {
   network: Network;
   addresses: AddressInterface[];
-  blindingByScript: Record<string, Buffer>;
+  blindingPrivateKeyByScript: Record<string, Buffer>;
   createTx(): string;
   updateTx(
     psetBase64: string,
@@ -34,14 +34,14 @@ export interface WalletInterface {
  * Implementation of Wallet Interface.
  * @member network type of network (regtest...)
  * @member addresses list of AddressInterface.
- * @member blindingByScript a map scriptPubKey --> blindingPrivateKey.
+ * @member blindingPrivateKeyByScript a map scriptPubKey --> blindingPrivateKey.
  * @method createTx init empty PSET.
  * @method updateTx update a PSET with outputs and inputs (for Swap tx).
  */
 export class Wallet implements WalletInterface {
   network: Network;
   addresses: AddressInterface[] = [];
-  blindingByScript: Record<string, Buffer> = {};
+  blindingPrivateKeyByScript: Record<string, Buffer> = {};
 
   constructor({
     addresses,
@@ -59,7 +59,7 @@ export class Wallet implements WalletInterface {
           network,
         })
         .output!.toString('hex');
-      this.blindingByScript[scriptHex] = Buffer.from(
+      this.blindingPrivateKeyByScript[scriptHex] = Buffer.from(
         a.blindingPrivateKey,
         'hex'
       );
@@ -130,7 +130,7 @@ export class Wallet implements WalletInterface {
 
       // we update the inputBlindingKeys map after we add an input to the transaction
       const scriptHex = i.script!.toString('hex');
-      inputBlindingKeys[scriptHex] = this.blindingByScript[scriptHex];
+      inputBlindingKeys[scriptHex] = this.blindingPrivateKeyByScript[scriptHex];
     });
 
     const receivingScript = address

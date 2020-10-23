@@ -23,7 +23,7 @@ describe('TDEX SDK', () => {
     );
 
     expect(
-      wallet.blindingByScript[
+      wallet.blindingPrivateKeyByScript[
         '0014fd3291f773fc61ffff8732dd7af942108ee856e1'
       ].toString('hex')
     ).toStrictEqual(
