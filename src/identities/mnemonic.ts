@@ -25,6 +25,15 @@ interface AddressInterfaceExtended {
   derivationPath: string;
 }
 
+/**
+ * @class Mnemonic
+ * Get a mnemonic as parameter to set up an HD Wallet.
+ * @member masterPrivateKeyNode a BIP32 node computed from the seed, used to generate signing key pairs.
+ * @member masterBlindingKeyNode a SLIP77 node computed from the seed, used to generate the blinding key pairs.
+ * @member derivationPath the base derivation path.
+ * @member index the next index used to derive the base node (for signing key pairs).
+ * @member scriptToAddressCache a map scriptPubKey --> address generation.
+ */
 export default class Mnemonic extends Identity implements IdentityInterface {
   static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
   static INITIAL_INDEX: number = 0;
@@ -72,6 +81,10 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
   }
 
+  /**
+   * return the next keypair derivated from the baseNode.
+   * increment the private member index +1.
+   */
   private getNextKeypair(): { publicKey: Buffer; privateKey: Buffer } {
     const baseNode = this.masterPrivateKeyNode.derivePath(this.derivationPath);
     const wif: string = baseNode.deriveHardened(this.index).toWIF();
@@ -80,6 +93,10 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
+  /**
+   * Derives the script given as parameter to a keypair (SLIP77).
+   * @param scriptPubKey script to derive.
+   */
   private getBlindingKeyPair(
     scriptPubKey: Buffer
   ): { publicKey: Buffer; privateKey: Buffer } {
@@ -89,23 +106,37 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
+  private scriptFromPublicKey(publicKey: Buffer): Buffer {
+    return payments.p2wpkh({
+      pubkey: publicKey,
+      network: this.network,
+    }).output!;
+  }
+
+  private createConfidentialAddress(
+    signingPublicKey: Buffer,
+    blindingPublicKey: Buffer
+  ): string {
+    return payments.p2wpkh({
+      pubkey: signingPublicKey,
+      blindkey: blindingPublicKey,
+      network: this.network,
+    }).confidentialAddress!;
+  }
+
   getNextConfidentialAddress(): AddressInterface {
     const currentIndex = this.index;
     // get the next key pair
-    const keyPair = this.getNextKeypair();
+    const signingKeyPair = this.getNextKeypair();
     // use the public key to compute the scriptPubKey
-    const script: Buffer = payments.p2wpkh({
-      pubkey: keyPair.publicKey!,
-      network: this.network,
-    }).output!;
+    const script: Buffer = this.scriptFromPublicKey(signingKeyPair.publicKey);
     // generate the blindKeyPair from the scriptPubKey
     const blindingKeyPair = this.getBlindingKeyPair(script);
     // with blindingPublicKey & signingPublicKey, generate the confidential address
-    const { confidentialAddress } = payments.p2wpkh({
-      pubkey: keyPair.publicKey!,
-      blindkey: blindingKeyPair.publicKey!,
-      network: this.network,
-    });
+    const confidentialAddress = this.createConfidentialAddress(
+      signingKeyPair.publicKey,
+      blindingKeyPair.publicKey
+    );
     // create the address generation object
     const newAddressGeneration: AddressInterfaceExtended = {
       address: {
@@ -113,7 +144,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
         blindingPrivateKey: blindingKeyPair.privateKey!.toString('hex'),
       },
       derivationPath: `${this.derivationPath}/${currentIndex}`,
-      signingPrivateKey: keyPair.privateKey!.toString('hex'),
+      signingPrivateKey: signingKeyPair.privateKey!.toString('hex'),
     };
     // store the generation inside local cache
     this.scriptToAddressCache.set(script, newAddressGeneration);
