@@ -124,7 +124,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     }).confidentialAddress!;
   }
 
-  getNextConfidentialAddress(): AddressInterface {
+  getNextAddress(): AddressInterface {
     const currentIndex = this.index;
     // get the next key pair
     const signingKeyPair = this.getNextKeypair();
@@ -150,6 +150,10 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     this.scriptToAddressCache.set(script, newAddressGeneration);
     // return the generation data
     return newAddressGeneration.address;
+  }
+
+  getNextChangeAddress(): AddressInterface {
+    return this.getNextAddress();
   }
 
   async signPset(psetBase64: string): Promise<string> {

@@ -31,6 +31,8 @@ export interface AddressInterface {
 export interface IdentityInterface {
   network: Network;
   type: IdentityType;
+  getNextAddress(): AddressInterface;
+  getNextChangeAddress(): AddressInterface;
   signPset(psetBase64: string): string | Promise<string>;
   getAddresses(): AddressInterface[];
 }

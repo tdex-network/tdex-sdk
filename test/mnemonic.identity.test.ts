@@ -113,7 +113,7 @@ describe('Identity: Private key', () => {
   describe('Mnemonic.signPset', () => {
     it('should sign the inputs of the previously generated addresses', async () => {
       const mnemonic = new Mnemonic(validOpts);
-      const generated = mnemonic.getNextConfidentialAddress();
+      const generated = mnemonic.getNextAddress();
 
       await faucet(generated.confidentialAddress);
       const utxo = (await fetchUtxos(generated.confidentialAddress))[0];
@@ -175,8 +175,8 @@ describe('Identity: Private key', () => {
   describe('Mnemonic.getAddresses', () => {
     it('should return all the generated addresses', () => {
       const mnemonic = new Mnemonic(validOpts);
-      const generated1 = mnemonic.getNextConfidentialAddress();
-      const generated2 = mnemonic.getNextConfidentialAddress();
+      const generated1 = mnemonic.getNextAddress();
+      const generated2 = mnemonic.getNextAddress();
       assert.deepStrictEqual([generated1, generated2], mnemonic.getAddresses());
     });
   });

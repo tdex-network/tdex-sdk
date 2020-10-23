@@ -84,6 +84,21 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     this.scriptPubKey = p2wpkh.output!;
   }
 
+  private getAddress(): AddressInterface {
+    return {
+      confidentialAddress: this.confidentialAddress,
+      blindingPrivateKey: this.blindingPrivateKey,
+    };
+  }
+
+  getNextAddress(): AddressInterface {
+    return this.getAddress();
+  }
+
+  getNextChangeAddress(): AddressInterface {
+    return this.getAddress();
+  }
+
   /**
    * iterate through inputs and sign when it's possible, then returns the signed pset (base64 encoded).
    * @param psetBase64 the base64 encoded pset.
