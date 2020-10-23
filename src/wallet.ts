@@ -3,6 +3,7 @@ import {
   Network,
   networks,
   payments,
+  address,
   Psbt,
   confidential,
   Transaction,
@@ -18,14 +19,14 @@ export interface WalletInterface {
   createTx(): string;
   updateTx(
     psetBase64: string,
-    unspents: Array<any>,
+    unspents: Array<UtxoInterface>,
     inputAmount: number,
     outputAmount: number,
     inputAsset: string,
     outputAsset: string,
     outputAddress: string,
     changeAddress: string
-  ): string;
+  ): any;
 }
 
 export class Wallet implements WalletInterface {
@@ -66,7 +67,7 @@ export class Wallet implements WalletInterface {
     outputAsset: string,
     outputAddress: string,
     changeAddress: string
-  ): string {
+  ): any {
     let pset: Psbt;
     try {
       pset = Psbt.fromBase64(psetBase64);
@@ -74,12 +75,16 @@ export class Wallet implements WalletInterface {
       throw new Error('Invalid pset');
     }
 
-    unspents = unspents.filter(
-      (utxo: UtxoInterface) => utxo.asset === inputAsset
+    const { selectedUnspents, change } = coinselect(
+      unspents,
+      inputAmount,
+      inputAsset
     );
-    const { selectedUnspents, change } = coinselect(unspents, inputAmount);
 
-    selectedUnspents.forEach((i: UtxoInterface) =>
+    let inputBlindingKeys: Record<string, Buffer> = {};
+    let outputBlindingKeys: Record<string, Buffer> = {};
+
+    selectedUnspents.forEach((i: UtxoInterface) => {
       pset.addInput({
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: i.txid,
@@ -91,9 +96,17 @@ export class Wallet implements WalletInterface {
           value: confidential.satoshiToConfidentialValue(i.value!),
           nonce: Buffer.from('00', 'hex'),
         },
-      } as any)
-    );
+      } as any);
 
+      // we update the inputBlindingKeys map after we add an input to the transaction
+      const scriptHex = i.script!.toString('hex');
+      inputBlindingKeys[scriptHex] = getBlindingWithScriptFromAddresses(
+        this.addresses,
+        i.script
+      )!;
+    });
+
+    // The receiving output
     pset.addOutput({
       address: outputAddress,
       value: confidential.satoshiToConfidentialValue(outputAmount),
@@ -101,6 +114,13 @@ export class Wallet implements WalletInterface {
       nonce: Buffer.from('00', 'hex'),
     });
 
+    // we update the outputBlindingKeys map after we add the receiving output to the transaction
+    const receivingScript = address.toOutputScript(outputAddress, this.network);
+    outputBlindingKeys[
+      receivingScript.toString('hex')
+    ] = getBlindingWithScriptFromAddresses(this.addresses, receivingScript)!;
+
+    // Change
     if (change > 0) {
       pset.addOutput({
         address: changeAddress,
@@ -108,9 +128,18 @@ export class Wallet implements WalletInterface {
         asset: fromAssetHash(inputAsset),
         nonce: Buffer.from('00', 'hex'),
       });
+      // we update the outputBlindingKeys map after we add the change output to the transaction
+      const changeScript = address.toOutputScript(changeAddress, this.network);
+      outputBlindingKeys[
+        changeScript.toString('hex')
+      ] = getBlindingWithScriptFromAddresses(this.addresses, changeScript)!;
     }
 
-    return pset.toBase64();
+    return {
+      psetBase64: pset.toBase64(),
+      inputBlindingKeys,
+      outputBlindingKeys,
+    };
   }
 
   static toHex(psetBase64: string): string {
@@ -228,7 +257,11 @@ export async function fetchBalances(
   ); // {} is the initial value of the storage
 }
 
-export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
+export function coinselect(
+  utxos: Array<UtxoInterface>,
+  amount: number,
+  asset: string
+) {
   let unspents = [];
   let availableSat = 0;
   let change = 0;
@@ -238,6 +271,8 @@ export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
 
     if (!utxo.value || !utxo.asset)
       throw new Error('Coin selection needs unblinded outputs');
+
+    if (utxo.asset !== asset) continue;
 
     unspents.push({
       txid: utxo.txid,
@@ -256,4 +291,17 @@ export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
   change = availableSat - amount;
 
   return { selectedUnspents: unspents, change };
+}
+
+function getBlindingWithScriptFromAddresses(
+  addresses: AddressInterface[],
+  script: any
+): Buffer | undefined {
+  if (!(script instanceof Buffer)) return undefined;
+
+  const addressToFind = payments.p2wpkh({ output: script }).confidentialAddress;
+  const found = addresses.find(
+    (a: AddressInterface) => a.confidentialAddress === addressToFind
+  );
+  return Buffer.from(found!.blindingPrivateKey, 'hex');
 }

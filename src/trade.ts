@@ -4,6 +4,7 @@ import {
   WalletInterface,
   fetchAndUnblindUtxos,
   walletFromAddresses,
+  UtxoInterface,
 } from './wallet';
 import { TraderClient } from './grpcClient';
 import TraderClientInterface from './grpcClientInterface';
@@ -195,32 +196,43 @@ export class Trade extends Core implements TradeInterface {
       amountToReceive,
     } = await this.preview(market, tradeType, amountInSatoshis);
 
-    const traderUnblindedUtxos = await Promise.all(
-      wallet.addresses.map((a: AddressInterface) => {
-        return fetchAndUnblindUtxos(
+    const arrayOfArrayOfUtxos = await Promise.all(
+      wallet.addresses.map((a: AddressInterface) =>
+        fetchAndUnblindUtxos(
           a.confidentialAddress,
           a.blindingPrivateKey,
           this.explorerUrl!
-        );
-      })
+        )
+      )
     );
 
-    // TODO this will need to call the identity class to get the next address, for now we hardcode the first one from cache.
-    const firstAddress = wallet.addresses[0].confidentialAddress;
+    let traderUnblindedUtxos: UtxoInterface[] = [];
+    arrayOfArrayOfUtxos.forEach((a: UtxoInterface[]) => {
+      traderUnblindedUtxos = traderUnblindedUtxos.concat(a);
+    });
+
+    //TODO replace with this
+    //const addressForOutput = this.identity.getNextAddress();
+    //const addressForChange = this.identity.getNextChangeAddress();
+    const firstAddress = wallet.addresses[0];
 
     const addressForOutput = firstAddress; //this.identity.getNextAddress(),
     const addressForChange = firstAddress; //this.identity.getNextChangeAddress()
 
     const emptyPsbt = wallet.createTx();
-    const psetBase64 = wallet.updateTx(
+    const {
+      psetBase64,
+      inputBlindingKeys,
+      outputBlindingKeys,
+    } = wallet.updateTx(
       emptyPsbt,
       traderUnblindedUtxos,
       amountToBeSent,
       amountToReceive,
       assetToBeSent,
       assetToReceive,
-      addressForOutput,
-      addressForChange
+      addressForOutput.confidentialAddress,
+      addressForChange.confidentialAddress
     );
 
     const swap = new Swap();
@@ -230,6 +242,8 @@ export class Trade extends Core implements TradeInterface {
       assetToReceive,
       amountToReceive,
       psbtBase64: psetBase64,
+      inputBlindingKeys,
+      outputBlindingKeys,
     });
 
     // 0 === Buy === receiving base_asset; 1 === sell === receiving base_asset
