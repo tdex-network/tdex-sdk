@@ -180,4 +180,26 @@ describe('Identity: Private key', () => {
       assert.deepStrictEqual([generated1, generated2], mnemonic.getAddresses());
     });
   });
+
+  describe('Mnemonic.getBlindingPrivateKey', () => {
+    it('should return the privateKey according to slip77 spec', () => {
+      const mnemonic = new Mnemonic(validOpts);
+      const {
+        confidentialAddress,
+        blindingPrivateKey,
+      } = mnemonic.getNextAddress();
+
+      const script: string = payments
+        .p2wpkh({
+          confidentialAddress,
+          network,
+        })
+        .output!.toString('hex');
+
+      assert.deepStrictEqual(
+        mnemonic.getBlindingPrivateKey(script),
+        Buffer.from(blindingPrivateKey, 'hex')
+      );
+    });
+  });
 });
