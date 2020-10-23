@@ -169,8 +169,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return this.getAddress(true);
   }
 
-  getBlindingPrivateKey(script: Buffer): Buffer {
-    return this.getBlindingKeyPair(script).privateKey;
+  getBlindingPrivateKey(script: string): Buffer {
+    const scriptPubKeyBuffer = Buffer.from(script, 'hex');
+    return this.getBlindingKeyPair(scriptPubKeyBuffer).privateKey;
   }
 
   async signPset(psetBase64: string): Promise<string> {

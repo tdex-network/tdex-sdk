@@ -35,7 +35,7 @@ export interface IdentityInterface {
   getNextChangeAddress(): AddressInterface;
   signPset(psetBase64: string): string | Promise<string>;
   getAddresses(): AddressInterface[];
-  getBlindingPrivateKey(script: Buffer): Buffer;
+  getBlindingPrivateKey(script: string): Buffer;
 }
 
 /**
