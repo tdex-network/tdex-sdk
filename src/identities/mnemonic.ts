@@ -35,7 +35,7 @@ interface AddressInterfaceExtended {
  * @member scriptToAddressCache a map scriptPubKey --> address generation.
  */
 export default class Mnemonic extends Identity implements IdentityInterface {
-  static INITIAL_BASE_PATH: string = "m/84'/0'/0'/0'";
+  static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
   static INITIAL_INDEX: number = 0;
 
   private baseDerivationPath: string = Mnemonic.INITIAL_BASE_PATH;
