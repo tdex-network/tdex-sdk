@@ -36,7 +36,7 @@ describe('TDEX SDK', () => {
     });
   });
 
-  test('Should get the preview of a trade of a daemon with AMM', async () => {
+  test.skip('Should get the preview of a trade of a daemon with AMM', async () => {
     const trade = new Trade({
       providerUrl: 'localhost:9945',
       explorerUrl: 'localhost:3001',
@@ -63,14 +63,14 @@ describe('TDEX SDK', () => {
     });
   });
 
-  test('Should sell some LBTCs', async () => {
+  test.skip('Should sell some LBTCs with a daemon', async () => {
     // address
     //el1qqfv793wyh4wcz4eys9y9vu97hfdskgjedykn4jcv37qhgtjlm8xhdlfjj8mh8lrplllcwvka0tu5yyywaptwztawfdeqzdwys
     // blidning
     // 48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc
     const trade = new Trade({
       providerUrl: 'localhost:9945',
-      explorerUrl: 'localhost:3001',
+      explorerUrl: 'http://localhost:3001',
       identity: {
         chain: 'regtest',
         type: IdentityType.PrivateKey,

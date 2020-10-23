@@ -9,7 +9,6 @@ import {
   Transaction,
 } from 'liquidjs-lib';
 import { AddressInterface } from 'types';
-import { fromAssetHash, toAssetHash } from './utils';
 
 /**
  * Wallet abstraction.
@@ -119,8 +118,11 @@ export class Wallet implements WalletInterface {
         index: i.vout,
         //The scriptPubkey and the value only are needed.
         witnessUtxo: {
-          script: i.script,
-          asset: fromAssetHash(inputAsset),
+          script: i.script!,
+          asset: Buffer.concat([
+            Buffer.from('01', 'hex'), //prefix for unconfidential asset
+            Buffer.from(inputAsset, 'hex').reverse(),
+          ]),
           value: confidential.satoshiToConfidentialValue(i.value!),
           nonce: Buffer.from('00', 'hex'),
         },
@@ -131,35 +133,38 @@ export class Wallet implements WalletInterface {
       inputBlindingKeys[scriptHex] = this.blindingByScript[scriptHex];
     });
 
+    const receivingScript = address
+      .toOutputScript(outputAddress.confidentialAddress, this.network)
+      .toString('hex');
+
     // The receiving output
     pset.addOutput({
-      address: outputAddress.confidentialAddress,
+      script: receivingScript,
       value: confidential.satoshiToConfidentialValue(outputAmount),
       asset: outputAsset,
       nonce: Buffer.from('00', 'hex'),
     });
 
     // we update the outputBlindingKeys map after we add the receiving output to the transaction
-    const receivingScript = address
-      .toOutputScript(outputAddress.confidentialAddress, this.network)
-      .toString('hex');
     outputBlindingKeys[receivingScript] = Buffer.from(
       outputAddress.blindingPrivateKey,
       'hex'
     );
 
-    // Change
     if (change > 0) {
-      pset.addOutput({
-        address: changeAddress.confidentialAddress,
-        value: confidential.satoshiToConfidentialValue(change),
-        asset: fromAssetHash(inputAsset),
-        nonce: Buffer.from('00', 'hex'),
-      });
-      // we update the outputBlindingKeys map after we add the change output to the transaction
       const changeScript = address
         .toOutputScript(changeAddress.confidentialAddress, this.network)
         .toString('hex');
+
+      // Change
+      pset.addOutput({
+        script: changeScript,
+        value: confidential.satoshiToConfidentialValue(change),
+        asset: inputAsset,
+        nonce: Buffer.from('00', 'hex'),
+      });
+
+      // we update the outputBlindingKeys map after we add the change output to the transaction
       outputBlindingKeys[changeScript] = Buffer.from(
         changeAddress.blindingPrivateKey,
         'hex'
@@ -260,7 +265,7 @@ export async function fetchAndUnblindUtxos(
       return {
         txid: blindedUtxo.txid,
         vout: blindedUtxo.vout,
-        asset: toAssetHash(unblindedUtxo.asset),
+        asset: (unblindedUtxo.asset.reverse() as Buffer).toString('hex'),
         value: parseInt(unblindedUtxo.value, 10),
         script: prevout.script,
       };
@@ -322,6 +327,7 @@ export function coinselect(
       vout: utxo.vout,
       value: utxo.value,
       asset: utxo.asset,
+      script: utxo.script,
     });
     availableSat += utxo.value;
 
