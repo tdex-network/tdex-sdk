@@ -35,10 +35,10 @@ interface AddressInterfaceExtended {
  * @member scriptToAddressCache a map scriptPubKey --> address generation.
  */
 export default class Mnemonic extends Identity implements IdentityInterface {
-  static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
+  static INITIAL_BASE_PATH: string = "m/84'/0'/0'/0'";
   static INITIAL_INDEX: number = 0;
 
-  private derivationPath: string = Mnemonic.INITIAL_BASE_PATH;
+  private baseDerivationPath: string = Mnemonic.INITIAL_BASE_PATH;
   private index: number = Mnemonic.INITIAL_INDEX;
   private scriptToAddressCache: BufferMap<
     AddressInterfaceExtended
@@ -81,12 +81,21 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
   }
 
+  private getCurrentDerivationPath(isChange: boolean): string {
+    const changeValue: number = isChange ? 1 : 0;
+    return `${this.baseDerivationPath}/${changeValue}`;
+  }
+
   /**
    * return the next keypair derivated from the baseNode.
    * increment the private member index +1.
    */
-  private getNextKeypair(): { publicKey: Buffer; privateKey: Buffer } {
-    const baseNode = this.masterPrivateKeyNode.derivePath(this.derivationPath);
+  private getNextKeypair(
+    isChange: boolean = false
+  ): { publicKey: Buffer; privateKey: Buffer } {
+    const baseNode = this.masterPrivateKeyNode.derivePath(
+      this.getCurrentDerivationPath(isChange)
+    );
     const wif: string = baseNode.deriveHardened(this.index).toWIF();
     const { publicKey, privateKey } = ECPair.fromWIF(wif, this.network);
     this.index += 1;
@@ -124,10 +133,10 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     }).confidentialAddress!;
   }
 
-  getNextAddress(): AddressInterface {
+  private getAddress(isChange: boolean): AddressInterface {
     const currentIndex = this.index;
     // get the next key pair
-    const signingKeyPair = this.getNextKeypair();
+    const signingKeyPair = this.getNextKeypair(isChange);
     // use the public key to compute the scriptPubKey
     const script: Buffer = this.scriptFromPublicKey(signingKeyPair.publicKey);
     // generate the blindKeyPair from the scriptPubKey
@@ -143,7 +152,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
         confidentialAddress: confidentialAddress!,
         blindingPrivateKey: blindingKeyPair.privateKey!.toString('hex'),
       },
-      derivationPath: `${this.derivationPath}/${currentIndex}`,
+      derivationPath: `${this.baseDerivationPath}/${currentIndex}`,
       signingPrivateKey: signingKeyPair.privateKey!.toString('hex'),
     };
     // store the generation inside local cache
@@ -152,8 +161,12 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return newAddressGeneration.address;
   }
 
+  getNextAddress(): AddressInterface {
+    return this.getAddress(false);
+  }
+
   getNextChangeAddress(): AddressInterface {
-    return this.getNextAddress();
+    return this.getAddress(true);
   }
 
   getBlindingPrivateKey(script: Buffer): Buffer {
