@@ -198,7 +198,7 @@ describe('Identity: Private key', () => {
 
       assert.deepStrictEqual(
         mnemonic.getBlindingPrivateKey(script),
-        Buffer.from(blindingPrivateKey, 'hex')
+        blindingPrivateKey
       );
     });
   });

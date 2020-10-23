@@ -99,13 +99,13 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     return this.getAddress();
   }
 
-  getBlindingPrivateKey(script: string): Buffer {
+  getBlindingPrivateKey(script: string): string {
     const scriptPubKeyBuffer = Buffer.from(script, 'hex');
     if (!scriptPubKeyBuffer.equals(this.scriptPubKey)) {
       throw new Error('The script is not PrivateKey.scriptPubKey.');
     }
 
-    return Buffer.from(this.blindingPrivateKey, 'hex');
+    return this.blindingPrivateKey;
   }
 
   /**

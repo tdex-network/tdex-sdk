@@ -156,7 +156,7 @@ describe('Identity: Private key', () => {
         .output!.toString('hex');
       assert.deepStrictEqual(
         privateKey.getBlindingPrivateKey(script),
-        Buffer.from(blindingPrivateKey, 'hex')
+        blindingPrivateKey
       );
     });
 
