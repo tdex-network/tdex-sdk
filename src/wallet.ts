@@ -1,230 +1,286 @@
 import axios from 'axios';
-import { ECPair, networks, payments, Psbt, confidential } from 'liquidjs-lib';
-//Libs
-import { coinselect } from './utils';
-//Types
-import { ECPairInterface } from 'liquidjs-lib/types/ecpair';
-import { Network } from 'liquidjs-lib/types/networks';
+import {
+  Network,
+  networks,
+  payments,
+  address,
+  Psbt,
+  confidential,
+  Transaction,
+} from 'liquidjs-lib';
+import { AddressInterface } from 'types';
 
-export interface WatchOnlyWalletInterface {
-  address: string;
-  script: string;
+/**
+ * Wallet abstraction.
+ */
+export interface WalletInterface {
   network: Network;
+  addresses: AddressInterface[];
+  blindingPrivateKeyByScript: Record<string, Buffer>;
+  createTx(): string;
   updateTx(
-    psbtBase64: string,
-    inputs: Array<any>,
+    psetBase64: string,
+    unspents: Array<UtxoInterface>,
     inputAmount: number,
     outputAmount: number,
     inputAsset: string,
-    outputAsset: string
-  ): string;
+    outputAsset: string,
+    outputAddress: AddressInterface,
+    changeAddress: AddressInterface
+  ): any;
 }
 
-export class WatchOnlyWallet implements WatchOnlyWalletInterface {
+/**
+ * Implementation of Wallet Interface.
+ * @member network type of network (regtest...)
+ * @member addresses list of AddressInterface.
+ * @member blindingPrivateKeyByScript a map scriptPubKey --> blindingPrivateKey.
+ * @method createTx init empty PSET.
+ * @method updateTx update a PSET with outputs and inputs (for Swap tx).
+ */
+export class Wallet implements WalletInterface {
   network: Network;
-  address: string;
-  script: string;
-  constructor({ address, network }: { address: string; network: Network }) {
-    const payment = payments.p2wpkh({ address, network });
+  addresses: AddressInterface[] = [];
+  blindingPrivateKeyByScript: Record<string, Buffer> = {};
 
+  constructor({
+    addresses,
+    network,
+  }: {
+    addresses: AddressInterface[];
+    network: Network;
+  }) {
     this.network = network;
-    this.address = payment.address!;
-    this.script = payment.output!.toString('hex');
+    this.addresses = addresses;
+    addresses.forEach((a: AddressInterface) => {
+      const scriptHex = payments
+        .p2wpkh({
+          confidentialAddress: a.confidentialAddress,
+          network,
+        })
+        .output!.toString('hex');
+      this.blindingPrivateKeyByScript[scriptHex] = Buffer.from(
+        a.blindingPrivateKey,
+        'hex'
+      );
+    });
   }
 
-  static fromAddress = fromAddress;
-  static createTx = createTx;
-  static toHex = toHex;
+  /**
+   * Returns an empty liquidjs lib Psbt instance.
+   */
+  createTx(): string {
+    const pset = new Psbt({ network: this.network });
+    return pset.toBase64();
+  }
 
+  /**
+   *
+   * @param psetBase64 the Pset to update, base64 encoded.
+   * @param unspents unspent that will be used to found the transaction.
+   * @param inputAmount the amount to found with unspents.
+   * @param inputAsset the assetHash of inputs.
+   * @param outputAmount the amount to send via output.
+   * @param outputAsset the asset hash of output.
+   * @param outputAddress the address that will receive the `outputAmount` of `outputAsset`.
+   * @param changeAddress the change address.
+   */
   updateTx(
-    psbtBase64: string,
-    inputs: Array<any>,
+    psetBase64: string,
+    unspents: Array<UtxoInterface>,
     inputAmount: number,
     outputAmount: number,
     inputAsset: string,
-    outputAsset: string
-  ): string {
-    let psbt: Psbt;
+    outputAsset: string,
+    outputAddress: AddressInterface,
+    changeAddress: AddressInterface
+  ): any {
+    let pset: Psbt;
     try {
-      psbt = Psbt.fromBase64(psbtBase64);
+      pset = Psbt.fromBase64(psetBase64);
     } catch (ignore) {
-      throw new Error('Invalid psbt');
+      throw new Error('Invalid pset');
     }
 
-    inputs = inputs.filter((utxo: any) => utxo.asset === inputAsset);
-    const { unspents, change } = coinselect(inputs, inputAmount);
+    const { selectedUnspents, change } = coinselect(
+      unspents,
+      inputAmount,
+      inputAsset
+    );
 
-    unspents.forEach((i: any) =>
-      psbt.addInput({
+    let inputBlindingKeys: Record<string, Buffer> = {};
+    let outputBlindingKeys: Record<string, Buffer> = {};
+
+    selectedUnspents.forEach((i: UtxoInterface) => {
+      pset.addInput({
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: i.txid,
         index: i.vout,
         //The scriptPubkey and the value only are needed.
         witnessUtxo: {
-          script: Buffer.from(this.script, 'hex'),
+          script: i.script!,
           asset: Buffer.concat([
             Buffer.from('01', 'hex'), //prefix for unconfidential asset
             Buffer.from(inputAsset, 'hex').reverse(),
           ]),
-          value: confidential.satoshiToConfidentialValue(i.value),
+          value: confidential.satoshiToConfidentialValue(i.value!),
           nonce: Buffer.from('00', 'hex'),
         },
-      } as any)
-    );
+      } as any);
 
-    psbt.addOutput({
-      script: Buffer.from(this.script, 'hex'),
+      // we update the inputBlindingKeys map after we add an input to the transaction
+      const scriptHex = i.script!.toString('hex');
+      inputBlindingKeys[scriptHex] = this.blindingPrivateKeyByScript[scriptHex];
+    });
+
+    const receivingScript = address
+      .toOutputScript(outputAddress.confidentialAddress, this.network)
+      .toString('hex');
+
+    // The receiving output
+    pset.addOutput({
+      script: receivingScript,
       value: confidential.satoshiToConfidentialValue(outputAmount),
-      asset: Buffer.concat([
-        Buffer.from('01', 'hex'), //prefix for unconfidential asset
-        Buffer.from(outputAsset, 'hex').reverse(),
-      ]),
+      asset: outputAsset,
       nonce: Buffer.from('00', 'hex'),
     });
 
+    // we update the outputBlindingKeys map after we add the receiving output to the transaction
+    outputBlindingKeys[receivingScript] = Buffer.from(
+      outputAddress.blindingPrivateKey,
+      'hex'
+    );
+
     if (change > 0) {
-      psbt.addOutput({
-        script: Buffer.from(this.script, 'hex'),
+      const changeScript = address
+        .toOutputScript(changeAddress.confidentialAddress, this.network)
+        .toString('hex');
+
+      // Change
+      pset.addOutput({
+        script: changeScript,
         value: confidential.satoshiToConfidentialValue(change),
-        asset: Buffer.concat([
-          Buffer.from('01', 'hex'), //prefix for unconfidential asset
-          Buffer.from(inputAsset, 'hex').reverse(),
-        ]),
+        asset: inputAsset,
         nonce: Buffer.from('00', 'hex'),
       });
+
+      // we update the outputBlindingKeys map after we add the change output to the transaction
+      outputBlindingKeys[changeScript] = Buffer.from(
+        changeAddress.blindingPrivateKey,
+        'hex'
+      );
     }
 
-    const base64 = psbt.toBase64();
-    return base64;
-  }
-}
-
-export interface WalletInterface extends WatchOnlyWalletInterface {
-  keyPair: ECPairInterface;
-  privateKey: string;
-  publicKey: string;
-  sign(psbtBase64: string): string;
-}
-
-export class Wallet extends WatchOnlyWallet implements WalletInterface {
-  keyPair: ECPairInterface;
-  privateKey: string;
-  publicKey: string;
-
-  static fromWIF = fromWIF;
-  static fromRandom = fromRandom;
-
-  constructor({
-    network,
-    address,
-    keyPair,
-  }: {
-    network: Network;
-    address: string;
-    keyPair: ECPairInterface | undefined;
-  }) {
-    super({ network, address });
-
-    if (!keyPair) this.keyPair = ECPair.makeRandom({ network: this.network });
-    else this.keyPair = keyPair;
-    this.privateKey = this.keyPair.privateKey!.toString('hex');
-    this.publicKey = this.keyPair.publicKey!.toString('hex');
+    return {
+      psetBase64: pset.toBase64(),
+      inputBlindingKeys,
+      outputBlindingKeys,
+    };
   }
 
-  updateTx = super.updateTx;
-
-  sign(psbtBase64: string): string {
-    let psbt: Psbt;
+  static toHex(psetBase64: string): string {
+    let pset: Psbt;
     try {
-      psbt = Psbt.fromBase64(psbtBase64);
+      pset = Psbt.fromBase64(psetBase64);
     } catch (ignore) {
-      throw new Error('Invalid psbt');
+      throw new Error('Invalid pset');
     }
 
-    psbt.data.inputs.forEach((p: any, i: number) => {
-      if (p.witnessUtxo!.script.toString('hex') === this.script) {
-        psbt.signInput(i, this.keyPair);
-        if (!psbt.validateSignaturesOfInput(i))
-          throw new Error('Invalid signature');
-      }
-    });
+    pset.validateSignaturesOfAllInputs();
+    pset.finalizeAllInputs();
 
-    return psbt.toBase64();
+    return pset.extractTransaction().toHex();
   }
 }
 
-function fromAddress(
-  address: string,
+/**
+ * Factory: list of addresses --to--> Wallet
+ * @param addresses a list of addressInterface.
+ * @param network network type
+ */
+export function walletFromAddresses(
+  addresses: AddressInterface[],
   network?: string
-): WatchOnlyWalletInterface {
-  const _network = network ? (networks as any)[network] : networks.liquid;
+): WalletInterface {
+  const _network = network
+    ? (networks as Record<string, Network>)[network]
+    : networks.liquid;
 
   try {
-    return new WatchOnlyWallet({
-      address,
+    return new Wallet({
+      addresses,
       network: _network,
     });
   } catch (ignore) {
-    throw new Error('fromAddress: Invalid address or network');
+    throw new Error('fromAddress: Invalid addresses list or network');
   }
 }
 
-function fromRandom(network?: string): WalletInterface {
-  const _network = network ? (networks as any)[network] : networks.liquid;
-  try {
-    const keyPair = ECPair.makeRandom({ network: _network });
-    const { address } = payments.p2wpkh({
-      pubkey: keyPair.publicKey,
-      network: _network,
-    });
-    return new Wallet({ keyPair, network: _network, address: address! });
-  } catch (ignore) {
-    throw new Error('fromRandom: Failed to create wallet');
-  }
+export interface UtxoInterface {
+  txid: string;
+  vout: number;
+  asset?: string;
+  value?: number;
+  assetcommitment?: string;
+  valuecommitment?: string;
+  script?: string | Buffer;
 }
 
-function fromWIF(wif: string, network?: string): WalletInterface {
-  const _network = network ? (networks as any)[network] : networks.liquid;
-
-  try {
-    const keyPair = ECPair.fromWIF(wif, _network);
-    const { address } = payments.p2wpkh({
-      pubkey: keyPair.publicKey,
-      network: _network,
-    });
-    return new Wallet({ keyPair, network: _network, address: address! });
-  } catch (ignore) {
-    throw new Error('fromWIF: Invalid keypair');
-  }
+export async function fetchTxHex(txId: string, url: string): Promise<string> {
+  return (await axios.get(`${url}/tx/${txId}/hex`)).data;
 }
 
-function createTx(network?: string): string {
-  const _network = network ? (networks as any)[network] : networks.liquid;
-  const psbt = new Psbt({ network: _network });
-  return psbt.toBase64();
-}
-
-function toHex(psbtBase64: string): string {
-  let psbt: Psbt;
-  try {
-    psbt = Psbt.fromBase64(psbtBase64);
-  } catch (ignore) {
-    throw new Error('Invalid psbt');
-  }
-
-  psbt.validateSignaturesOfAllInputs();
-  psbt.finalizeAllInputs();
-
-  return psbt.extractTransaction().toHex();
-}
-
-export async function fetchUtxos(address: string, url: string): Promise<any> {
+export async function fetchUtxos(
+  address: string,
+  url: string
+): Promise<Array<UtxoInterface>> {
   return (await axios.get(`${url}/address/${address}/utxo`)).data;
 }
 
-export async function fetchBalances(address: string, url: string) {
-  const utxos = await fetchUtxos(address, url);
-  return utxos.reduce(
+export async function fetchAndUnblindUtxos(
+  address: string,
+  blindPrivKey: string,
+  url: string
+): Promise<Array<UtxoInterface>> {
+  const blindedUtxos = await fetchUtxos(address, url);
+  const prevoutHexes = await Promise.all(
+    blindedUtxos.map((utxo: UtxoInterface) => fetchTxHex(utxo.txid, url))
+  );
+
+  const unblindedUtxos = blindedUtxos.map(
+    (blindedUtxo: UtxoInterface, index: number) => {
+      const prevout = Transaction.fromHex(String(prevoutHexes[index])).outs[
+        blindedUtxo.vout
+      ];
+
+      const unblindedUtxo = confidential.unblindOutput(
+        prevout.nonce,
+        Buffer.from(blindPrivKey, 'hex'),
+        prevout.rangeProof!,
+        prevout.value,
+        prevout.asset,
+        prevout.script
+      );
+
+      return {
+        txid: blindedUtxo.txid,
+        vout: blindedUtxo.vout,
+        asset: (unblindedUtxo.asset.reverse() as Buffer).toString('hex'),
+        value: parseInt(unblindedUtxo.value, 10),
+        script: prevout.script,
+      };
+    }
+  );
+  return unblindedUtxos;
+}
+
+export async function fetchBalances(
+  address: string,
+  blindPrivKey: string,
+  url: string
+) {
+  const utxoInterfaces = await fetchAndUnblindUtxos(address, blindPrivKey, url);
+  return (utxoInterfaces as any).reduce(
     (storage: { [x: string]: any }, item: { [x: string]: any; value: any }) => {
       // get the first instance of the key by which we're grouping
       var group = item['asset'];
@@ -240,4 +296,48 @@ export async function fetchBalances(address: string, url: string) {
     },
     {}
   ); // {} is the initial value of the storage
+}
+
+/**
+ * Select a set of unspent in `utxos` such as sum(utxo.value) >= `amount` && where utxo.asset = `asset`.
+ * Returns change and selected unspent outputs.
+ * @param utxos the unspents to search in.
+ * @param amount the amount of coin to search.
+ * @param asset the asset hash.
+ */
+export function coinselect(
+  utxos: Array<UtxoInterface>,
+  amount: number,
+  asset: string
+) {
+  let unspents = [];
+  let availableSat = 0;
+  let change = 0;
+
+  for (let i = 0; i < utxos.length; i++) {
+    const utxo = utxos[i];
+
+    if (!utxo.value || !utxo.asset)
+      throw new Error('Coin selection needs unblinded outputs');
+
+    if (utxo.asset !== asset) continue;
+
+    unspents.push({
+      txid: utxo.txid,
+      vout: utxo.vout,
+      value: utxo.value,
+      asset: utxo.asset,
+      script: utxo.script,
+    });
+    availableSat += utxo.value;
+
+    if (availableSat >= amount) break;
+  }
+
+  if (availableSat < amount)
+    throw new Error('You do not have enough in your wallet');
+
+  change = availableSat - amount;
+
+  return { selectedUnspents: unspents, change };
 }

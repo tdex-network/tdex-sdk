@@ -1,6 +1,6 @@
 import { ECPair, ECPairInterface, payments, Psbt } from 'liquidjs-lib';
+import { AddressInterface } from 'types';
 import Identity, {
-  AddressInterface,
   IdentityInterface,
   IdentityOpts,
   IdentityType,

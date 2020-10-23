@@ -11,6 +11,13 @@ export function toAssetHash(x: Buffer): string {
   return (withoutFirstByte.reverse() as Buffer).toString('hex');
 }
 
+export function fromAssetHash(x: string): Buffer {
+  return Buffer.concat([
+    Buffer.from('01', 'hex'), //prefix for unconfidential asset
+    Buffer.from(x, 'hex').reverse(),
+  ]);
+}
+
 export function toNumber(x: Buffer): number {
   return confidential.confidentialValueToSatoshi(x);
 }
@@ -94,40 +101,6 @@ export function decodePsbt(
     psbt,
     transaction,
   };
-}
-
-export interface UtxoInterface {
-  txid: string;
-  vout: number;
-  asset: string;
-  value: number;
-  script?: string;
-}
-
-export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
-  let unspents = [];
-  let availableSat = 0;
-  let change = 0;
-
-  for (let i = 0; i < utxos.length; i++) {
-    const utxo = utxos[i];
-    unspents.push({
-      txid: utxo.txid,
-      vout: utxo.vout,
-      value: utxo.value,
-      asset: utxo.asset,
-    });
-    availableSat += utxo.value;
-
-    if (availableSat >= amount) break;
-  }
-
-  if (availableSat < amount)
-    throw new Error('You do not have enough in your wallet');
-
-  change = availableSat - amount;
-
-  return { unspents, change };
 }
 
 export function isValidAmount(amount: number): boolean {
