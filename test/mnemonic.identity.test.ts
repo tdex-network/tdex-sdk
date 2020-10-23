@@ -120,14 +120,19 @@ describe('Identity: Private key', () => {
 
       const prevoutHex = await fetchTxHex(utxo.txid);
       const prevout = Transaction.fromHex(prevoutHex).outs[utxo.vout];
-      const unblindedUtxo = mnemonic.unblindUtxo(prevout);
+      const unblindedUtxo = confidential.unblindOutput(
+        prevout.nonce,
+        Buffer.from(generated.blindingPrivateKey, 'hex'),
+        prevout.rangeProof!,
+        prevout.value,
+        prevout.asset,
+        prevout.script
+      );
 
       const script: Buffer = payments.p2wpkh({
         confidentialAddress: generated.confidentialAddress,
         network,
       }).output!;
-
-      console.log(script);
 
       const pset: Psbt = new Psbt({ network })
         .addInput({

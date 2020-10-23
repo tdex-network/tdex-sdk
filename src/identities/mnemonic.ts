@@ -1,4 +1,4 @@
-import { confidential, ECPair, payments, Psbt, TxOutput } from 'liquidjs-lib';
+import { ECPair, payments, Psbt } from 'liquidjs-lib';
 import * as bip39 from 'bip39';
 import { fromSeed as slip77fromSeed, Slip77Interface } from 'slip77';
 import { fromSeed as bip32fromSeed, BIP32Interface } from 'bip32';
@@ -24,7 +24,7 @@ interface AddressInterfaceExtended {
   derivationPath: string;
 }
 
-type AddressCacheMap = Record<string, AddressInterfaceExtended>;
+type AddressCacheMap = { [script: string]: AddressInterfaceExtended };
 
 export default class Mnemonic extends Identity implements IdentityInterface {
   static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
