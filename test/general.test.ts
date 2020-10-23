@@ -22,7 +22,11 @@ describe('TDEX SDK', () => {
       addrs[0].confidentialAddress
     );
 
-    expect(wallet.blindingByScript["0014fd3291f773fc61ffff8732dd7af942108ee856e1"].toString('hex')).toStrictEqual(
+    expect(
+      wallet.blindingByScript[
+        '0014fd3291f773fc61ffff8732dd7af942108ee856e1'
+      ].toString('hex')
+    ).toStrictEqual(
       '48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc'
     );
   });
