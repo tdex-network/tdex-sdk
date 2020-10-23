@@ -83,19 +83,10 @@ export class Trade extends Core implements TradeInterface {
   async buy({
     market,
     amount,
-    address,
-    privateKey,
   }: {
     market: MarketInterface;
-    amount: number; //this is fractional amount
-    address?: string;
-    privateKey?: string;
+    amount: number;
   }): Promise<string> {
-    if (!privateKey && !address)
-      throw new Error(
-        'Either private key or native segwit address is required'
-      );
-
     const addresses = this.identity.getAddresses();
     const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
@@ -116,19 +107,10 @@ export class Trade extends Core implements TradeInterface {
   async sell({
     market,
     amount,
-    address,
-    privateKey,
   }: {
     market: MarketInterface;
-    amount: number; // this is fractional amount
-    address?: string;
-    privateKey?: string;
+    amount: number;
   }): Promise<Uint8Array | string> {
-    if (!privateKey && !address)
-      throw new Error(
-        'Either private key or native segwit address is required'
-      );
-
     const addresses = this.identity.getAddresses();
     const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
@@ -142,12 +124,16 @@ export class Trade extends Core implements TradeInterface {
     return txid;
   }
 
-  async preview(
-    market: MarketInterface,
-    tradeType: TradeType,
-    amountInSatoshis: number
-  ): Promise<any> {
-    if (!isValidAmount(amountInSatoshis)) {
+  async preview({
+    market,
+    tradeType,
+    amount,
+  }: {
+    market: MarketInterface;
+    tradeType: TradeType;
+    amount: number;
+  }): Promise<any> {
+    if (!isValidAmount(amount)) {
       throw new Error('Amount is not valid');
     }
     const { baseAsset, quoteAsset } = market;
@@ -158,7 +144,7 @@ export class Trade extends Core implements TradeInterface {
         quoteAsset,
       },
       tradeType,
-      amountInSatoshis
+      amount
     );
 
     if (tradeType === TradeType.BUY) {
@@ -166,13 +152,13 @@ export class Trade extends Core implements TradeInterface {
         assetToBeSent: quoteAsset,
         amountToBeSent: prices[0].amount,
         assetToReceive: baseAsset,
-        amountToReceive: amountInSatoshis,
+        amountToReceive: amount,
       };
     }
 
     return {
       assetToBeSent: baseAsset,
-      amountToBeSent: amountInSatoshis,
+      amountToBeSent: amount,
       assetToReceive: quoteAsset,
       amountToReceive: prices[0].amount,
     };
@@ -189,7 +175,7 @@ export class Trade extends Core implements TradeInterface {
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-    } = await this.preview(market, tradeType, amountInSatoshis);
+    } = await this.preview({ market, tradeType, amount: amountInSatoshis });
 
     const arrayOfArrayOfUtxos = await Promise.all(
       wallet.addresses.map((a: AddressInterface) =>
