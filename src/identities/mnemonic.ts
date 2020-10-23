@@ -115,7 +115,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       signingPrivateKey: keyPair.privateKey!.toString('hex'),
     };
     // store the generation inside local cache
-    this.scriptToAddressCache[script.toString('hex')] = newAddressGeneration;
+    this.scriptToAddressCache[
+      script.toString('hex').valueOf()
+    ] = newAddressGeneration;
     // return the generation data
     return newAddressGeneration.address;
   }
@@ -128,7 +130,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       const input = pset.data.inputs[index];
       if (input.witnessUtxo) {
         const addressGeneration = this.scriptToAddressCache[
-          input.witnessUtxo.script.toString()
+          input.witnessUtxo.script.toString('hex').valueOf()
         ];
 
         if (addressGeneration) {
