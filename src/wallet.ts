@@ -8,8 +8,8 @@ import {
   confidential,
   Transaction,
 } from 'liquidjs-lib';
+import { AddressInterface } from 'types';
 import { fromAssetHash, toAssetHash } from './utils';
-import { AddressInterface } from './identity';
 
 /**
  * Wallet abstraction.

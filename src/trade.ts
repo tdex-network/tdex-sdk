@@ -10,14 +10,10 @@ import { TraderClient } from './grpcClient';
 import TraderClientInterface from './grpcClientInterface';
 import { isValidAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
-import {
-  AddressInterface,
-  IdentityInterface,
-  IdentityOpts,
-  IdentityType,
-} from './identity';
+import { IdentityInterface, IdentityOpts, IdentityType } from './identity';
 import PrivateKey from './identities/privatekey';
 import Mnemonic from './identities/mnemonic';
+import { AddressInterface } from 'types';
 
 export interface MarketInterface {
   baseAsset: string;
@@ -81,7 +77,7 @@ export class Trade extends Core implements TradeInterface {
   }
 
   /**
-   * Trade.buy let the trder buy the baseAsset,
+   * Trade.buy let the trader buy the baseAsset,
    * sending his own quoteAsset using the current market price
    */
   async buy({
@@ -114,10 +110,9 @@ export class Trade extends Core implements TradeInterface {
   }
 
   /**
-   * Trade.sell let the trder sell the baseAsset,
+   * Trade.sell let the trader sell the baseAsset,
    * receiving the quoteAsset using the current market price
    */
-
   async sell({
     market,
     amount,
