@@ -99,6 +99,14 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     return this.getAddress();
   }
 
+  getBlindingPrivateKey(script: Buffer): Buffer {
+    if (!script.equals(this.scriptPubKey)) {
+      throw new Error('The script is not PrivateKey.scriptPubKey.');
+    }
+
+    return Buffer.from(this.blindingPrivateKey, 'hex');
+  }
+
   /**
    * iterate through inputs and sign when it's possible, then returns the signed pset (base64 encoded).
    * @param psetBase64 the base64 encoded pset.
