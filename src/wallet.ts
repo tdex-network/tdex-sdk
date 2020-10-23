@@ -15,7 +15,7 @@ import { AddressInterface } from './identity';
 export interface WalletInterface {
   network: Network;
   addresses: AddressInterface[];
-  scripts: string[];
+  blindingByScript: Record<string, Buffer>;
   createTx(): string;
   updateTx(
     psetBase64: string,
@@ -24,15 +24,15 @@ export interface WalletInterface {
     outputAmount: number,
     inputAsset: string,
     outputAsset: string,
-    outputAddress: string,
-    changeAddress: string
+    outputAddress: AddressInterface,
+    changeAddress: AddressInterface
   ): any;
 }
 
 export class Wallet implements WalletInterface {
   network: Network;
-  addresses: AddressInterface[];
-  scripts: string[];
+  addresses: AddressInterface[] = [];
+  blindingByScript: Record<string, Buffer> = {};
 
   constructor({
     addresses,
@@ -43,14 +43,18 @@ export class Wallet implements WalletInterface {
   }) {
     this.network = network;
     this.addresses = addresses;
-    this.scripts = addresses.map((a: AddressInterface) =>
-      payments
+    addresses.forEach((a: AddressInterface) => {
+      const scriptHex = payments
         .p2wpkh({
           confidentialAddress: a.confidentialAddress,
           network,
         })
-        .output!.toString('hex')
-    );
+        .output!.toString('hex');
+      this.blindingByScript[scriptHex] = Buffer.from(
+        a.blindingPrivateKey,
+        'hex'
+      );
+    });
   }
 
   createTx(): string {
@@ -65,8 +69,8 @@ export class Wallet implements WalletInterface {
     outputAmount: number,
     inputAsset: string,
     outputAsset: string,
-    outputAddress: string,
-    changeAddress: string
+    outputAddress: AddressInterface,
+    changeAddress: AddressInterface
   ): any {
     let pset: Psbt;
     try {
@@ -100,39 +104,42 @@ export class Wallet implements WalletInterface {
 
       // we update the inputBlindingKeys map after we add an input to the transaction
       const scriptHex = i.script!.toString('hex');
-      inputBlindingKeys[scriptHex] = getBlindingWithScriptFromAddresses(
-        this.addresses,
-        i.script
-      )!;
+      inputBlindingKeys[scriptHex] = this.blindingByScript[scriptHex];
     });
 
     // The receiving output
     pset.addOutput({
-      address: outputAddress,
+      address: outputAddress.confidentialAddress,
       value: confidential.satoshiToConfidentialValue(outputAmount),
       asset: outputAsset,
       nonce: Buffer.from('00', 'hex'),
     });
 
     // we update the outputBlindingKeys map after we add the receiving output to the transaction
-    const receivingScript = address.toOutputScript(outputAddress, this.network);
-    outputBlindingKeys[
-      receivingScript.toString('hex')
-    ] = getBlindingWithScriptFromAddresses(this.addresses, receivingScript)!;
+    const receivingScript = address
+      .toOutputScript(outputAddress.confidentialAddress, this.network)
+      .toString('hex');
+    outputBlindingKeys[receivingScript] = Buffer.from(
+      outputAddress.blindingPrivateKey,
+      'hex'
+    );
 
     // Change
     if (change > 0) {
       pset.addOutput({
-        address: changeAddress,
+        address: changeAddress.confidentialAddress,
         value: confidential.satoshiToConfidentialValue(change),
         asset: fromAssetHash(inputAsset),
         nonce: Buffer.from('00', 'hex'),
       });
       // we update the outputBlindingKeys map after we add the change output to the transaction
-      const changeScript = address.toOutputScript(changeAddress, this.network);
-      outputBlindingKeys[
-        changeScript.toString('hex')
-      ] = getBlindingWithScriptFromAddresses(this.addresses, changeScript)!;
+      const changeScript = address
+        .toOutputScript(changeAddress.confidentialAddress, this.network)
+        .toString('hex');
+      outputBlindingKeys[changeScript] = Buffer.from(
+        changeAddress.blindingPrivateKey,
+        'hex'
+      );
     }
 
     return {
@@ -291,17 +298,4 @@ export function coinselect(
   change = availableSat - amount;
 
   return { selectedUnspents: unspents, change };
-}
-
-function getBlindingWithScriptFromAddresses(
-  addresses: AddressInterface[],
-  script: any
-): Buffer | undefined {
-  if (!(script instanceof Buffer)) return undefined;
-
-  const addressToFind = payments.p2wpkh({ output: script }).confidentialAddress;
-  const found = addresses.find(
-    (a: AddressInterface) => a.confidentialAddress === addressToFind
-  );
-  return Buffer.from(found!.blindingPrivateKey, 'hex');
 }

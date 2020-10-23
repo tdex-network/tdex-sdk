@@ -228,8 +228,8 @@ export class Trade extends Core implements TradeInterface {
       amountToReceive,
       assetToBeSent,
       assetToReceive,
-      addressForOutput.confidentialAddress,
-      addressForChange.confidentialAddress
+      addressForOutput,
+      addressForChange
     );
 
     const swap = new Swap();
