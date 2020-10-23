@@ -49,7 +49,7 @@ export default class PrivateKey extends Identity implements IdentityInterface {
 
     // checks the args type.
     if (args.type !== IdentityType.PrivateKey) {
-      throw new Error('The identity arguments has not the PrivateKey type.');
+      throw new Error('The identity arguments have not the PrivateKey type.');
     }
 
     // checks if args.value is an instance of PrivateKeyOptsValue interface.
@@ -84,6 +84,30 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     this.scriptPubKey = p2wpkh.output!;
   }
 
+  private getAddress(): AddressInterface {
+    return {
+      confidentialAddress: this.confidentialAddress,
+      blindingPrivateKey: this.blindingPrivateKey,
+    };
+  }
+
+  getNextAddress(): AddressInterface {
+    return this.getAddress();
+  }
+
+  getNextChangeAddress(): AddressInterface {
+    return this.getAddress();
+  }
+
+  getBlindingPrivateKey(script: string): string {
+    const scriptPubKeyBuffer = Buffer.from(script, 'hex');
+    if (!scriptPubKeyBuffer.equals(this.scriptPubKey)) {
+      throw new Error('The script is not PrivateKey.scriptPubKey.');
+    }
+
+    return this.blindingPrivateKey;
+  }
+
   /**
    * iterate through inputs and sign when it's possible, then returns the signed pset (base64 encoded).
    * @param psetBase64 the base64 encoded pset.
@@ -105,7 +129,7 @@ export default class PrivateKey extends Identity implements IdentityInterface {
 
     // sign all the inputs asynchronously
     await Promise.all(
-      pset.data.inputs.map((_, index: number) =>
+      indexOfInputs.map((index: number) =>
         pset.signInputAsync(index, this.signingKeyPair)
       )
     );

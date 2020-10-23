@@ -56,6 +56,7 @@
   ],
   "devDependencies": {
     "@types/jest": "^25.2.1",
+    "@types/node": "^14.14.2",
     "husky": "^4.2.3",
     "ts-protoc-gen": "^0.12.0",
     "tsdx": "^0.13.1",
@@ -67,6 +68,7 @@
     "axios": "^0.19.2",
     "bip32": "^2.0.6",
     "bip39": "^3.0.2",
+    "slip77": "github:vulpemventures/slip77",
     "google-protobuf": "^3.11.4",
     "jsbi": "^3.1.2",
     "liquidjs-lib": "vulpemventures/liquidjs-lib",
