@@ -3,7 +3,13 @@ import Mnemonic from './../src/identities/mnemonic';
 import { fromSeed as slip77fromSeed } from 'slip77';
 import { fromSeed as bip32fromSeed } from 'bip32';
 import * as assert from 'assert';
-import { confidential, networks, Psbt, Transaction } from 'liquidjs-lib';
+import {
+  confidential,
+  networks,
+  payments,
+  Psbt,
+  Transaction,
+} from 'liquidjs-lib';
 import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
 import { mnemonicToSeedSync } from 'bip39';
 
@@ -91,7 +97,7 @@ describe('Identity: Private key', () => {
       assert.throws(() => new Mnemonic(unvalidTypeOpts));
     });
 
-    it('should throw an error if value of IdentityOpts is not of type {mnemonic: string; language?: string, passphrase?: string;}', () => {
+    it('should throw an error if value of IdentityOpts is not of type {mnemonic: string; language?: string;}', () => {
       assert.throws(() => new Mnemonic(unvalidValueOpts));
     });
 
@@ -109,12 +115,19 @@ describe('Identity: Private key', () => {
       const mnemonic = new Mnemonic(validOpts);
       const generated = mnemonic.getNextConfidentialAddress();
 
-      await faucet(generated.address.confidentialAddress);
-      const utxo = (await fetchUtxos(generated.address.confidentialAddress))[0];
+      await faucet(generated.confidentialAddress);
+      const utxo = (await fetchUtxos(generated.confidentialAddress))[0];
 
       const prevoutHex = await fetchTxHex(utxo.txid);
       const prevout = Transaction.fromHex(prevoutHex).outs[utxo.vout];
       const unblindedUtxo = mnemonic.unblindUtxo(prevout);
+
+      const script: Buffer = payments.p2wpkh({
+        confidentialAddress: generated.confidentialAddress,
+        network,
+      }).output!;
+
+      console.log(script);
 
       const pset: Psbt = new Psbt({ network })
         .addInput({
@@ -126,14 +139,14 @@ describe('Identity: Private key', () => {
               parseInt(unblindedUtxo.value, 10)
             ),
             asset: unblindedUtxo.asset,
-            script: generated.scriptPubKey,
+            script,
           },
         })
         .addOutputs([
           {
             nonce: Buffer.from('00', 'hex'),
             value: confidential.satoshiToConfidentialValue(49999500),
-            script: generated.scriptPubKey,
+            script,
             asset: network.assetHash,
           },
           {
@@ -157,8 +170,8 @@ describe('Identity: Private key', () => {
   describe('Mnemonic.getAddresses', () => {
     it('should return all the generated addresses', () => {
       const mnemonic = new Mnemonic(validOpts);
-      const generated1 = mnemonic.getNextConfidentialAddress().address;
-      const generated2 = mnemonic.getNextConfidentialAddress().address;
+      const generated1 = mnemonic.getNextConfidentialAddress();
+      const generated2 = mnemonic.getNextConfidentialAddress();
       assert.deepStrictEqual([generated1, generated2], mnemonic.getAddresses());
     });
   });

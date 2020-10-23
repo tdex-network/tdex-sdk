@@ -1,4 +1,4 @@
-import { confidential, ECPair, payments, Psbt } from 'liquidjs-lib';
+import { confidential, ECPair, payments, Psbt, TxOutput } from 'liquidjs-lib';
 import * as bip39 from 'bip39';
 import { fromSeed as slip77fromSeed, Slip77Interface } from 'slip77';
 import { fromSeed as bip32fromSeed, BIP32Interface } from 'bip32';
@@ -8,13 +8,10 @@ import Identity, {
   IdentityOpts,
   IdentityType,
 } from '../identity';
-import { Output } from 'liquidjs-lib/types/transaction';
-import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
 
 export interface MnemonicOptsValue {
   mnemonic: string;
   language?: string;
-  passphrase?: string;
 }
 
 function instanceOfMnemonicOptsValue(value: any): value is MnemonicOptsValue {
@@ -25,8 +22,9 @@ interface AddressInterfaceExtended {
   address: AddressInterface;
   signingPrivateKey: string;
   derivationPath: string;
-  scriptPubKey: Buffer;
 }
+
+type AddressCacheMap = Record<string, AddressInterfaceExtended>;
 
 export default class Mnemonic extends Identity implements IdentityInterface {
   static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
@@ -34,8 +32,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
   private derivationPath: string = Mnemonic.INITIAL_BASE_PATH;
   private index: number = Mnemonic.INITIAL_INDEX;
-  private confidentialAddresses: AddressInterfaceExtended[] = [];
-  private walletSeed: Buffer;
+  private scriptToAddressCache: AddressCacheMap = {};
 
   readonly masterPrivateKeyNode: BIP32Interface;
   readonly masterBlindingKeyNode: Slip77Interface;
@@ -66,15 +63,12 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       throw new Error('Mnemonic is not valid.');
     }
 
-    // set up the wallet's seed.
-    this.walletSeed = bip39.mnemonicToSeedSync(
-      args.value.mnemonic,
-      args.value.passphrase
-    );
+    // retreive the wallet's seed from mnemonic
+    const walletSeed = bip39.mnemonicToSeedSync(args.value.mnemonic);
     // generate the master private key from the wallet seed
-    this.masterPrivateKeyNode = bip32fromSeed(this.walletSeed, this.network);
+    this.masterPrivateKeyNode = bip32fromSeed(walletSeed, this.network);
     // generate the master blinding key from the seed
-    this.masterBlindingKeyNode = slip77fromSeed(this.walletSeed);
+    this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
   }
 
   private getNextKeypair(): { publicKey: Buffer; privateKey: Buffer } {
@@ -94,7 +88,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
-  getNextConfidentialAddress(): AddressInterfaceExtended {
+  getNextConfidentialAddress(): AddressInterface {
     const currentIndex = this.index;
     // get the next key pair
     const keyPair = this.getNextKeypair();
@@ -119,39 +113,24 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       },
       derivationPath: `${this.derivationPath}/${currentIndex}`,
       signingPrivateKey: keyPair.privateKey!.toString('hex'),
-      scriptPubKey: script,
     };
     // store the generation inside local cache
-    this.confidentialAddresses.push(newAddressGeneration);
+    this.scriptToAddressCache[script.toString('hex')] = newAddressGeneration;
     // return the generation data
-    return newAddressGeneration;
-  }
-
-  unblindUtxo(blindedUtxo: Output): UnblindOutputResult {
-    const blindingPrivKey: Buffer = this.masterBlindingKeyNode.derive(
-      blindedUtxo.script
-    ).privateKey!;
-
-    return confidential.unblindOutput(
-      blindedUtxo.nonce,
-      blindingPrivKey,
-      blindedUtxo.rangeProof!,
-      blindedUtxo.value,
-      blindedUtxo.asset,
-      blindedUtxo.script
-    );
+    return newAddressGeneration.address;
   }
 
   async signPset(psetBase64: string): Promise<string> {
     const pset = Psbt.fromBase64(psetBase64);
     const signInputPromises: Array<Promise<void>> = [];
-    const findInAddresses = (script: Buffer) =>
-      this.confidentialAddresses.find(addr => addr.scriptPubKey.equals(script));
 
     for (let index = 0; index < pset.data.inputs.length; index++) {
       const input = pset.data.inputs[index];
       if (input.witnessUtxo) {
-        const addressGeneration = findInAddresses(input.witnessUtxo.script);
+        const addressGeneration = this.scriptToAddressCache[
+          input.witnessUtxo.script.toString()
+        ];
+
         if (addressGeneration) {
           // if there is an address generated for the input script: build the signing key pair.
           const privateKeyBuffer = Buffer.from(
@@ -172,6 +151,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
   // returns all the addresses generated
   getAddresses(): AddressInterface[] {
-    return this.confidentialAddresses.map(addr => addr.address);
+    return Object.values(this.scriptToAddressCache).map(
+      addrExtended => addrExtended.address
+    );
   }
 }
