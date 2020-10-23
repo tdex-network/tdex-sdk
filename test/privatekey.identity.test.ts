@@ -140,4 +140,30 @@ describe('Identity: Private key', () => {
       );
     });
   });
+
+  describe('PrivateKey.getBlindingPrivateKey', () => {
+    it('should return the private blinding key associated with the PrivateKey instance confidential address', () => {
+      const privateKey = new PrivateKey(validOpts);
+      const {
+        confidentialAddress,
+        blindingPrivateKey,
+      } = privateKey.getAddresses()[0];
+      const script: string = payments
+        .p2wpkh({
+          confidentialAddress,
+          network,
+        })
+        .output!.toString('hex');
+      assert.deepStrictEqual(
+        privateKey.getBlindingPrivateKey(script),
+        blindingPrivateKey
+      );
+    });
+
+    it('should throw an error if the script is not the PrivateKey scriptPubKey', () => {
+      const privateKey = new PrivateKey(validOpts);
+      const notTheGoodScript = 'bbb4659bedb5d3d3c7ab12d7f85323c3a1b6c060efbe';
+      assert.throws(() => privateKey.getBlindingPrivateKey(notTheGoodScript));
+    });
+  });
 });

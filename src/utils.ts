@@ -164,3 +164,28 @@ export function isConfidentialOutput(output: Output): boolean {
     output.nonce !== emptyNonce
   );
 }
+
+export class BufferMap<T> {
+  private map: Map<string, T>;
+
+  constructor() {
+    this.map = new Map<string, T>();
+  }
+
+  private bufferToStringPrimitive(buffer: Buffer): string {
+    return buffer.toString('hex').valueOf();
+  }
+
+  get(key: Buffer): T | undefined {
+    return this.map.get(this.bufferToStringPrimitive(key));
+  }
+
+  set(key: Buffer, value: T): this {
+    this.map.set(this.bufferToStringPrimitive(key), value);
+    return this;
+  }
+
+  values(): Array<T> {
+    return Array.from(this.map.values());
+  }
+}
