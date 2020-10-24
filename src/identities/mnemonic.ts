@@ -40,6 +40,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
   private baseDerivationPath: string = Mnemonic.INITIAL_BASE_PATH;
   private index: number = Mnemonic.INITIAL_INDEX;
+  private changeIndex: number = Mnemonic.INITIAL_INDEX;
   private scriptToAddressCache: BufferMap<
     AddressInterfaceExtended
   > = new BufferMap();
@@ -104,7 +105,6 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     );
     const wif: string = baseNode.deriveHardened(index).toWIF();
     const { publicKey, privateKey } = ECPair.fromWIF(wif, this.network);
-    this.index += 1;
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
@@ -180,11 +180,13 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   getNextAddress(): AddressInterface {
     const addr = this.getAddress(false);
     this.persistAddressToCache(addr);
+    this.changeIndex = this.index;
+    this.index += 1;
     return addr.address;
   }
 
   getNextChangeAddress(): AddressInterface {
-    const addr = this.getAddress(true);
+    const addr = this.getAddress(true, this.changeIndex);
     this.persistAddressToCache(addr);
     return addr.address;
   }
