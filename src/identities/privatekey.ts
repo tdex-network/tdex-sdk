@@ -60,16 +60,10 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     }
 
     // decode signing key pair from WIF
-    this.signingKeyPair = ECPair.fromWIF(
-      args.value.signingKeyWIF,
-      this.network
-    );
+    this.signingKeyPair = this.decodeFromWif(args.value.signingKeyWIF);
 
     // decode blinding key pair from WIF
-    this.blindingKeyPair = ECPair.fromWIF(
-      args.value.blindingKeyWIF,
-      this.network
-    );
+    this.blindingKeyPair = this.decodeFromWif(args.value.blindingKeyWIF);
 
     // create payment
     const p2wpkh = payments.p2wpkh({
@@ -82,6 +76,10 @@ export default class PrivateKey extends Identity implements IdentityInterface {
     this.confidentialAddress = p2wpkh.confidentialAddress!;
     this.blindingPrivateKey = this.blindingKeyPair.privateKey!.toString('hex');
     this.scriptPubKey = p2wpkh.output!;
+  }
+
+  private decodeFromWif(wif: string): ECPairInterface {
+    return ECPair.fromWIF(wif, this.network);
   }
 
   private getAddress(): AddressInterface {
