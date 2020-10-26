@@ -5,11 +5,11 @@ JavaScript SDK for building trader-facing applications on top of TDEX
 
 * Install with **yarn**
 ```sh
-$ yarn add tdex-sdk
+$ yarn add tdex-sdk@beta
 ```
 * Install with **npm**
 ```sh
-$ npm install --save tdex-sdk
+$ npm install --save tdex-sdk@beta
 ```
 
 
@@ -22,8 +22,9 @@ In-depth documentation for using the tdex-sdk is available at [docs.tdex.network
 
 * [x] Swap protocol
 * [x] Trade protocol
-* [x] Wallet support
+* [x] HD Wallet support
 * [x] Browser support
+* [x] Blinding support
 
 
 ## 🖥 Local Development
