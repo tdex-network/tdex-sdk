@@ -55,7 +55,7 @@ describe.skip('Integration tests with a local daemon', () => {
         market,
         amount: 500000,
       });
-      console.log(txid)
+      console.log(txid);
       expect(txid).toBeDefined();
     } catch (e) {
       console.error(e);
