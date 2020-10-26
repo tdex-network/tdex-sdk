@@ -1,4 +1,3 @@
-import Axios from 'axios';
 import axios from 'axios';
 
 export interface IdentityRestorerInterface {
@@ -20,7 +19,7 @@ export default class EsploraIdentityRestorer
   }
 
   addressesHaveBeenUsed = async (addresses: string[]) => {
-    return Axios.all(addresses.map(this.addressHasBeenUsed));
+    return axios.all(addresses.map(this.addressHasBeenUsed));
   };
 
   addressHasBeenUsed = async (address: string) => {
