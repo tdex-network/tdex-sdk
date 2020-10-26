@@ -7,6 +7,7 @@ import {
   Psbt,
   confidential,
   Transaction,
+  TxOutput,
 } from 'liquidjs-lib';
 import { AddressInterface } from 'types';
 
@@ -116,20 +117,12 @@ export class Wallet implements WalletInterface {
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: i.txid,
         index: i.vout,
-        //The scriptPubkey and the value only are needed.
-        witnessUtxo: {
-          script: i.script!,
-          asset: Buffer.concat([
-            Buffer.from('01', 'hex'), //prefix for unconfidential asset
-            Buffer.from(inputAsset, 'hex').reverse(),
-          ]),
-          value: confidential.satoshiToConfidentialValue(i.value!),
-          nonce: Buffer.from('00', 'hex'),
-        },
+        //We put here the blinded prevout
+        witnessUtxo: i.prevout!,
       } as any);
 
       // we update the inputBlindingKeys map after we add an input to the transaction
-      const scriptHex = i.script!.toString('hex');
+      const scriptHex = i.prevout!.script.toString('hex');
       inputBlindingKeys[scriptHex] = this.blindingPrivateKeyByScript[scriptHex];
     });
 
@@ -223,7 +216,7 @@ export interface UtxoInterface {
   value?: number;
   assetcommitment?: string;
   valuecommitment?: string;
-  script?: string | Buffer;
+  prevout?: TxOutput;
 }
 
 export async function fetchTxHex(txId: string, url: string): Promise<string> {
@@ -267,7 +260,7 @@ export async function fetchAndUnblindUtxos(
         vout: blindedUtxo.vout,
         asset: (unblindedUtxo.asset.reverse() as Buffer).toString('hex'),
         value: parseInt(unblindedUtxo.value, 10),
-        script: prevout.script,
+        prevout: prevout,
       };
     }
   );
@@ -320,6 +313,8 @@ export function coinselect(
     if (!utxo.value || !utxo.asset)
       throw new Error('Coin selection needs unblinded outputs');
 
+    if (!utxo.prevout) throw new Error('UtxoInterface: Prevout is mandatory');
+
     if (utxo.asset !== asset) continue;
 
     unspents.push({
@@ -327,7 +322,7 @@ export function coinselect(
       vout: utxo.vout,
       value: utxo.value,
       asset: utxo.asset,
-      script: utxo.script,
+      prevout: utxo.prevout,
     });
     availableSat += utxo.value;
 

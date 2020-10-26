@@ -6,7 +6,7 @@ const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const market = {
   baseAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
   quoteAsset:
-    '225585b28b768c55eb396eda29246baf20227f94ff8c2c50e298cb1178a4b543',
+    '822be5ee6a7a457719dce6d862ce9d98ef180f6f6ba01451699bb3ebf276f14a',
 };
 
 describe.skip('Integration tests with a local daemon', () => {
@@ -28,11 +28,9 @@ describe.skip('Integration tests with a local daemon', () => {
     });
 
     expect(preview).toStrictEqual({
-      assetToBeSent:
-        '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+      assetToBeSent: market.baseAsset,
       amountToBeSent: 5000000,
-      assetToReceive:
-        '225585b28b768c55eb396eda29246baf20227f94ff8c2c50e298cb1178a4b543',
+      assetToReceive: market.quoteAsset,
       amountToReceive: 23869047,
     });
   });
@@ -57,6 +55,7 @@ describe.skip('Integration tests with a local daemon', () => {
         market,
         amount: 500000,
       });
+      console.log(txid);
       expect(txid).toBeDefined();
     } catch (e) {
       console.error(e);
