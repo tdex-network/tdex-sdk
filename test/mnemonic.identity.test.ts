@@ -213,8 +213,8 @@ describe('Identity: Private key', () => {
       for (let i = 0; i < numberOfAddresses; i++) {
         const addr = mnemonic.getNextAddress();
         const changeAddr = mnemonic.getNextChangeAddress();
-        // await faucet(addr.confidentialAddress);
-        // await faucet(changeAddr.confidentialAddress);
+        await faucet(addr.confidentialAddress);
+        await faucet(changeAddr.confidentialAddress);
         generated.push(addr);
         generated.push(changeAddr);
       }

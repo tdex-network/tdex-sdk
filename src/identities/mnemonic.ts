@@ -347,13 +347,16 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return restoredAddresses;
   }
 
+  /**
+   * Restore try to (1) generate and verify a range of addresses & (2) persist the address to the instance cache.
+   * Then it returns true if everything is ok.
+   */
   private async restore(): Promise<boolean> {
     try {
       const restoredAddresses = await this.restoreAddresses();
       restoredAddresses.forEach(addr => this.persistAddressToCache(addr));
       return true;
     } catch (e) {
-      console.error(e);
       return false;
     }
   }

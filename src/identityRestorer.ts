@@ -5,6 +5,9 @@ export interface IdentityRestorerInterface {
   addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]>;
 }
 
+/**
+ * Implementation of IdentityRestorerInterface using Esplora endpoint.
+ */
 export default class EsploraIdentityRestorer
   implements IdentityRestorerInterface {
   static DEFAULT_ESPLORA_ENDPOINT: string = 'http://localhost:3001';
@@ -18,10 +21,12 @@ export default class EsploraIdentityRestorer
     }
   }
 
+  // Use axios.all safer than Promise.all
   addressesHaveBeenUsed = async (addresses: string[]) => {
     return axios.all(addresses.map(this.addressHasBeenUsed));
   };
 
+  // returns true if the address has txs according to esplora endpoint.
   addressHasBeenUsed = async (address: string) => {
     return axios
       .get(`${this.esploraEndpoint}/address/${address}/txs`)
