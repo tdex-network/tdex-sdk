@@ -58,7 +58,7 @@ describe('Wallet - Transaction builder', () => {
     let proposerUtxos: UtxoInterface[];
     let shitcoin: string;
 
-    it('should let the Proposer to create a valid SwapRequest transaction', async () => {
+    it('should let the Proposer to create a valid transaction to be used in a SwapRequest message', async () => {
       // found the proposer account with LBTC
       await faucet(proposer.confidentialAddress!);
       proposerUtxos = await fetchUtxos(proposer.confidentialAddress!);
