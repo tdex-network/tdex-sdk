@@ -39,3 +39,17 @@ export async function fetchTxHex(txId: string): Promise<string> {
   }
   return hex;
 }
+
+export async function mint(address: string, quantity: number): Promise<string> {
+  let ret: string;
+  try {
+    const response = await axios.post(`${APIURL}/mint`, { address, quantity });
+    await sleep(3000);
+    const { asset } = response.data;
+    ret = asset;
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+  return ret;
+}

@@ -114,7 +114,7 @@ export function isValidAmount(amount: number): boolean {
 export interface UnblindResult {
   asset: Buffer;
   // in satoshis
-  value: Number;
+  value: number;
 }
 
 /**
