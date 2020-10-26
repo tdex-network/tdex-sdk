@@ -15,7 +15,7 @@ import { mnemonicToSeedSync } from 'bip39';
 
 const network = networks.regtest;
 
-jest.setTimeout(15000);
+jest.setTimeout(60000);
 
 const validOpts: IdentityOpts = {
   chain: 'regtest',
@@ -199,6 +199,39 @@ describe('Identity: Private key', () => {
       assert.deepStrictEqual(
         mnemonic.getBlindingPrivateKey(script),
         blindingPrivateKey
+      );
+    });
+  });
+
+  describe('Mnemonic.restore', () => {
+    it('should restore already used addresses', async () => {
+      const numberOfAddresses = 2;
+      const mnemonic = new Mnemonic(validOpts);
+      const generated = [];
+
+      // faucet all the addresses
+      for (let i = 0; i < numberOfAddresses; i++) {
+        const addr = mnemonic.getNextAddress();
+        const changeAddr = mnemonic.getNextChangeAddress();
+        // await faucet(addr.confidentialAddress);
+        // await faucet(changeAddr.confidentialAddress);
+        generated.push(addr);
+        generated.push(changeAddr);
+      }
+
+      const toRestoreMnemonic = new Mnemonic({
+        ...validOpts,
+        initializeFromRestorer: true,
+      });
+
+      await toRestoreMnemonic.restored;
+
+      assert.deepStrictEqual(
+        generated.map(a => a.confidentialAddress).sort(),
+        toRestoreMnemonic
+          .getAddresses()
+          .map(a => a.confidentialAddress)
+          .sort()
       );
     });
   });

@@ -48,6 +48,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   readonly masterPrivateKeyNode: BIP32Interface;
   readonly masterBlindingKeyNode: Slip77Interface;
 
+  readonly restored: Promise<boolean>;
+
   constructor(args: IdentityOpts) {
     super(args);
 
@@ -83,7 +85,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
     if (args.initializeFromRestorer) {
       // restore from restorer
-      this.restore();
+      this.restored = this.restore();
+    } else {
+      this.restored = new Promise(() => true);
     }
   }
 
@@ -276,13 +280,15 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   private async checkAddressesWithRestorer(
     addresses: AddressInterfaceExtended[]
   ): Promise<boolean[]> {
-    return Promise.all(
-      addresses
-        .map(
-          (addrI: AddressInterfaceExtended) => addrI.address.confidentialAddress
-        )
-        .map(this.restorer.addressHasBeenUsed)
+    const confidentialAddresses: string[] = addresses.map(
+      addrI => addrI.address.confidentialAddress
     );
+
+    const results: boolean[] = await this.restorer.addressesHaveBeenUsed(
+      confidentialAddresses
+    );
+
+    return results;
   }
 
   private async restoreAddresses(): Promise<AddressInterfaceExtended[]> {
@@ -296,7 +302,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       hasBeenUsed: boolean,
       index: number
     ) => {
-      if (hasBeenUsed) {
+      if (hasBeenUsed === true) {
         counter = 0;
         restoredAddresses.push(addresses[index]);
       } else {
@@ -304,26 +310,27 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       }
     };
 
-    // stop the loop when the LIMIT is reached
     while (counter < NOT_USED_ADDRESSES_LIMIT) {
       // generate addresses to test
       const addressesToTest = await this.generateSetOfAddresses(
         index,
-        NOT_USED_ADDRESSES_LIMIT
+        NOT_USED_ADDRESSES_LIMIT - counter
       );
       // test all addresses asynchronously using restorer.
       const hasBeenUsedArray: boolean[] = await this.checkAddressesWithRestorer(
         addressesToTest
       );
+
       // iterate through array
       // if address has been used before = push to restoredAddresses array
       // else increment counter
       hasBeenUsedArray.forEach(incrementOrResetCounter(addressesToTest));
+      index += NOT_USED_ADDRESSES_LIMIT;
     }
 
     // check for change address
     const changeAddresses: AddressInterfaceExtended[] = await Promise.all(
-      restoredAddresses.map(this.addressToChangeAddressAsync)
+      restoredAddresses.map(addr => this.addressToChangeAddressAsync(addr))
     );
 
     const hasBeenUsedArrayChange: boolean[] = await this.checkAddressesWithRestorer(
@@ -340,11 +347,14 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return restoredAddresses;
   }
 
-  private restore(): void {
-    this.restoreAddresses().then(
-      (restoredAddresses: AddressInterfaceExtended[]) => {
-        restoredAddresses.forEach(this.persistAddressToCache);
-      }
-    );
+  private async restore(): Promise<boolean> {
+    try {
+      const restoredAddresses = await this.restoreAddresses();
+      restoredAddresses.forEach(addr => this.persistAddressToCache(addr));
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   }
 }
