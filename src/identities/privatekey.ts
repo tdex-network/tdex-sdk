@@ -44,6 +44,8 @@ export default class PrivateKey extends Identity implements IdentityInterface {
   private blindingPrivateKey: string;
   private scriptPubKey: Buffer;
 
+  readonly isRestored: Promise<boolean> = new Promise(() => true);
+
   constructor(args: IdentityOpts) {
     super(args);
 

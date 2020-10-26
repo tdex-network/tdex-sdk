@@ -35,6 +35,7 @@ export interface IdentityInterface {
   network: Network;
   type: IdentityType;
   restorer: IdentityRestorerInterface;
+  isRestored: Promise<boolean>;
   getNextAddress(): AddressInterface;
   getNextChangeAddress(): AddressInterface;
   signPset(psetBase64: string): string | Promise<string>;

@@ -224,7 +224,7 @@ describe('Identity: Private key', () => {
         initializeFromRestorer: true,
       });
 
-      await toRestoreMnemonic.restored;
+      await toRestoreMnemonic.isRestored;
 
       assert.deepStrictEqual(
         generated.map(a => a.confidentialAddress).sort(),

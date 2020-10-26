@@ -48,7 +48,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   readonly masterPrivateKeyNode: BIP32Interface;
   readonly masterBlindingKeyNode: Slip77Interface;
 
-  readonly restored: Promise<boolean>;
+  readonly isRestored: Promise<boolean>;
 
   constructor(args: IdentityOpts) {
     super(args);
@@ -85,9 +85,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
     if (args.initializeFromRestorer) {
       // restore from restorer
-      this.restored = this.restore();
+      this.isRestored = this.restore();
     } else {
-      this.restored = new Promise(() => true);
+      this.isRestored = new Promise(() => true);
     }
   }
 
