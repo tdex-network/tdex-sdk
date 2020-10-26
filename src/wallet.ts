@@ -7,8 +7,8 @@ import {
   Psbt,
   confidential,
   Transaction,
+  TxOutput,
 } from 'liquidjs-lib';
-import { Output } from 'liquidjs-lib/types/transaction';
 import { AddressInterface } from 'types';
 
 /**
@@ -216,7 +216,7 @@ export interface UtxoInterface {
   value?: number;
   assetcommitment?: string;
   valuecommitment?: string;
-  prevout?: Output;
+  prevout?: TxOutput;
 }
 
 export async function fetchTxHex(txId: string, url: string): Promise<string> {
