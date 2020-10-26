@@ -1,10 +1,13 @@
+import Axios from 'axios';
 import axios from 'axios';
 
 export interface IdentityRestorerInterface {
   addressHasBeenUsed(address: string): Promise<boolean>;
+  addressesHaveBeenUsed(addresses: string[]): Promise<boolean[]>;
 }
 
-export class EsploraIdentityRestorer implements IdentityRestorerInterface {
+export default class EsploraIdentityRestorer
+  implements IdentityRestorerInterface {
   static DEFAULT_ESPLORA_ENDPOINT: string = 'http://localhost:3001';
 
   private esploraEndpoint: string =
@@ -16,15 +19,19 @@ export class EsploraIdentityRestorer implements IdentityRestorerInterface {
     }
   }
 
-  private getAddressPath(address: string): string {
-    return `${this.esploraEndpoint}/address/${address}/txs`;
-  }
+  addressesHaveBeenUsed = async (addresses: string[]) => {
+    return Axios.all(addresses.map(this.addressHasBeenUsed));
+  };
 
-  async addressHasBeenUsed(address: string): Promise<boolean> {
-    const path: string = this.getAddressPath(address);
+  addressHasBeenUsed = async (address: string) => {
     return axios
-      .get(path)
-      .then(({ data }) => (data.length > 0 ? true : false))
+      .get(`${this.esploraEndpoint}/address/${address}/txs`)
+      .then(
+        // resolve
+        ({ data }) => (data.length > 0 ? true : false),
+        // reject
+        _ => false
+      )
       .catch(() => false);
-  }
+  };
 }
