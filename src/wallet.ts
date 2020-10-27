@@ -10,6 +10,7 @@ import {
   TxOutput,
 } from 'liquidjs-lib';
 import { AddressInterface } from 'types';
+import { isConfidentialOutput, toAssetHash, unblindOutput } from './utils';
 
 /**
  * Wallet abstraction.
@@ -106,7 +107,8 @@ export class Wallet implements WalletInterface {
     const { selectedUnspents, change } = coinselect(
       unspents,
       inputAmount,
-      inputAsset
+      inputAsset,
+      this.blindingPrivateKeyByScript
     );
 
     let inputBlindingKeys: Record<string, Buffer> = {};
@@ -118,11 +120,11 @@ export class Wallet implements WalletInterface {
         hash: i.txid,
         index: i.vout,
         //We put here the blinded prevout
-        witnessUtxo: i.prevout!,
-      } as any);
+        witnessUtxo: i.prevout,
+      });
 
       // we update the inputBlindingKeys map after we add an input to the transaction
-      const scriptHex = i.prevout!.script.toString('hex');
+      const scriptHex = i.prevout.script.toString('hex');
       inputBlindingKeys[scriptHex] = this.blindingPrivateKeyByScript[scriptHex];
     });
 
@@ -212,11 +214,7 @@ export function walletFromAddresses(
 export interface UtxoInterface {
   txid: string;
   vout: number;
-  asset?: string;
-  value?: number;
-  assetcommitment?: string;
-  valuecommitment?: string;
-  prevout?: TxOutput;
+  prevout: TxOutput;
 }
 
 export async function fetchTxHex(txId: string, url: string): Promise<string> {
@@ -301,7 +299,8 @@ export async function fetchBalances(
 export function coinselect(
   utxos: Array<UtxoInterface>,
   amount: number,
-  asset: string
+  asset: string,
+  inputBlindingKeys: Record<string, Buffer>
 ) {
   let unspents = [];
   let availableSat = 0;
@@ -310,22 +309,27 @@ export function coinselect(
   for (let i = 0; i < utxos.length; i++) {
     const utxo = utxos[i];
 
-    if (!utxo.value || !utxo.asset)
-      throw new Error('Coin selection needs unblinded outputs');
+    // confidential
+    try {
+      if (isConfidentialOutput(utxo.prevout)) {
+        const { asset: unblindAsset, value } = unblindOutput(
+          utxo.prevout,
+          inputBlindingKeys[utxo.prevout.script.toString('hex')]
+        );
 
-    if (!utxo.prevout) throw new Error('UtxoInterface: Prevout is mandatory');
+        if (toAssetHash(unblindAsset) !== asset) continue;
+        unspents.push(utxo);
+        availableSat += value;
+        continue;
+      }
+    } catch (err) {
+      continue;
+    }
 
-    if (utxo.asset !== asset) continue;
-
-    unspents.push({
-      txid: utxo.txid,
-      vout: utxo.vout,
-      value: utxo.value,
-      asset: utxo.asset,
-      prevout: utxo.prevout,
-    });
-    availableSat += utxo.value;
-
+    // unconfidential
+    if (toAssetHash(utxo.prevout.asset) !== asset) continue;
+    unspents.push(utxo);
+    availableSat += confidential.confidentialValueToSatoshi(utxo.prevout.value);
     if (availableSat >= amount) break;
   }
 

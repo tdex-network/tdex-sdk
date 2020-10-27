@@ -1,7 +1,6 @@
 import JSBI from 'jsbi';
-import { confidential, Psbt, Transaction } from 'liquidjs-lib';
+import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
 import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
-import { Output } from 'liquidjs-lib/types/transaction';
 
 const HUNDRED = JSBI.BigInt(100);
 const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
@@ -122,7 +121,10 @@ export interface UnblindResult {
  * @param output the output to unblind.
  * @param blindKey the private blinding key.
  */
-export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
+export function unblindOutput(
+  output: TxOutput,
+  blindKey: Buffer
+): UnblindResult {
   const result: UnblindResult = { asset: Buffer.alloc(0), value: 0 };
 
   if (!output.rangeProof) {
@@ -157,7 +159,7 @@ function bufferNotEmptyOrNull(buffer?: Buffer): boolean {
  * Checks if a given output is a confidential one.
  * @param output the ouput to check.
  */
-export function isConfidentialOutput(output: Output): boolean {
+export function isConfidentialOutput(output: TxOutput): boolean {
   return (
     bufferNotEmptyOrNull(output.rangeProof) &&
     bufferNotEmptyOrNull(output.surjectionProof) &&
