@@ -1,4 +1,4 @@
-import { AddressInterface, IdentityOpts, IdentityType } from '../src/identity';
+import { IdentityOpts, IdentityType, AddressInterface } from '../src/identity';
 import PrivateKey from './../src/identities/privatekey';
 import * as assert from 'assert';
 import {

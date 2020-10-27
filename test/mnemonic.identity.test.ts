@@ -10,7 +10,7 @@ import {
   Psbt,
   Transaction,
 } from 'liquidjs-lib';
-import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
+import { faucet, fetchTxHex, fetchUtxos, sleep } from './_regtest';
 import { mnemonicToSeedSync } from 'bip39';
 import EsploraIdentityRestorer from '../src/identityRestorer';
 
@@ -205,31 +205,37 @@ describe('Identity: Private key', () => {
   });
 
   describe('Mnemonic.restore', () => {
-    it('should restore already used addresses', async () => {
-      const numberOfAddresses = 2;
-      const mnemonic = new Mnemonic(validOpts);
-      const generated = [];
+    let mnemonic: Mnemonic;
+    let toRestoreMnemonic: Mnemonic;
 
+    beforeAll(async () => {
+      const numberOfAddresses = 2;
+      mnemonic = new Mnemonic(validOpts);
       // faucet all the addresses
       for (let i = 0; i < numberOfAddresses; i++) {
         const addr = mnemonic.getNextAddress();
         const changeAddr = mnemonic.getNextChangeAddress();
         await faucet(addr.confidentialAddress);
         await faucet(changeAddr.confidentialAddress);
-        generated.push(addr);
-        generated.push(changeAddr);
       }
 
-      const toRestoreMnemonic = new Mnemonic({
+      await sleep(3000);
+
+      toRestoreMnemonic = new Mnemonic({
         ...validOpts,
         initializeFromRestorer: true,
         restorer: new EsploraIdentityRestorer('http://localhost:3001'),
       });
 
       await toRestoreMnemonic.isRestored;
+    });
 
+    it('should restore already used addresses', () => {
       assert.deepStrictEqual(
-        generated.map(a => a.confidentialAddress).sort(),
+        mnemonic
+          .getAddresses()
+          .map(a => a.confidentialAddress)
+          .sort(),
         toRestoreMnemonic
           .getAddresses()
           .map(a => a.confidentialAddress)
