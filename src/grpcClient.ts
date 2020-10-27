@@ -157,6 +157,7 @@ export function throwErrorIfSwapFail(
 ) {
   const swapFail = tradeReply.getSwapFail();
   if (swapFail) {
-    throw new Error('');
+    const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
+    throw new Error(errorMessage);
   }
 }
