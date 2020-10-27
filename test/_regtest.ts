@@ -2,7 +2,7 @@ const axios = require('axios');
 // Nigiri Chopstick Liquid base URI
 const APIURL = process.env.EXPLORER || `http://localhost:3001`;
 
-function sleep(ms: number): Promise<any> {
+export function sleep(ms: number): Promise<any> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
