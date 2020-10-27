@@ -355,8 +355,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
       const restoredAddresses = await this.restoreAddresses();
       restoredAddresses.forEach(addr => this.persistAddressToCache(addr));
       return true;
-    } catch (e) {
-      return false;
+    } catch (error) {
+      throw new Error(`Mnemonic restoration error: ${error}`);
     }
   }
 }
