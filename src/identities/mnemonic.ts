@@ -86,7 +86,9 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     this.isRestored = new Promise(() => true);
     if (args.initializeFromRestorer) {
       // restore from restorer
-      this.isRestored = this.restore();
+      this.isRestored = this.restore().catch((reason: any) => {
+        throw new Error(`Error during restoration step: ${reason}`);
+      });
     }
   }
 
@@ -351,12 +353,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
    * Then it returns true if everything is ok.
    */
   private async restore(): Promise<boolean> {
-    try {
-      const restoredAddresses = await this.restoreAddresses();
-      restoredAddresses.forEach(addr => this.persistAddressToCache(addr));
-      return true;
-    } catch (error) {
-      throw new Error(`Mnemonic restoration error: ${error}`);
-    }
+    const restoredAddresses = await this.restoreAddresses();
+    restoredAddresses.forEach(addr => this.persistAddressToCache(addr));
+    return true;
   }
 }
