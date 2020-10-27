@@ -41,8 +41,9 @@ describe('Wallet - Transaction builder', () => {
 
   describe('SwapRequest transaction', () => {
     let proposerUtxos: UtxoInterface[];
+    let psbtBase64: string;
 
-    it('should let the Proposer to create a valid transaction to be used in a SwapRequest message', async () => {
+    beforeAll(async () => {
       // found the proposer account with LBTC
       await faucet(proposerAddress);
       proposerUtxos = await fetchUtxos(proposerAddress);
@@ -84,10 +85,31 @@ describe('Wallet - Transaction builder', () => {
         proposer.getNextAddress()
       );
 
+      psbtBase64 = psetBase64;
       inputsKeys = { ...inputBlindingKeys };
       outputsKeys = { ...outputBlindingKeys };
+    });
 
-      assert.doesNotThrow(() => (txSwapRequest = Psbt.fromBase64(psetBase64)));
+    it('should create a deserializable psbt', () => {
+      assert.doesNotThrow(() => Psbt.fromBase64(psbtBase64));
+    });
+
+    it('should add the input to the transaction', () => {
+      const inputsCount = Psbt.fromBase64(
+        psbtBase64
+      ).data.globalMap.unsignedTx.getInputOutputCounts().inputCount;
+      expect(inputsCount).toBeGreaterThan(0);
+    });
+
+    it('should add the output to the transaction', () => {
+      const outputsCount = Psbt.fromBase64(
+        psbtBase64
+      ).data.globalMap.unsignedTx.getInputOutputCounts().outputCount;
+      expect(outputsCount).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should let the Proposer to create a valid transaction to be used in a SwapRequest message', () => {
+      assert.doesNotThrow(() => (txSwapRequest = Psbt.fromBase64(psbtBase64)));
 
       const swap = new Swap();
       assert.doesNotThrow(() => {
@@ -96,16 +118,18 @@ describe('Wallet - Transaction builder', () => {
           assetToBeSent: network.assetHash,
           amountToReceive: 100_0000_0000,
           assetToReceive: shitcoin,
-          psbtBase64: psetBase64,
-          inputBlindingKeys,
-          outputBlindingKeys,
+          psbtBase64,
+          inputBlindingKeys: inputsKeys,
+          outputBlindingKeys: outputsKeys,
         });
       });
     });
   });
 
   describe('SwapAccept message', () => {
-    it('should let the proposer to create a valid transaction to be used for a Swap Accept', async () => {
+    let psbtBase64: string;
+
+    beforeAll(async () => {
       const responderUtxos = await fetchUtxos(responderAddress);
 
       const txHexs: string[] = await Promise.all(
@@ -142,16 +166,41 @@ describe('Wallet - Transaction builder', () => {
         responder.getNextChangeAddress()
       );
 
-      assert.doesNotThrow(() => Psbt.fromBase64(psetBase64));
-
+      psbtBase64 = psetBase64;
       inputsKeys = { ...inputsKeys, ...inputBlindingKeys };
       outputsKeys = { ...outputsKeys, ...outputBlindingKeys };
+    });
 
+    it('should create a deserializable psbt', () => {
+      assert.doesNotThrow(() => Psbt.fromBase64(psbtBase64));
+    });
+
+    it('should add the output responder to the transaction', () => {
+      const diffOutputs =
+        Psbt.fromBase64(
+          psbtBase64
+        ).data.globalMap.unsignedTx.getInputOutputCounts().outputCount -
+        txSwapRequest.data.globalMap.unsignedTx.getInputOutputCounts()
+          .outputCount;
+      expect(diffOutputs).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should add the input of the responder to the transaction', () => {
+      const diffInputs =
+        Psbt.fromBase64(
+          psbtBase64
+        ).data.globalMap.unsignedTx.getInputOutputCounts().inputCount -
+        txSwapRequest.data.globalMap.unsignedTx.getInputOutputCounts()
+          .inputCount;
+      expect(diffInputs).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should let the responder to create a valid transaction to be used for a Swap Accept', () => {
       const swap = new Swap();
       assert.doesNotThrow(() => {
         swap.accept({
           message: messageSwapRequest,
-          psbtBase64: psetBase64,
+          psbtBase64,
           inputBlindingKeys: inputsKeys,
           outputBlindingKeys: outputsKeys,
         });
