@@ -4,6 +4,7 @@ import * as types from 'tdex-protobuf/generated/js/types_pb';
 import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 
 import TraderClientInterface from './grpcClientInterface';
+import { throwErrorIfSwapFail } from './grpcClient';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
@@ -41,10 +42,7 @@ export class TraderClient implements TraderClientInterface {
 
       let data: Uint8Array;
       call.on('data', (reply: messages.TradeProposeReply) => {
-        const swapFail = reply.getSwapFail();
-        if (swapFail) {
-          reject(swapFail);
-        }
+        throwErrorIfSwapFail(reply);
         const swapAcceptMsg = reply!.getSwapAccept();
         data = swapAcceptMsg!.serializeBinary();
       });
@@ -67,10 +65,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradeComplete(request);
       let data: string;
       call.on('data', (reply: messages.TradeCompleteReply) => {
-        const swapFail = reply.getSwapFail();
-        if (swapFail) {
-          reject(swapFail);
-        }
+        throwErrorIfSwapFail(reply);
         data = reply!.getTxid();
       });
       call.on('end', () => resolve(data));

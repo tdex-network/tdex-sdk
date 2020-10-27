@@ -1,6 +1,8 @@
+import { networks } from 'liquidjs-lib';
 import { TraderClient } from './../src/grpcClient';
 import * as TDEX from '../src/index';
 import { Trade, IdentityType } from '../src/index';
+import { TradeType } from 'tdex-protobuf/generated/js/types_pb';
 
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
@@ -32,6 +34,10 @@ describe('TDEX SDK', () => {
   });
 
   describe('TraderClient', () => {
-    let traderClient: TraderClient;
+    let traderClient = new TraderClient('http://localhost:9945');
+
+    describe('TradePropose', () => {
+      it('should reject if the Swap fails', () => {});
+    });
   });
 });

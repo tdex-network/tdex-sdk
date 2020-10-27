@@ -9,6 +9,7 @@ import TraderClientInterface from './grpcClientInterface';
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.TradeClient;
+
   constructor(providerUrl: string) {
     this.providerUrl = providerUrl;
     this.client = new services.TradeClient(
@@ -23,7 +24,6 @@ export class TraderClient implements TraderClientInterface {
    * @param tradeType
    * @param swapRequestSerialized
    */
-
   tradePropose(
     { baseAsset, quoteAsset }: any,
     tradeType: number,
@@ -44,10 +44,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradePropose(request);
       let data: Uint8Array;
       call.on('data', (reply: messages.TradeProposeReply) => {
-        const swapFail = reply.getSwapFail();
-        if (swapFail) {
-          reject(swapFail);
-        }
+        throwErrorIfSwapFail(reply);
         const swapAcceptMsg = reply!.getSwapAccept();
         data = swapAcceptMsg!.serializeBinary();
       });
@@ -61,7 +58,6 @@ export class TraderClient implements TraderClientInterface {
    * tradeComplete
    * @param swapCompleteSerialized
    */
-
   tradeComplete(swapCompleteSerialized: Uint8Array): Promise<any> {
     return new Promise((resolve, reject) => {
       const request = new messages.TradeCompleteRequest();
@@ -71,10 +67,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradeComplete(request);
       let data: string;
       call.on('data', (reply: messages.TradeCompleteReply) => {
-        const swapFail = reply.getSwapFail();
-        if (swapFail) {
-          reject(swapFail);
-        }
+        throwErrorIfSwapFail(reply);
         data = reply!.getTxid();
       });
       call.on('end', () => resolve(data));
@@ -156,5 +149,14 @@ export class TraderClient implements TraderClientInterface {
         resolve(reply);
       });
     });
+  }
+}
+
+export function throwErrorIfSwapFail(
+  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply
+) {
+  const swapFail = tradeReply.getSwapFail();
+  if (swapFail) {
+    throw new Error('');
   }
 }
