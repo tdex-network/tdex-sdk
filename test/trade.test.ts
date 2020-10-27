@@ -1,3 +1,4 @@
+import { TraderClient } from './../src/grpcClient';
 import * as TDEX from '../src/index';
 import { Trade, IdentityType } from '../src/index';
 
@@ -28,5 +29,9 @@ describe('TDEX SDK', () => {
       providerUrl: 'localhost:9945',
       explorerUrl: 'https://nigiri.network',
     });
+  });
+
+  describe('TraderClient', () => {
+    let traderClient: TraderClient;
   });
 });
