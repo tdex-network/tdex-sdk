@@ -1,7 +1,6 @@
 import JSBI from 'jsbi';
-import { confidential, Psbt, Transaction } from 'liquidjs-lib';
+import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
 import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
-import { Output } from 'liquidjs-lib/types/transaction';
 
 const HUNDRED = JSBI.BigInt(100);
 const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
@@ -9,6 +8,13 @@ const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
 export function toAssetHash(x: Buffer): string {
   const withoutFirstByte = x.slice(1);
   return (withoutFirstByte.reverse() as Buffer).toString('hex');
+}
+
+export function fromAssetHash(x: string): Buffer {
+  return Buffer.concat([
+    Buffer.from('01', 'hex'), //prefix for unconfidential asset
+    Buffer.from(x, 'hex').reverse(),
+  ]);
 }
 
 export function toNumber(x: Buffer): number {
@@ -96,40 +102,6 @@ export function decodePsbt(
   };
 }
 
-export interface UtxoInterface {
-  txid: string;
-  vout: number;
-  asset: string;
-  value: number;
-  script?: string;
-}
-
-export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
-  let unspents = [];
-  let availableSat = 0;
-  let change = 0;
-
-  for (let i = 0; i < utxos.length; i++) {
-    const utxo = utxos[i];
-    unspents.push({
-      txid: utxo.txid,
-      vout: utxo.vout,
-      value: utxo.value,
-      asset: utxo.asset,
-    });
-    availableSat += utxo.value;
-
-    if (availableSat >= amount) break;
-  }
-
-  if (availableSat < amount)
-    throw new Error('You do not have enough in your wallet');
-
-  change = availableSat - amount;
-
-  return { unspents, change };
-}
-
 export function isValidAmount(amount: number): boolean {
   if (amount <= 0 || !Number.isSafeInteger(amount)) return false;
   return true;
@@ -141,7 +113,7 @@ export function isValidAmount(amount: number): boolean {
 export interface UnblindResult {
   asset: Buffer;
   // in satoshis
-  value: Number;
+  value: number;
 }
 
 /**
@@ -149,7 +121,10 @@ export interface UnblindResult {
  * @param output the output to unblind.
  * @param blindKey the private blinding key.
  */
-export function unblindOutput(output: Output, blindKey: Buffer): UnblindResult {
+export function unblindOutput(
+  output: TxOutput,
+  blindKey: Buffer
+): UnblindResult {
   const result: UnblindResult = { asset: Buffer.alloc(0), value: 0 };
 
   if (!output.rangeProof) {
@@ -184,7 +159,7 @@ function bufferNotEmptyOrNull(buffer?: Buffer): boolean {
  * Checks if a given output is a confidential one.
  * @param output the ouput to check.
  */
-export function isConfidentialOutput(output: Output): boolean {
+export function isConfidentialOutput(output: TxOutput): boolean {
   return (
     bufferNotEmptyOrNull(output.rangeProof) &&
     bufferNotEmptyOrNull(output.surjectionProof) &&

@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "1.0.1",
   "license": "MIT",
   "main": "dist/index.js",
   "browser": "dist-web/index.js",
@@ -68,10 +68,10 @@
     "axios": "^0.19.2",
     "bip32": "^2.0.6",
     "bip39": "^3.0.2",
-    "slip77": "github:vulpemventures/slip77",
     "google-protobuf": "^3.11.4",
     "jsbi": "^3.1.2",
     "liquidjs-lib": "vulpemventures/liquidjs-lib",
+    "slip77": "github:vulpemventures/slip77",
     "tdex-protobuf": "tdex-network/tdex-protobuf#beta",
     "tslib": "^2.0.0"
   }

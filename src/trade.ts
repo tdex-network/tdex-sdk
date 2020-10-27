@@ -2,18 +2,18 @@ import Core, { CoreInterface } from './core';
 import { Swap } from './swap';
 import {
   WalletInterface,
-  WatchOnlyWalletInterface,
-  Wallet,
-  WatchOnlyWallet,
-  fetchUtxos,
+  fetchAndUnblindUtxos,
+  walletFromAddresses,
+  UtxoInterface,
 } from './wallet';
 import { TraderClient } from './grpcClient';
 import TraderClientInterface from './grpcClientInterface';
 import { isValidAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
-import { IdentityInterface, IdentityType } from './identity';
+import { IdentityInterface, IdentityOpts, IdentityType } from './identity';
 import PrivateKey from './identities/privatekey';
 import Mnemonic from './identities/mnemonic';
+import { AddressInterface } from 'types';
 
 export interface MarketInterface {
   baseAsset: string;
@@ -30,12 +30,19 @@ export enum TradeType {
 }
 
 export class Trade extends Core implements TradeInterface {
-  private grpcClient: TraderClientInterface;
-  identity: IdentityInterface;
+  grpcClient: TraderClientInterface;
+  identity!: IdentityInterface;
 
   constructor(args: any) {
     super(args);
 
+    this.validate(args);
+    this.setIdentity(args.identity);
+
+    this.grpcClient = new TraderClient(this.providerUrl!);
+  }
+
+  validate(args: any) {
     if (!this.providerUrl)
       throw new Error(
         'To be able to trade you need to select a liquidity provider via { providerUrl }'
@@ -50,121 +57,83 @@ export class Trade extends Core implements TradeInterface {
       throw new Error(
         'To be able to trade you need to select an identity via { identity }'
       );
+  }
 
-    this.grpcClient = new TraderClient(this.providerUrl);
-    switch (args.identity.type) {
+  setIdentity(identity: IdentityOpts) {
+    switch (identity.type) {
       case IdentityType.PrivateKey:
-        this.identity = new PrivateKey(args.identity);
+        this.identity = new PrivateKey(identity);
         break;
 
       case IdentityType.Mnemonic:
-        this.identity = new Mnemonic(args.identity);
+        this.identity = new Mnemonic(identity);
         break;
 
       default:
         throw new Error('Selected identity type not supported');
     }
 
-    this.chain = args.identity.chain;
+    this.chain = identity.chain;
   }
 
   /**
-   * Trade.buy let the trder buy the baseAsset,
+   * Trade.buy let the trader buy the baseAsset,
    * sending his own quoteAsset using the current market price
    */
   async buy({
     market,
     amount,
-    address,
-    privateKey,
   }: {
     market: MarketInterface;
-    amount: number; //this is fractional amount
-    address?: string;
-    privateKey?: string;
-  }): Promise<Uint8Array | string> {
-    if (!privateKey && !address)
-      throw new Error(
-        'Either private key or native segwit address is required'
-      );
+    amount: number;
+  }): Promise<string> {
+    const addresses = this.identity.getAddresses();
+    const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
-    if (!privateKey) {
-      const watchOnlyWallet: WatchOnlyWalletInterface = WatchOnlyWallet.fromAddress(
-        address!,
-        this.chain!
-      );
-      const swapAccept = await this.marketOrderRequest(
-        market,
-        TradeType.BUY,
-        amount,
-        watchOnlyWallet
-      );
-      return swapAccept;
-    } else {
-      const wallet: WalletInterface = Wallet.fromWIF(privateKey, this.chain!);
-      const swapAccept = await this.marketOrderRequest(
-        market,
-        TradeType.BUY,
-        amount,
-        wallet
-      );
-      const txid = await this.marketOrderComplete(swapAccept, wallet);
-      return txid;
-    }
+    const swapAccept = await this.marketOrderRequest(
+      market,
+      TradeType.BUY,
+      amount,
+      wallet
+    );
+    const txid = await this.marketOrderComplete(swapAccept);
+    return txid;
   }
 
   /**
-   * Trade.sell let the trder sell the baseAsset,
+   * Trade.sell let the trader sell the baseAsset,
    * receiving the quoteAsset using the current market price
    */
-
   async sell({
     market,
     amount,
-    address,
-    privateKey,
   }: {
     market: MarketInterface;
-    amount: number; // this is fractional amount
-    address?: string;
-    privateKey?: string;
+    amount: number;
   }): Promise<Uint8Array | string> {
-    if (!privateKey && !address)
-      throw new Error(
-        'Either private key or native segwit address is required'
-      );
+    const addresses = this.identity.getAddresses();
+    const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
-    if (!privateKey) {
-      const watchOnlyWallet: WatchOnlyWalletInterface = WatchOnlyWallet.fromAddress(
-        address!,
-        this.chain!
-      );
-      const swapAccept = await this.marketOrderRequest(
-        market,
-        TradeType.SELL,
-        amount,
-        watchOnlyWallet
-      );
-      return swapAccept;
-    } else {
-      const wallet: WalletInterface = Wallet.fromWIF(privateKey, this.chain!);
-      const swapAccept = await this.marketOrderRequest(
-        market,
-        TradeType.SELL,
-        amount,
-        wallet
-      );
-      const txid = await this.marketOrderComplete(swapAccept, wallet);
-      return txid;
-    }
+    const swapAccept = await this.marketOrderRequest(
+      market,
+      TradeType.SELL,
+      amount,
+      wallet
+    );
+    const txid = await this.marketOrderComplete(swapAccept);
+    return txid;
   }
 
-  async preview(
-    market: MarketInterface,
-    tradeType: TradeType,
-    amountInSatoshis: number
-  ): Promise<any> {
-    if (!isValidAmount(amountInSatoshis)) {
+  async preview({
+    market,
+    tradeType,
+    amount,
+  }: {
+    market: MarketInterface;
+    tradeType: TradeType;
+    amount: number;
+  }): Promise<any> {
+    if (!isValidAmount(amount)) {
       throw new Error('Amount is not valid');
     }
     const { baseAsset, quoteAsset } = market;
@@ -175,7 +144,7 @@ export class Trade extends Core implements TradeInterface {
         quoteAsset,
       },
       tradeType,
-      amountInSatoshis
+      amount
     );
 
     if (tradeType === TradeType.BUY) {
@@ -183,13 +152,13 @@ export class Trade extends Core implements TradeInterface {
         assetToBeSent: quoteAsset,
         amountToBeSent: prices[0].amount,
         assetToReceive: baseAsset,
-        amountToReceive: amountInSatoshis,
+        amountToReceive: amount,
       };
     }
 
     return {
       assetToBeSent: baseAsset,
-      amountToBeSent: amountInSatoshis,
+      amountToBeSent: amount,
       assetToReceive: quoteAsset,
       amountToReceive: prices[0].amount,
     };
@@ -199,25 +168,44 @@ export class Trade extends Core implements TradeInterface {
     market: MarketInterface,
     tradeType: TradeType,
     amountInSatoshis: number,
-    wallet: WalletInterface | WatchOnlyWalletInterface
+    wallet: WalletInterface
   ): Promise<Uint8Array> {
     const {
       assetToBeSent,
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-    } = await this.preview(market, tradeType, amountInSatoshis);
+    } = await this.preview({ market, tradeType, amount: amountInSatoshis });
 
-    const traderUtxos = await fetchUtxos(wallet.address, this.explorerUrl!);
+    const arrayOfArrayOfUtxos = await Promise.all(
+      wallet.addresses.map((a: AddressInterface) =>
+        fetchAndUnblindUtxos(
+          a.confidentialAddress,
+          a.blindingPrivateKey,
+          this.explorerUrl!
+        )
+      )
+    );
 
-    const emptyPsbt = Wallet.createTx(this.chain);
-    const psbtBase64 = wallet.updateTx(
+    const traderUnblindedUtxos: UtxoInterface[] = arrayOfArrayOfUtxos.flat();
+
+    const addressForOutput = this.identity.getNextAddress();
+    const addressForChange = this.identity.getNextChangeAddress();
+
+    const emptyPsbt = wallet.createTx();
+    const {
+      psetBase64,
+      inputBlindingKeys,
+      outputBlindingKeys,
+    } = wallet.updateTx(
       emptyPsbt,
-      traderUtxos,
+      traderUnblindedUtxos,
       amountToBeSent,
       amountToReceive,
       assetToBeSent,
-      assetToReceive
+      assetToReceive,
+      addressForOutput,
+      addressForChange
     );
 
     const swap = new Swap();
@@ -226,7 +214,9 @@ export class Trade extends Core implements TradeInterface {
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-      psbtBase64,
+      psbtBase64: psetBase64,
+      inputBlindingKeys,
+      outputBlindingKeys,
     });
 
     // 0 === Buy === receiving base_asset; 1 === sell === receiving base_asset
@@ -240,8 +230,7 @@ export class Trade extends Core implements TradeInterface {
   }
 
   private async marketOrderComplete(
-    swapAcceptSerialized: Uint8Array,
-    wallet: WalletInterface
+    swapAcceptSerialized: Uint8Array
   ): Promise<string> {
     // trader need to check the signed inputs by the provider
     // and add his own inputs if all is correct
@@ -249,13 +238,13 @@ export class Trade extends Core implements TradeInterface {
       swapAcceptSerialized
     );
     const transaction = swapAcceptMessage.getTransaction();
-    const signedPsbt = wallet.sign(transaction);
+    const signedPset = await this.identity.signPset(transaction);
 
     // Trader  adds his signed inputs to the transaction
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
       message: swapAcceptSerialized,
-      psbtBase64: signedPsbt,
+      psbtBase64: signedPset,
     });
 
     // Trader call the tradeComplete endpoint to finalize the swap

@@ -3,12 +3,12 @@ import * as bip39 from 'bip39';
 import { fromSeed as slip77fromSeed, Slip77Interface } from 'slip77';
 import { fromSeed as bip32fromSeed, BIP32Interface } from 'bip32';
 import Identity, {
-  AddressInterface,
   IdentityInterface,
   IdentityOpts,
   IdentityType,
 } from '../identity';
 import { BufferMap } from '../utils';
+import { AddressInterface } from 'types';
 
 export interface MnemonicOptsValue {
   mnemonic: string;
