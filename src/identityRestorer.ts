@@ -10,7 +10,8 @@ export interface IdentityRestorerInterface {
  */
 export default class EsploraIdentityRestorer
   implements IdentityRestorerInterface {
-  static DEFAULT_ESPLORA_ENDPOINT: string = 'http://localhost:3001';
+  static DEFAULT_ESPLORA_ENDPOINT: string =
+    'https://blockstream.com/liquid/api';
 
   private esploraEndpoint: string =
     EsploraIdentityRestorer.DEFAULT_ESPLORA_ENDPOINT;

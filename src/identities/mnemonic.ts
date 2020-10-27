@@ -83,11 +83,10 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     // generate the master blinding key from the seed
     this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
 
+    this.isRestored = new Promise(() => true);
     if (args.initializeFromRestorer) {
       // restore from restorer
       this.isRestored = this.restore();
-    } else {
-      this.isRestored = new Promise(() => true);
     }
   }
 
@@ -100,8 +99,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
    * return the next keypair derivated from the baseNode.
    * increment the private member index +1.
    */
-  private getNextKeypair(
-    isChange: boolean = false,
+  private deriveKeyWithIndex(
+    isChange: boolean,
     index: number
   ): { publicKey: Buffer; privateKey: Buffer } {
     const baseNode = this.masterPrivateKeyNode.derivePath(
@@ -155,10 +154,10 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
   private getAddress(
     isChange: boolean,
-    index: number = this.index
+    index: number
   ): AddressInterfaceExtended {
     // get the next key pair
-    const signingKeyPair = this.getNextKeypair(isChange, index);
+    const signingKeyPair = this.deriveKeyWithIndex(isChange, index);
     // use the public key to compute the scriptPubKey
     const script: Buffer = this.scriptFromPublicKey(signingKeyPair.publicKey);
     // generate the blindKeyPair from the scriptPubKey
@@ -182,9 +181,8 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   }
 
   getNextAddress(): AddressInterface {
-    const addr = this.getAddress(false);
+    const addr = this.getAddress(false, this.index);
     this.persistAddressToCache(addr);
-    this.changeIndex = this.index;
     this.index += 1;
     return addr.address;
   }
@@ -192,6 +190,7 @@ export default class Mnemonic extends Identity implements IdentityInterface {
   getNextChangeAddress(): AddressInterface {
     const addr = this.getAddress(true, this.changeIndex);
     this.persistAddressToCache(addr);
+    this.changeIndex += 1;
     return addr.address;
   }
 

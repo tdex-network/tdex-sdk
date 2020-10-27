@@ -12,6 +12,7 @@ import {
 } from 'liquidjs-lib';
 import { faucet, fetchTxHex, fetchUtxos } from './_regtest';
 import { mnemonicToSeedSync } from 'bip39';
+import EsploraIdentityRestorer from '../src/identityRestorer';
 
 const network = networks.regtest;
 
@@ -222,6 +223,7 @@ describe('Identity: Private key', () => {
       const toRestoreMnemonic = new Mnemonic({
         ...validOpts,
         initializeFromRestorer: true,
+        restorer: new EsploraIdentityRestorer('http://localhost:3001'),
       });
 
       await toRestoreMnemonic.isRestored;

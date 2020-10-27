@@ -11,19 +11,29 @@ const addressToFaucet =
 const addressToNotFaucet =
   'AzpjnpWdDRSFnWC4Ymzwn3b8srTf7aLVRt5Ci13K5KpsUFkGTNQA6qHwxRNGDWH5gztp7wu3cEnZciY2';
 
+const restorer = new EsploraIdentityRestorer('http://localhost:3001');
+
+let resultThatShouldBeTrue: boolean;
+let resultThatShouldBeFalse: boolean;
+
 describe('EsploraIdentityRestorer', () => {
   describe('EsploraIdentityRestorer.addressHasBeenUsed', () => {
-    it('should return true if the address has txs', async () => {
+    beforeAll(async () => {
       await faucet(addressToFaucet);
-      const restorer = new EsploraIdentityRestorer();
-      const result = await restorer.addressHasBeenUsed(addressToFaucet);
-      assert.deepStrictEqual(result, true);
+      resultThatShouldBeTrue = await restorer.addressHasBeenUsed(
+        addressToFaucet
+      );
+      resultThatShouldBeFalse = await restorer.addressHasBeenUsed(
+        addressToNotFaucet
+      );
     });
 
-    it('should return false if the address has no txs', async () => {
-      const restorer = new EsploraIdentityRestorer();
-      const result = await restorer.addressHasBeenUsed(addressToNotFaucet);
-      assert.deepStrictEqual(result, false);
+    it('should return true if the address has txs', () => {
+      assert.deepStrictEqual(resultThatShouldBeTrue, true);
+    });
+
+    it('should return false if the address has no txs', () => {
+      assert.deepStrictEqual(resultThatShouldBeFalse, false);
     });
   });
 });
