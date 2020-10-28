@@ -15,13 +15,13 @@ describe('Swap', () => {
 
   describe('Swap Request message', () => {
     test('should create a valid SwapRequest message if transaction is unconfidential.', () => {
-      const psbtBase64 = initialPsbtOfAlice;
+      const psetBase64 = initialPsbtOfAlice;
       const bytes = swap.request({
         assetToBeSent: fixtures.assets.USDT,
         amountToBeSent: 30000000000,
         assetToReceive: fixtures.assets.LBTC,
         amountToReceive: 5000000,
-        psbtBase64,
+        psetBase64,
       });
 
       expect(bytes).toBeDefined();
@@ -34,11 +34,11 @@ describe('Swap', () => {
       amountToBeSent: 30000000000,
       assetToReceive: fixtures.assets.LBTC,
       amountToReceive: 5000000,
-      psbtBase64: initialPsbtOfAlice,
+      psetBase64: initialPsbtOfAlice,
     });
 
-    const psbtBase64 = initialPsbtOfBob;
-    const bytes = swap.accept({ message: swapRequestMessage, psbtBase64 });
+    const psetBase64 = initialPsbtOfBob;
+    const bytes = swap.accept({ message: swapRequestMessage, psetBase64 });
 
     expect(bytes).toBeDefined();
   });
@@ -49,17 +49,17 @@ describe('Swap', () => {
       amountToBeSent: 30000000000,
       assetToReceive: fixtures.assets.LBTC,
       amountToReceive: 5000000,
-      psbtBase64: initialPsbtOfAlice,
+      psetBase64: initialPsbtOfAlice,
     });
 
     const swapAcceptMessage = swap.accept({
       message: swapRequestMessage,
-      psbtBase64: initialPsbtOfBob,
+      psetBase64: initialPsbtOfBob,
     });
 
     const bytes = swap.complete({
       message: swapAcceptMessage,
-      psbtBase64: finalPsbtOfAlice,
+      psetBase64: finalPsbtOfAlice,
     });
 
     expect(bytes).toBeDefined();
@@ -92,7 +92,7 @@ describe('Swap', () => {
           amountToBeSent: fixture.toBeSent.amount,
           assetToReceive: fixture.toReceive.asset,
           amountToReceive: fixture.toReceive.amount,
-          psbtBase64: fixture.request.psbt,
+          psetBase64: fixture.request.psbt,
           inputBlindingKeys: inKeys,
           outputBlindingKeys: outKeys,
         });
@@ -123,7 +123,7 @@ describe('Swap', () => {
       // assertions
       assert.doesNotThrow(() => {
         acceptMessage = swap.accept({
-          psbtBase64: fixture.accept.psbt,
+          psetBase64: fixture.accept.psbt,
           message: requestMessage,
           inputBlindingKeys: inKeys,
           outputBlindingKeys: outKeys,
@@ -135,7 +135,7 @@ describe('Swap', () => {
       assert.doesNotThrow(() => {
         swap.complete({
           message: acceptMessage,
-          psbtBase64: fixtures.confidentialSwaps[0].complete.psbt,
+          psetBase64: fixtures.confidentialSwaps[0].complete.psbt,
         });
       });
     });

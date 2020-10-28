@@ -20,7 +20,7 @@ interface requestOpts {
   amountToBeSent: number;
   assetToReceive: string;
   amountToReceive: number;
-  psbtBase64: string;
+  psetBase64: string;
   inputBlindingKeys?: BlindKeysMap;
   outputBlindingKeys?: BlindKeysMap;
 }
@@ -28,7 +28,7 @@ interface requestOpts {
 // define the Swap.accept arguments.
 interface acceptOpts {
   message: Uint8Array;
-  psbtBase64: string;
+  psetBase64: string;
   inputBlindingKeys?: BlindKeysMap;
   outputBlindingKeys?: BlindKeysMap;
 }
@@ -49,7 +49,7 @@ export class Swap extends Core {
     assetToBeSent,
     amountToReceive,
     assetToReceive,
-    psbtBase64,
+    psetBase64,
     inputBlindingKeys,
     outputBlindingKeys,
   }: requestOpts): Uint8Array {
@@ -60,7 +60,7 @@ export class Swap extends Core {
     msg.setAssetP(assetToBeSent);
     msg.setAmountR(amountToReceive);
     msg.setAssetR(assetToReceive);
-    msg.setTransaction(psbtBase64);
+    msg.setTransaction(psetBase64);
 
     if (inputBlindingKeys) {
       // set the input blinding keys
@@ -90,7 +90,7 @@ export class Swap extends Core {
    */
   accept({
     message,
-    psbtBase64,
+    psetBase64,
     inputBlindingKeys,
     outputBlindingKeys,
   }: acceptOpts): Uint8Array {
@@ -100,7 +100,7 @@ export class Swap extends Core {
     const msgAccept = new proto.SwapAccept();
     msgAccept.setId(makeid(8));
     msgAccept.setRequestId(msgRequest.getId());
-    msgAccept.setTransaction(psbtBase64);
+    msgAccept.setTransaction(psetBase64);
 
     if (inputBlindingKeys) {
       // set the input blinding keys
@@ -131,13 +131,13 @@ export class Swap extends Core {
    */
   complete({
     message,
-    psbtBase64,
+    psetBase64,
   }: {
     message: Uint8Array;
-    psbtBase64: string;
+    psetBase64: string;
   }): Uint8Array {
     //First validate signatures
-    const { psbt } = decodePsbt(psbtBase64);
+    const { psbt } = decodePsbt(psetBase64);
 
     if (!psbt.validateSignaturesOfAllInputs())
       throw new Error('Signatures not valid');
@@ -147,7 +147,7 @@ export class Swap extends Core {
     const msgComplete = new proto.SwapComplete();
     msgComplete.setId(makeid(8));
     msgComplete.setAcceptId(msgAccept.getId());
-    msgComplete.setTransaction(psbtBase64);
+    msgComplete.setTransaction(psetBase64);
 
     if (this.verbose) console.log(msgAccept.toObject());
 

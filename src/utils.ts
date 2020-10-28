@@ -85,11 +85,11 @@ export function makeid(length: number): string {
 }
 
 export function decodePsbt(
-  psbtBase64: string
+  psetBase64: string
 ): { psbt: Psbt; transaction: Transaction } {
   let psbt: Psbt;
   try {
-    psbt = Psbt.fromBase64(psbtBase64);
+    psbt = Psbt.fromBase64(psetBase64);
   } catch (ignore) {
     throw new Error('Invalid psbt');
   }

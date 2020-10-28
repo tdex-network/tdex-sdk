@@ -118,7 +118,7 @@ describe('Wallet - Transaction builder', () => {
           assetToBeSent: network.assetHash,
           amountToReceive: 100_0000_0000,
           assetToReceive: shitcoin,
-          psbtBase64,
+          psetBase64: psbtBase64,
           inputBlindingKeys: inputsKeys,
           outputBlindingKeys: outputsKeys,
         });
@@ -200,7 +200,7 @@ describe('Wallet - Transaction builder', () => {
       assert.doesNotThrow(() => {
         swap.accept({
           message: messageSwapRequest,
-          psbtBase64,
+          psetBase64: psbtBase64,
           inputBlindingKeys: inputsKeys,
           outputBlindingKeys: outputsKeys,
         });
