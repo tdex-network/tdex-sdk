@@ -9,7 +9,7 @@ import {
   isConfidentialOutput,
   unblindOutput,
 } from './utils';
-import { Output } from 'liquidjs-lib/types/transaction';
+import { TxOutput, Transaction } from 'liquidjs-lib';
 
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
@@ -164,10 +164,19 @@ function compareMessagesAndTransaction(
   msgRequest: proto.SwapRequest,
   msgAccept?: proto.SwapAccept
 ): void {
-  // msg Request
-
   // decode the transaction.
   const decodedFromRequest = decodePsbt(msgRequest.getTransaction());
+
+  // nonWitnessUtxo to witnessUtxoutxos
+  decodedFromRequest.psbt.data.inputs.forEach((i: any, inputIndex: number) => {
+    if (!i.witnessUtxo && i.nonWitnessUtxo) {
+      const vout: number = decodedFromRequest.transaction.ins[inputIndex].index;
+      const witnessUtxo: TxOutput = Transaction.fromHex(i.nonWitnessUtxo).outs[
+        vout
+      ];
+      i.witnessUtxo = witnessUtxo;
+    }
+  });
 
   // check the amount of the transaction
   const totalP = countUtxos(
@@ -210,10 +219,11 @@ function compareMessagesAndTransaction(
       blindKeysMap(msgAccept.getInputBlindingKeyMap())
     );
 
-    if (totalR < msgRequest.getAmountR())
+    if (totalR < msgRequest.getAmountR()) {
       throw new Error(
         'Cumulative utxos count is not enough to cover SwapRequest.amount_r'
       );
+    }
 
     // check if there is an output found in the transaction.
     const outputPFound = outputFoundInTransaction(
@@ -238,13 +248,13 @@ function compareMessagesAndTransaction(
  * @param outputBlindKeys optional, only if blinded outputs. Blinding keys map (scriptPukKey -> blindingKey).
  */
 function outputFoundInTransaction(
-  outputs: Array<Output>,
+  outputs: Array<TxOutput>,
   value: number,
   asset: string,
   outputBlindKeys: BlindKeysMap = {}
 ): boolean {
   const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
-  return outputs.some((o: Output) => {
+  return outputs.some((o: TxOutput) => {
     // unblind first if confidential ouput
     const isConfidential = isConfidentialOutput(o);
     if (isConfidential === true) {

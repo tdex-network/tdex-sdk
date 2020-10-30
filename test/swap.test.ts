@@ -1,8 +1,21 @@
-import { Psbt } from 'liquidjs-lib';
+import { networks, Psbt, address, confidential } from 'liquidjs-lib';
 import { Swap } from '../src/swap';
 import * as assert from 'assert';
-
 import * as fixtures from './fixtures/swap.json';
+import { faucet, fetchUtxos, mint, fetchTxHex } from './_regtest';
+import {
+  proposer,
+  proposerAddress,
+  responder,
+  responderAddress,
+} from './fixtures/swap.keys';
+import { UtxoInterface } from '../src/wallet';
+
+const toOutputScript = (addr: string) =>
+  address.toOutputScript(addr, networks.regtest);
+const satoshiToConfidentialValue = confidential.satoshiToConfidentialValue;
+
+jest.setTimeout(30000);
 
 describe('Swap', () => {
   const swap = new Swap();
@@ -63,6 +76,73 @@ describe('Swap', () => {
     });
 
     expect(bytes).toBeDefined();
+  });
+
+  describe('Swap with legacy input', () => {
+    const swap = new Swap();
+    let requestTx: string;
+    let altcoin: string;
+
+    const inputBlindingKeys: Record<string, Buffer> = {};
+
+    beforeAll(async () => {
+      await faucet(proposerAddress);
+      const mintResult = await mint(responderAddress, 100);
+
+      altcoin = mintResult.asset;
+
+      const utxoProposer: UtxoInterface = (
+        await fetchUtxos(proposerAddress)
+      )[0];
+
+      const proposerNonWitnessUtxo: Buffer = Buffer.from(
+        await fetchTxHex(utxoProposer.txid),
+        'hex'
+      );
+
+      inputBlindingKeys[
+        toOutputScript(responderAddress).toString('hex')
+      ] = Buffer.from(responder.getNextAddress().blindingPrivateKey, 'hex');
+      inputBlindingKeys[
+        toOutputScript(proposerAddress).toString('hex')
+      ] = Buffer.from(proposer.getNextAddress().blindingPrivateKey, 'hex');
+
+      requestTx = new Psbt({ network: networks.regtest })
+        .addInput({
+          hash: utxoProposer.txid,
+          index: utxoProposer.vout,
+          nonWitnessUtxo: proposerNonWitnessUtxo,
+        })
+        .addOutput({
+          value: satoshiToConfidentialValue(100_0000_0000),
+          asset: altcoin,
+          nonce: Buffer.alloc(0),
+          script: toOutputScript(proposerAddress),
+        })
+        .addOutput({
+          value: satoshiToConfidentialValue(0),
+          asset: networks.regtest.assetHash,
+          nonce: Buffer.alloc(0),
+          script: Buffer.alloc(0),
+        })
+        .toBase64();
+
+      function swapRequest() {
+        return swap.request({
+          amountToBeSent: 1_0000_0000,
+          assetToBeSent: networks.regtest.assetHash,
+          amountToReceive: 100_0000_0000,
+          assetToReceive: altcoin,
+          psbtBase64: requestTx,
+          inputBlindingKeys,
+          outputBlindingKeys: {},
+        });
+      }
+
+      it('should create a valid swap request message', () => {
+        assert.doesNotThrow(() => swapRequest());
+      });
+    });
   });
 
   describe('Confidential Swap', () => {
