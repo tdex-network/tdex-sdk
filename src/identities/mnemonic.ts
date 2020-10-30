@@ -40,12 +40,15 @@ export default class Mnemonic extends Identity implements IdentityInterface {
 
   private baseDerivationPath: string = Mnemonic.INITIAL_BASE_PATH;
   private index: number = Mnemonic.INITIAL_INDEX;
+  private changeIndex: number = Mnemonic.INITIAL_INDEX;
   private scriptToAddressCache: BufferMap<
     AddressInterfaceExtended
   > = new BufferMap();
 
   readonly masterPrivateKeyNode: BIP32Interface;
   readonly masterBlindingKeyNode: Slip77Interface;
+
+  readonly isRestored: Promise<boolean>;
 
   constructor(args: IdentityOpts) {
     super(args);
@@ -79,6 +82,14 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     this.masterPrivateKeyNode = bip32fromSeed(walletSeed, this.network);
     // generate the master blinding key from the seed
     this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
+
+    this.isRestored = new Promise(() => true);
+    if (args.initializeFromRestorer) {
+      // restore from restorer
+      this.isRestored = this.restore().catch((reason: any) => {
+        throw new Error(`Error during restoration step: ${reason}`);
+      });
+    }
   }
 
   private getCurrentDerivationPath(isChange: boolean): string {
@@ -90,15 +101,15 @@ export default class Mnemonic extends Identity implements IdentityInterface {
    * return the next keypair derivated from the baseNode.
    * increment the private member index +1.
    */
-  private getNextKeypair(
-    isChange: boolean = false
+  private deriveKeyWithIndex(
+    isChange: boolean,
+    index: number
   ): { publicKey: Buffer; privateKey: Buffer } {
     const baseNode = this.masterPrivateKeyNode.derivePath(
       this.getCurrentDerivationPath(isChange)
     );
-    const wif: string = baseNode.deriveHardened(this.index).toWIF();
+    const wif: string = baseNode.deriveHardened(index).toWIF();
     const { publicKey, privateKey } = ECPair.fromWIF(wif, this.network);
-    this.index += 1;
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
@@ -133,10 +144,22 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     }).confidentialAddress!;
   }
 
-  private getAddress(isChange: boolean): AddressInterface {
-    const currentIndex = this.index;
+  // store the generation inside local cache
+  private persistAddressToCache(address: AddressInterfaceExtended): void {
+    const privateKeyBuffer = Buffer.from(address.signingPrivateKey, 'hex');
+    const publicKey: Buffer = ECPair.fromPrivateKey(privateKeyBuffer, {
+      network: this.network,
+    }).publicKey!;
+    const script = this.scriptFromPublicKey(publicKey);
+    this.scriptToAddressCache.set(script, address);
+  }
+
+  private getAddress(
+    isChange: boolean,
+    index: number
+  ): AddressInterfaceExtended {
     // get the next key pair
-    const signingKeyPair = this.getNextKeypair(isChange);
+    const signingKeyPair = this.deriveKeyWithIndex(isChange, index);
     // use the public key to compute the scriptPubKey
     const script: Buffer = this.scriptFromPublicKey(signingKeyPair.publicKey);
     // generate the blindKeyPair from the scriptPubKey
@@ -152,21 +175,25 @@ export default class Mnemonic extends Identity implements IdentityInterface {
         confidentialAddress: confidentialAddress!,
         blindingPrivateKey: blindingKeyPair.privateKey!.toString('hex'),
       },
-      derivationPath: `${this.baseDerivationPath}/${currentIndex}`,
+      derivationPath: `${this.baseDerivationPath}/${index}`,
       signingPrivateKey: signingKeyPair.privateKey!.toString('hex'),
     };
-    // store the generation inside local cache
-    this.scriptToAddressCache.set(script, newAddressGeneration);
     // return the generation data
-    return newAddressGeneration.address;
+    return newAddressGeneration;
   }
 
   getNextAddress(): AddressInterface {
-    return this.getAddress(false);
+    const addr = this.getAddress(false, this.index);
+    this.persistAddressToCache(addr);
+    this.index += 1;
+    return addr.address;
   }
 
   getNextChangeAddress(): AddressInterface {
-    return this.getAddress(true);
+    const addr = this.getAddress(true, this.changeIndex);
+    this.persistAddressToCache(addr);
+    this.changeIndex += 1;
+    return addr.address;
   }
 
   getBlindingPrivateKey(script: string): string {
@@ -210,5 +237,124 @@ export default class Mnemonic extends Identity implements IdentityInterface {
     return this.scriptToAddressCache
       .values()
       .map(addrExtended => addrExtended.address);
+  }
+
+  // RESTORATION PART
+
+  /**
+   * generate a range of addresses asynchronously.
+   * @param fromIndex generation will begin at index `fromIndex`
+   * @param numberToGenerate number of addresses to generate.
+   */
+  private async generateSetOfAddresses(
+    fromIndex: number,
+    numberToGenerate: number
+  ): Promise<AddressInterfaceExtended[]> {
+    // asynchronous getAddress function
+    const getAddressAsync = async (
+      index: number
+    ): Promise<AddressInterfaceExtended> => {
+      return this.getAddress(false, index);
+    };
+
+    // index of addresses to generate.
+    const indexToGenerate = Array.from(
+      { length: numberToGenerate },
+      (_, i) => i + fromIndex
+    );
+
+    // return a promise when all addresses are generated.
+    return Promise.all(indexToGenerate.map(getAddressAsync));
+  }
+
+  private async addressToChangeAddressAsync(
+    address: AddressInterfaceExtended
+  ): Promise<AddressInterfaceExtended> {
+    const derivationPathSplitted = address.derivationPath.split('/');
+    const index: number = parseInt(
+      derivationPathSplitted[derivationPathSplitted.length - 1]
+    );
+
+    return this.getAddress(true, index);
+  }
+
+  private async checkAddressesWithRestorer(
+    addresses: AddressInterfaceExtended[]
+  ): Promise<boolean[]> {
+    const confidentialAddresses: string[] = addresses.map(
+      addrI => addrI.address.confidentialAddress
+    );
+
+    const results: boolean[] = await this.restorer.addressesHaveBeenUsed(
+      confidentialAddresses
+    );
+
+    return results;
+  }
+
+  private async restoreAddresses(): Promise<AddressInterfaceExtended[]> {
+    const NOT_USED_ADDRESSES_LIMIT = 20;
+    let counter = 0;
+    let index = 0;
+
+    const restoredAddresses: AddressInterfaceExtended[] = [];
+
+    const incrementOrResetCounter = (addresses: AddressInterfaceExtended[]) => (
+      hasBeenUsed: boolean,
+      index: number
+    ) => {
+      if (hasBeenUsed === true) {
+        counter = 0;
+        restoredAddresses.push(addresses[index]);
+      } else {
+        counter += 1;
+      }
+    };
+
+    while (counter < NOT_USED_ADDRESSES_LIMIT) {
+      // generate addresses to test
+      const addressesToTest = await this.generateSetOfAddresses(
+        index,
+        NOT_USED_ADDRESSES_LIMIT - counter
+      );
+      // test all addresses asynchronously using restorer.
+      const hasBeenUsedArray: boolean[] = await this.checkAddressesWithRestorer(
+        addressesToTest
+      );
+
+      // iterate through array
+      // if address has been used before = push to restoredAddresses array
+      // else increment counter
+      hasBeenUsedArray.forEach(incrementOrResetCounter(addressesToTest));
+      index += NOT_USED_ADDRESSES_LIMIT;
+    }
+
+    // check for change address
+    const changeAddresses: AddressInterfaceExtended[] = await Promise.all(
+      restoredAddresses.map(addr => this.addressToChangeAddressAsync(addr))
+    );
+
+    const hasBeenUsedArrayChange: boolean[] = await this.checkAddressesWithRestorer(
+      changeAddresses
+    );
+
+    hasBeenUsedArrayChange.forEach((hasBeenUsed: boolean, index: number) => {
+      if (hasBeenUsed) {
+        restoredAddresses.push(changeAddresses[index]);
+      }
+    });
+
+    // return the restored address
+    return restoredAddresses;
+  }
+
+  /**
+   * Restore try to (1) generate and verify a range of addresses & (2) persist the address to the instance cache.
+   * Then it returns true if everything is ok.
+   */
+  private async restore(): Promise<boolean> {
+    const restoredAddresses = await this.restoreAddresses();
+    restoredAddresses.forEach(addr => this.persistAddressToCache(addr));
+    return true;
   }
 }

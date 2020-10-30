@@ -214,7 +214,7 @@ export class Trade extends Core implements TradeInterface {
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-      psbtBase64: psetBase64,
+      psetBase64: psetBase64,
       inputBlindingKeys,
       outputBlindingKeys,
     });
@@ -244,7 +244,7 @@ export class Trade extends Core implements TradeInterface {
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
       message: swapAcceptSerialized,
-      psbtBase64: signedPset,
+      psetBase64: signedPset,
     });
 
     // Trader call the tradeComplete endpoint to finalize the swap

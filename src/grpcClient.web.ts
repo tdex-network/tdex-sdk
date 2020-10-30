@@ -4,10 +4,12 @@ import * as types from 'tdex-protobuf/generated/js/types_pb';
 import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 
 import TraderClientInterface from './grpcClientInterface';
+import { throwErrorIfSwapFail } from './grpcClient';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.TradeClient;
+
   constructor(providerUrl: string) {
     this.providerUrl = providerUrl;
     this.client = new services.TradeClient(providerUrl);
@@ -19,7 +21,6 @@ export class TraderClient implements TraderClientInterface {
    * @param tradeType
    * @param swapRequestSerialized
    */
-
   tradePropose(
     { baseAsset, quoteAsset }: any,
     tradeType: number,
@@ -41,6 +42,7 @@ export class TraderClient implements TraderClientInterface {
 
       let data: Uint8Array;
       call.on('data', (reply: messages.TradeProposeReply) => {
+        throwErrorIfSwapFail(reply);
         const swapAcceptMsg = reply!.getSwapAccept();
         data = swapAcceptMsg!.serializeBinary();
       });
@@ -54,7 +56,6 @@ export class TraderClient implements TraderClientInterface {
    * tradeComplete
    * @param swapCompleteSerialized
    */
-
   tradeComplete(swapCompleteSerialized: Uint8Array): Promise<any> {
     return new Promise((resolve, reject) => {
       const request = new messages.TradeCompleteRequest();
@@ -64,6 +65,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradeComplete(request);
       let data: string;
       call.on('data', (reply: messages.TradeCompleteReply) => {
+        throwErrorIfSwapFail(reply);
         data = reply!.getTxid();
       });
       call.on('end', () => resolve(data));
