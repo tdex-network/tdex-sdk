@@ -133,7 +133,7 @@ describe('Swap', () => {
           assetToBeSent: networks.regtest.assetHash,
           amountToReceive: 100_0000_0000,
           assetToReceive: altcoin,
-          psbtBase64: requestTx,
+          psetBase64: requestTx,
           inputBlindingKeys,
           outputBlindingKeys: {},
         });
