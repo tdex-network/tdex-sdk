@@ -6,11 +6,14 @@ function sleep(ms: number): Promise<any> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function fetchUtxos(address: string): Promise<any> {
+export async function fetchUtxos(address: string, txid?: string): Promise<any> {
   let utxos: any = [];
   try {
     await sleep(3000);
     utxos = (await axios.get(`${APIURL}/address/${address}/utxo`)).data;
+    if (txid) {
+      utxos = utxos.filter((u: any) => u.txid === txid);
+    }
   } catch (e) {
     console.error(e);
     throw e;
@@ -40,13 +43,15 @@ export async function fetchTxHex(txId: string): Promise<string> {
   return hex;
 }
 
-export async function mint(address: string, quantity: number): Promise<string> {
-  let ret: string;
+export async function mint(
+  address: string,
+  quantity: number
+): Promise<{ asset: string; txid: string }> {
+  let ret: any;
   try {
     const response = await axios.post(`${APIURL}/mint`, { address, quantity });
     await sleep(3000);
-    const { asset } = response.data;
-    ret = asset;
+    ret = response.data;
   } catch (e) {
     console.error(e);
     throw e;
