@@ -126,22 +126,22 @@ describe('Swap', () => {
           script: Buffer.alloc(0),
         })
         .toBase64();
+    });
 
-      function swapRequest() {
-        return swap.request({
-          amountToBeSent: 1_0000_0000,
-          assetToBeSent: networks.regtest.assetHash,
-          amountToReceive: 100_0000_0000,
-          assetToReceive: altcoin,
-          psetBase64: requestTx,
-          inputBlindingKeys,
-          outputBlindingKeys: {},
-        });
-      }
-
-      it('should create a valid swap request message', () => {
-        assert.doesNotThrow(() => swapRequest());
+    function swapRequest() {
+      return swap.request({
+        amountToBeSent: 1_0000_0000,
+        assetToBeSent: networks.regtest.assetHash,
+        amountToReceive: 100_0000_0000,
+        assetToReceive: altcoin,
+        psetBase64: requestTx,
+        inputBlindingKeys,
+        outputBlindingKeys: {},
       });
+    }
+
+    test('should create a valid swap request message', () => {
+      assert.doesNotThrow(() => swapRequest());
     });
   });
 
