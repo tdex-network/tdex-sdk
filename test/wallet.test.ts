@@ -3,32 +3,14 @@ import { networks, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
 import { faucet, fetchUtxos, fetchTxHex, mint } from './_regtest';
 import * as assert from 'assert';
 import { Swap } from '../src/swap';
-import PrivateKey from '../src/identities/privatekey';
-import { IdentityType } from '../src/identity';
+import {
+  proposer,
+  proposerAddress,
+  responder,
+  responderAddress,
+} from './fixtures/swap.keys';
 
 const network = networks.regtest;
-
-const proposer = new PrivateKey({
-  chain: 'regtest',
-  type: IdentityType.PrivateKey,
-  value: {
-    blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
-    signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
-  },
-});
-
-const proposerAddress = proposer.getNextAddress().confidentialAddress;
-
-const responder = new PrivateKey({
-  chain: 'regtest',
-  type: IdentityType.PrivateKey,
-  value: {
-    blindingKeyWIF: 'cSv4PQtTpvYKHjfp9qih2RMeieBQAVADqc8JGXPvA7mkJ8yD5QC1',
-    signingKeyWIF: 'cVcDj9Td96x8jcG1eudxKL6hdwziCTgvPhqBoazkDeFGSAR8pCG8',
-  },
-});
-
-const responderAddress = responder.getNextAddress().confidentialAddress;
 
 jest.setTimeout(15000);
 
@@ -48,7 +30,7 @@ describe('Wallet - Transaction builder', () => {
       await faucet(proposerAddress);
       proposerUtxos = await fetchUtxos(proposerAddress);
       // mint for the responder
-      shitcoin = await mint(responderAddress, 100);
+      shitcoin = (await mint(responderAddress, 100)).asset;
 
       const txHexs: string[] = await Promise.all(
         proposerUtxos.map(utxo => fetchTxHex(utxo.txid))
