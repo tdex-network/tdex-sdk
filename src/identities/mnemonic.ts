@@ -8,7 +8,7 @@ import Identity, {
   IdentityType,
 } from '../identity';
 import { BufferMap } from '../utils';
-import { AddressInterface } from 'types';
+import { AddressInterface } from '../types';
 
 export interface MnemonicOptsValue {
   mnemonic: string;

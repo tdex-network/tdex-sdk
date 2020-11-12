@@ -6,4 +6,5 @@ export * from './identity';
 export * from './identities/mnemonic';
 export * from './identities/privatekey';
 export * from './wallet';
+export * from './types';
 export { calculateExpectedAmount, calculateProposeAmount } from './utils';
