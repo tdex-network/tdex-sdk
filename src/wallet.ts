@@ -9,7 +9,7 @@ import {
   Transaction,
   TxOutput,
 } from 'liquidjs-lib';
-import { AddressInterface } from 'types';
+import { AddressInterface } from './types';
 import { isConfidentialOutput, toAssetHash, unblindOutput } from './utils';
 
 /**
