@@ -34,7 +34,7 @@ interface AddressInterfaceExtended {
  * @member index the next index used to derive the base node (for signing key pairs).
  * @member scriptToAddressCache a map scriptPubKey --> address generation.
  */
-export default class Mnemonic extends Identity implements IdentityInterface {
+export class Mnemonic extends Identity implements IdentityInterface {
   static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
   static INITIAL_INDEX: number = 0;
 

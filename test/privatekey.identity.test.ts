@@ -1,6 +1,6 @@
 import { AddressInterface } from './../src/types';
 import { IdentityOpts, IdentityType } from '../src/identity';
-import PrivateKey from './../src/identities/privatekey';
+import { PrivateKey } from './../src/identities/privatekey';
 import * as assert from 'assert';
 import {
   payments,

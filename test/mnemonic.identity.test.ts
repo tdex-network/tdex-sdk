@@ -1,5 +1,5 @@
 import { IdentityOpts, IdentityType } from './../src/identity';
-import Mnemonic from './../src/identities/mnemonic';
+import { Mnemonic } from './../src/identities/mnemonic';
 import { fromSeed as slip77fromSeed } from 'slip77';
 import { fromSeed as bip32fromSeed } from 'bip32';
 import * as assert from 'assert';

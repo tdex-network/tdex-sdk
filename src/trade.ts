@@ -11,8 +11,8 @@ import TraderClientInterface from './grpcClientInterface';
 import { isValidAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
 import { IdentityInterface, IdentityOpts, IdentityType } from './identity';
-import PrivateKey from './identities/privatekey';
-import Mnemonic from './identities/mnemonic';
+import { PrivateKey } from './identities/privatekey';
+import { Mnemonic } from './identities/mnemonic';
 import { AddressInterface } from 'types';
 
 export interface MarketInterface {

@@ -1,4 +1,4 @@
-import PrivateKey from '../../src/identities/privatekey';
+import { PrivateKey } from '../../src/identities/privatekey';
 import { IdentityType } from '../../src/identity';
 
 export const proposer = new PrivateKey({

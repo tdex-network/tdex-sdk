@@ -36,7 +36,7 @@ function instanceOfPrivateKeyOptsValue(
  * @method signPset sign all the inputs when it's possible (scriptPubKey = input's script).
  * @method getAddresses return an array of one element containing the blindingPrivateKey & the confidentialAddress.
  */
-export default class PrivateKey extends Identity implements IdentityInterface {
+export class PrivateKey extends Identity implements IdentityInterface {
   private signingKeyPair: ECPairInterface;
   private blindingKeyPair: ECPairInterface;
 
