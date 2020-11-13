@@ -1,4 +1,4 @@
-import { UtxoInterface, Wallet, walletFromAddresses } from './../src/wallet';
+import { UtxoInterface, Wallet, walletFromAddresses } from '../src/wallet';
 import { networks, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
 import { faucet, fetchUtxos, fetchTxHex, mint } from './_regtest';
 import * as assert from 'assert';
@@ -9,6 +9,12 @@ import {
   responder,
   responderAddress,
 } from './fixtures/swap.keys';
+import {
+  senderAddress,
+  senderWallet,
+  recipientAddress,
+  sender,
+} from './fixtures/wallet.keys';
 
 const network = networks.regtest;
 
@@ -20,6 +26,39 @@ describe('Wallet - Transaction builder', () => {
   let shitcoin: string;
   let inputsKeys: Record<string, Buffer>;
   let outputsKeys: Record<string, Buffer>;
+
+  describe('build transaction', () => {
+    it('Can build a transaction spending LBTC', async () => {
+      // found the proposer account with LBTC
+      await faucet(senderAddress);
+      const senderUtxos = await fetchUtxos(senderAddress);
+
+      const txHexs: string[] = await Promise.all(
+        senderUtxos.map((utxo: any) => fetchTxHex(utxo.txid))
+      );
+
+      const outputs: TxOutput[] = txHexs.map(
+        (hex, index) => Transaction.fromHex(hex).outs[senderUtxos[index].vout]
+      );
+
+      senderUtxos.forEach((utxo: any, index: number) => {
+        utxo.prevout = outputs[index];
+      });
+      // create a tx using wallet
+      const tx = senderWallet.createTx();
+
+      const unsignedTx = senderWallet.buildTx(
+        tx,
+        senderUtxos,
+        recipientAddress!,
+        50000,
+        network.assetHash,
+        sender.getNextChangeAddress().confidentialAddress
+      );
+
+      assert.doesNotThrow(() => (txSwapRequest = Psbt.fromBase64(unsignedTx)));
+    });
+  });
 
   describe('SwapRequest transaction', () => {
     let proposerUtxos: UtxoInterface[];
