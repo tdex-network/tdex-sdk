@@ -8,8 +8,7 @@ export interface IdentityRestorerInterface {
 /**
  * Implementation of IdentityRestorerInterface using Esplora endpoint.
  */
-export default class EsploraIdentityRestorer
-  implements IdentityRestorerInterface {
+export class EsploraIdentityRestorer implements IdentityRestorerInterface {
   static DEFAULT_ESPLORA_ENDPOINT: string =
     'https://blockstream.com/liquid/api';
 
