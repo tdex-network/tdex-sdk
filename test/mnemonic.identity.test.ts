@@ -12,7 +12,7 @@ import {
 } from 'liquidjs-lib';
 import { faucet, fetchTxHex, fetchUtxos, sleep } from './_regtest';
 import { mnemonicToSeedSync } from 'bip39';
-import EsploraIdentityRestorer from '../src/identityRestorer';
+import { EsploraIdentityRestorer } from '../src/identityRestorer';
 
 const network = networks.regtest;
 

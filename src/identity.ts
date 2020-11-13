@@ -1,4 +1,5 @@
-import EsploraIdentityRestorer, {
+import {
+  EsploraIdentityRestorer,
   IdentityRestorerInterface,
 } from './identityRestorer';
 import { Network, networks } from 'liquidjs-lib';

@@ -20,6 +20,14 @@ export interface WalletInterface {
   addresses: AddressInterface[];
   blindingPrivateKeyByScript: Record<string, Buffer>;
   createTx(): string;
+  buildTx(
+    psetBase64: string,
+    unspents: Array<UtxoInterface>,
+    recipient: string,
+    amount: number,
+    asset: string,
+    changeAddress: string
+  ): string;
   updateTx(
     psetBase64: string,
     unspents: Array<UtxoInterface>,
@@ -77,12 +85,132 @@ export class Wallet implements WalletInterface {
   }
 
   /**
+   * Returns an unsigned pset base64 encoded with a valid transaction that spends the given asset versus a recipient.
+   * @param psetBase64
+   * @param unspents
+   * @param recipient
+   * @param amount
+   * @param asset
+   * @param changeAddress
+   */
+  buildTx(
+    psetBase64: string,
+    unspents: Array<UtxoInterface>,
+    recipient: string,
+    amount: number,
+    asset: string,
+    changeAddress: string
+  ): string {
+    const pset = decodePset(psetBase64);
+
+    // at 0.1 sat per byte means pretty big transactions
+    const FIXED_FEE = 1500;
+
+    let lbtcAmountToLookup = FIXED_FEE;
+    if (asset === this.network.assetHash) {
+      lbtcAmountToLookup += amount;
+      // The receiving output of LBTC
+      const recipientScript = address
+        .toOutputScript(recipient, this.network)
+        .toString('hex');
+      pset.addOutput({
+        script: recipientScript,
+        value: confidential.satoshiToConfidentialValue(amount),
+        asset: this.network.assetHash,
+        nonce: Buffer.from('00', 'hex'),
+      });
+    } else {
+      // coin select the asset
+      const { selectedUnspents, change } = coinselect(
+        unspents,
+        amount,
+        asset,
+        this.blindingPrivateKeyByScript
+      );
+
+      selectedUnspents.forEach((i: UtxoInterface) => {
+        pset.addInput({
+          // if hash is string, txid, if hash is Buffer, is reversed compared to txid
+          hash: i.txid,
+          index: i.vout,
+          //We put here the blinded prevout
+          witnessUtxo: i.prevout,
+        });
+      });
+
+      // The receiving output of the asset
+      const recipientScript = address
+        .toOutputScript(recipient, this.network)
+        .toString('hex');
+      pset.addOutput({
+        script: recipientScript,
+        value: confidential.satoshiToConfidentialValue(amount),
+        asset: asset,
+        nonce: Buffer.from('00', 'hex'),
+      });
+
+      if (change > 0) {
+        // Change of the asset
+        pset.addOutput({
+          address: changeAddress,
+          value: confidential.satoshiToConfidentialValue(change),
+          asset: asset,
+          nonce: Buffer.from('00', 'hex'),
+        });
+      }
+    }
+
+    const {
+      selectedUnspents: lbtcSelectedUnspents,
+      change: lbtcChange,
+    } = coinselect(
+      unspents,
+      lbtcAmountToLookup,
+      this.network.assetHash,
+      this.blindingPrivateKeyByScript
+    );
+
+    lbtcSelectedUnspents.forEach((i: UtxoInterface) => {
+      pset.addInput({
+        // if hash is string, txid, if hash is Buffer, is reversed compared to txid
+        hash: i.txid,
+        index: i.vout,
+        //We put here the blinded prevout
+        witnessUtxo: i.prevout,
+      });
+    });
+
+    if (lbtcChange > 0) {
+      const lbtcChangeScript = address
+        .toOutputScript(changeAddress, this.network)
+        .toString('hex');
+      // Change of LBTC
+      pset.addOutput({
+        script: lbtcChangeScript,
+        value: confidential.satoshiToConfidentialValue(lbtcChange),
+        asset: this.network.assetHash,
+        nonce: Buffer.from('00', 'hex'),
+      });
+    }
+
+    // fee output
+    pset.addOutput({
+      script: Buffer.alloc(0),
+      value: confidential.satoshiToConfidentialValue(FIXED_FEE),
+      asset: this.network.assetHash,
+      nonce: Buffer.from('00', 'hex'),
+    });
+
+    return pset.toBase64();
+  }
+
+  /**
    *
    * @param psetBase64 the Pset to update, base64 encoded.
    * @param unspents unspent that will be used to found the transaction.
    * @param inputAmount the amount to found with unspents.
-   * @param inputAsset the assetHash of inputs.
    * @param outputAmount the amount to send via output.
+   * @param inputAsset the assetHash of inputs.
    * @param outputAsset the asset hash of output.
    * @param outputAddress the address that will receive the `outputAmount` of `outputAsset`.
    * @param changeAddress the change address.
@@ -97,12 +225,7 @@ export class Wallet implements WalletInterface {
     outputAddress: AddressInterface,
     changeAddress: AddressInterface
   ): any {
-    let pset: Psbt;
-    try {
-      pset = Psbt.fromBase64(psetBase64);
-    } catch (ignore) {
-      throw new Error('Invalid pset');
-    }
+    const pset = decodePset(psetBase64);
 
     const { selectedUnspents, change } = coinselect(
       unspents,
@@ -211,6 +334,16 @@ export function walletFromAddresses(
   }
 }
 
+function decodePset(psetBase64: string) {
+  let pset: Psbt;
+  try {
+    pset = Psbt.fromBase64(psetBase64);
+  } catch (ignore) {
+    throw new Error('Invalid pset');
+  }
+  return pset;
+}
+
 export interface UtxoInterface {
   txid: string;
   vout: number;
@@ -295,6 +428,7 @@ export async function fetchBalances(
  * @param utxos the unspents to search in.
  * @param amount the amount of coin to search.
  * @param asset the asset hash.
+ * @param inputBlindingKeys map a hex encoded script to a blinding private key
  */
 export function coinselect(
   utxos: Array<UtxoInterface>,
