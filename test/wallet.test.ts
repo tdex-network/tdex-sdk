@@ -27,11 +27,17 @@ describe('Wallet - Transaction builder', () => {
   let inputsKeys: Record<string, Buffer>;
   let outputsKeys: Record<string, Buffer>;
 
-  describe('build transaction', () => {
-    it('Can build a transaction spending LBTC', async () => {
-      // found the proposer account with LBTC
+  describe('buildTx', () => {
+    let senderUtxos: any[] = [];
+    let USDT: string = '';
+
+    beforeAll(async () => {
+      // fund the proposer account with LBTC
       await faucet(senderAddress);
-      const senderUtxos = await fetchUtxos(senderAddress);
+      // mint and fund with USDT
+      const minted = await mint(senderAddress, 100);
+      USDT = minted.asset;
+      senderUtxos = await fetchUtxos(senderAddress);
 
       const txHexs: string[] = await Promise.all(
         senderUtxos.map((utxo: any) => fetchTxHex(utxo.txid))
@@ -44,6 +50,9 @@ describe('Wallet - Transaction builder', () => {
       senderUtxos.forEach((utxo: any, index: number) => {
         utxo.prevout = outputs[index];
       });
+    });
+
+    it('Can build a confidential transaction spending LBTC', async () => {
       // create a tx using wallet
       const tx = senderWallet.createTx();
 
@@ -53,6 +62,22 @@ describe('Wallet - Transaction builder', () => {
         recipientAddress!,
         50000,
         network.assetHash,
+        sender.getNextChangeAddress().confidentialAddress
+      );
+
+      assert.doesNotThrow(() => (txSwapRequest = Psbt.fromBase64(unsignedTx)));
+    });
+
+    it('Can build a confidential transaction spending USDT', async () => {
+      // create a tx using wallet
+      const tx = senderWallet.createTx();
+
+      const unsignedTx = senderWallet.buildTx(
+        tx,
+        senderUtxos,
+        recipientAddress!,
+        150000,
+        USDT,
         sender.getNextChangeAddress().confidentialAddress
       );
 

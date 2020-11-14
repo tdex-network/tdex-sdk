@@ -104,7 +104,9 @@ export class Wallet implements WalletInterface {
     const pset = decodePset(psetBase64);
 
     // at 0.1 sat per byte means pretty big transactions
-    const FIXED_FEE = 1500;
+    const FIXED_FEE = 2000;
+    let inputBlindingKeys: Array<Buffer> = [];
+    let outputBlindingKeys: Array<Buffer> = [];
 
     let lbtcAmountToLookup = FIXED_FEE;
     if (asset === this.network.assetHash) {
@@ -119,6 +121,8 @@ export class Wallet implements WalletInterface {
         asset: this.network.assetHash,
         nonce: Buffer.from('00', 'hex'),
       });
+      // Add the receiving blinding pub key
+      outputBlindingKeys.push(address.fromConfidential(recipient).blindingKey);
     } else {
       // coin select the asset
       const { selectedUnspents, change } = coinselect(
@@ -136,6 +140,10 @@ export class Wallet implements WalletInterface {
           //We put here the blinded prevout
           witnessUtxo: i.prevout,
         });
+
+        // we update the inputBlindingKeys map after we add an input to the transaction
+        const scriptHex = i.prevout.script.toString('hex');
+        inputBlindingKeys.push(this.blindingPrivateKeyByScript[scriptHex]);
       });
 
       // The receiving output of the asset
@@ -149,14 +157,26 @@ export class Wallet implements WalletInterface {
         nonce: Buffer.from('00', 'hex'),
       });
 
+      // we update the outputBlindingKeys map after we add the change output to the transaction
+      outputBlindingKeys.push(address.fromConfidential(recipient).blindingKey);
+
       if (change > 0) {
+        // Get the script from address
+        const changeScript = address
+          .toOutputScript(changeAddress, this.network)
+          .toString('hex');
         // Change of the asset
         pset.addOutput({
-          address: changeAddress,
+          script: changeScript,
           value: confidential.satoshiToConfidentialValue(change),
           asset: asset,
           nonce: Buffer.from('00', 'hex'),
         });
+
+        // we update the outputBlindingKeys map after we add the change output to the transaction
+        outputBlindingKeys.push(
+          address.fromConfidential(changeAddress).blindingKey
+        );
       }
     }
 
@@ -178,6 +198,10 @@ export class Wallet implements WalletInterface {
         //We put here the blinded prevout
         witnessUtxo: i.prevout,
       });
+
+      // we update the inputBlindingKeys map after we add an input to the transaction
+      const scriptHex = i.prevout.script.toString('hex');
+      inputBlindingKeys.push(this.blindingPrivateKeyByScript[scriptHex]);
     });
 
     if (lbtcChange > 0) {
@@ -191,6 +215,11 @@ export class Wallet implements WalletInterface {
         asset: this.network.assetHash,
         nonce: Buffer.from('00', 'hex'),
       });
+
+      // we update the outputBlindingKeys map after we add the change output to the transaction
+      outputBlindingKeys.push(
+        address.fromConfidential(changeAddress).blindingKey
+      );
     }
 
     // fee output
@@ -200,6 +229,10 @@ export class Wallet implements WalletInterface {
       asset: this.network.assetHash,
       nonce: Buffer.from('00', 'hex'),
     });
+
+    // Let's blind all the outputs. The order is important (same of output and some blinding key)
+    // The alice linding private key is an hex string, we need to pass to Buffer.
+    pset.blindOutputs(inputBlindingKeys, outputBlindingKeys);
 
     return pset.toBase64();
   }
@@ -454,6 +487,7 @@ export function coinselect(
         if (toAssetHash(unblindAsset) !== asset) continue;
         unspents.push(utxo);
         availableSat += value;
+        if (availableSat >= amount) break;
         continue;
       }
     } catch (err) {
