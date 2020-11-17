@@ -4,7 +4,6 @@ import * as types from 'tdex-protobuf/generated/js/types_pb';
 import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 
 import TraderClientInterface from './grpcClientInterface';
-import { throwErrorIfSwapFail } from './grpcClient';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
@@ -151,5 +150,15 @@ export class TraderClient implements TraderClientInterface {
         resolve(reply);
       });
     });
+  }
+}
+
+export function throwErrorIfSwapFail(
+  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply
+) {
+  const swapFail = tradeReply.getSwapFail();
+  if (swapFail) {
+    const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
+    throw new Error(errorMessage);
   }
 }
