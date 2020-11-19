@@ -10,7 +10,7 @@ export interface IdentityRestorerInterface {
  */
 export class EsploraIdentityRestorer implements IdentityRestorerInterface {
   static DEFAULT_ESPLORA_ENDPOINT: string =
-    'https://blockstream.com/liquid/api';
+    'https://blockstream.info/liquid/api';
 
   private esploraEndpoint: string =
     EsploraIdentityRestorer.DEFAULT_ESPLORA_ENDPOINT;
