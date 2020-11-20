@@ -10,12 +10,17 @@ export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.TradeClient;
 
-  constructor(providerUrl: string) {
-    this.providerUrl = providerUrl;
-    this.client = new services.TradeClient(
-      providerUrl,
-      grpc.credentials.createInsecure()
-    );
+  constructor(providerUrlString: string) {
+    let creds = grpc.credentials.createInsecure();
+
+    this.providerUrl = providerUrlString;
+    const url = new URL(providerUrlString);
+    this.client = new services.TradeClient(this.providerUrl, creds);
+
+    if (url.protocol.includes('https')) {
+      creds = grpc.credentials.createSsl();
+      this.client = new services.TradeClient(url.host, creds);
+    }
   }
 
   /**
