@@ -2,7 +2,6 @@ import axios from 'axios';
 import {
   Network,
   networks,
-  payments,
   address,
   Psbt,
   confidential,
@@ -63,12 +62,9 @@ export class Wallet implements WalletInterface {
     this.network = network;
     this.addresses = addresses;
     addresses.forEach((a: AddressInterface) => {
-      const scriptHex = payments
-        .p2wpkh({
-          confidentialAddress: a.confidentialAddress,
-          network,
-        })
-        .output!.toString('hex');
+      const scriptHex = address
+        .toOutputScript(a.confidentialAddress, network)
+        .toString('hex');
       this.blindingPrivateKeyByScript[scriptHex] = Buffer.from(
         a.blindingPrivateKey,
         'hex'
