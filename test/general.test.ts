@@ -1,5 +1,5 @@
 import * as TDEX from '../src/index';
-import { Wallet, WatchOnlyWallet } from '../src/wallet';
+import { walletFromAddresses } from '../src/wallet';
 
 describe('TDEX SDK', () => {
   it('Init', () => {
@@ -7,46 +7,27 @@ describe('TDEX SDK', () => {
     expect(swap).toMatchObject({ chain: 'regtest', verbose: false });
   });
 
-  it('Can create a Wallet from wif', () => {
-    const wallet = Wallet.fromWIF(
-      'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
-      'regtest'
-    );
-    expect(wallet).toBeDefined();
-  });
+  it('Can create a Wallet from addresses', () => {
+    const addrs = [
+      {
+        confidentialAddress:
+          'el1qqfv793wyh4wcz4eys9y9vu97hfdskgjedykn4jcv37qhgtjlm8xhdlfjj8mh8lrplllcwvka0tu5yyywaptwztawfdeqzdwys',
+        blindingPrivateKey:
+          '48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc',
+      },
+    ];
 
-  it('Can create a Watch Only Wallet from address', () => {
-    const wallet = WatchOnlyWallet.fromAddress(
-      'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
-      'regtest'
+    const wallet = walletFromAddresses(addrs, 'regtest');
+    expect(wallet.addresses[0].confidentialAddress).toStrictEqual(
+      addrs[0].confidentialAddress
     );
-    expect(wallet.address).toStrictEqual(
-      'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9'
-    );
-    expect(wallet.script).toStrictEqual(
-      '0014fd3291f773fc61ffff8732dd7af942108ee856e1'
-    );
-  });
 
-  test('Calculate expected amount given an amount_p', () => {
-    // balanceP, balanceR, amountP, fee
-    const expectedAmount = TDEX.calculateExpectedAmount(
-      100000000,
-      650000000000,
-      10000,
-      0.25
+    expect(
+      wallet.blindingPrivateKeyByScript[
+        '0014fd3291f773fc61ffff8732dd7af942108ee856e1'
+      ].toString('hex')
+    ).toStrictEqual(
+      '48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc'
     );
-    expect(expectedAmount).toStrictEqual(64831026);
-  });
-
-  test('Calculate propose amount given an amount_r', () => {
-    // balanceP, balanceR, amountR, fee
-    const proposeAmount = TDEX.calculateProposeAmount(
-      650000000000,
-      100000000,
-      10000,
-      0.25
-    );
-    expect(proposeAmount).toStrictEqual(65169000);
   });
 });

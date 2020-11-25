@@ -1,5 +1,14 @@
 import * as TDEX from '../src/index';
-import { Trade } from '../src/index';
+import { Trade, IdentityType, throwErrorIfSwapFail } from '../src/index';
+import {
+  TradeCompleteReply,
+  TradeProposeReply,
+} from 'tdex-protobuf/generated/js/trade_pb';
+import { SwapFail } from 'tdex-protobuf/generated/js/swap_pb';
+import * as assert from 'assert';
+
+const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
+const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 
 describe('TDEX SDK', () => {
   it('Should throw if arguments not given', () => {
@@ -10,6 +19,14 @@ describe('TDEX SDK', () => {
     const trade = new Trade({
       providerUrl: 'localhost:9945',
       explorerUrl: 'https://nigiri.network',
+      identity: {
+        chain: 'regtest',
+        type: IdentityType.PrivateKey,
+        value: {
+          signingKeyWIF,
+          blindingKeyWIF,
+        },
+      },
     });
     expect(trade).toMatchObject({
       chain: 'regtest',
@@ -19,40 +36,44 @@ describe('TDEX SDK', () => {
     });
   });
 
-  /*   it('Should sell some LBTCs', async () => {
-    const trade = new Trade({
-      chain: 'regtest',
-      providerUrl: 'localhost:9945',
-      explorerUrl: 'https://nigiri.network/liquid/api',
+  describe('TraderClient', () => {
+    const swapFail = new SwapFail();
+    swapFail.setId('00011101');
+    swapFail.setFailureCode(666);
+    swapFail.setFailureMessage('COVID');
+
+    describe('TradePropose', () => {
+      const tradeProposeReply = new TradeProposeReply();
+      tradeProposeReply.setSwapFail(swapFail);
+
+      const tradeProposeReplyWithoutSwapFail = new TradeProposeReply();
+
+      it('should throw an error if there is SwapFail in TradeProposeReply', () => {
+        assert.throws(() => throwErrorIfSwapFail(tradeProposeReply));
+      });
+
+      it('should not throw an error if there is no SwapFail in TradeProposeReply', () => {
+        assert.doesNotThrow(() =>
+          throwErrorIfSwapFail(tradeProposeReplyWithoutSwapFail)
+        );
+      });
     });
 
-    const market = {
-      baseAsset:
-        '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-      quoteAsset:
-        'a2f9206f890bf93ca8030fa22819fd72bf8eb6788adda29cdc996b4c399a8980',
-    };
+    describe('TradeComplete', () => {
+      const tradeCompleteReply = new TradeCompleteReply();
+      tradeCompleteReply.setSwapFail(swapFail);
 
-    const params = {
-      market,
-      amount: 500000,
-      //address: 'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
-      privateKey: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
-    };
-    const txid = await trade.sell(params);
-    expect(txid).toBeDefined();
-    
-    //await sleep(1500);
-    
-    const params3 = {
-      market,
-      amount: 400000,
-      //address: 'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
-      privateKey: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
-    };
-    const txid3 = await trade.buy(params3);
-    expect(txid3).toBeDefined();
+      const tradeCompleteReplyWithoutSwapFail = new TradeCompleteReply();
 
+      it('should throw an error if there is SwapFail in TradeCompleteReply', () => {
+        assert.throws(() => throwErrorIfSwapFail(tradeCompleteReply));
+      });
 
-  }, 27000); */
+      it('should not throw an error if there is no SwapFail in TradeCompleteReply', () => {
+        assert.doesNotThrow(() =>
+          throwErrorIfSwapFail(tradeCompleteReplyWithoutSwapFail)
+        );
+      });
+    });
+  });
 });

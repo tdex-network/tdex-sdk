@@ -1,12 +1,20 @@
 import JSBI from 'jsbi';
-import { confidential, Psbt, Transaction } from 'liquidjs-lib';
+import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
+import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
 
 const HUNDRED = JSBI.BigInt(100);
 const TENTHOUSAND = JSBI.multiply(HUNDRED, HUNDRED);
 
 export function toAssetHash(x: Buffer): string {
   const withoutFirstByte = x.slice(1);
-  return withoutFirstByte.reverse().toString('hex');
+  return (withoutFirstByte.reverse() as Buffer).toString('hex');
+}
+
+export function fromAssetHash(x: string): Buffer {
+  return Buffer.concat([
+    Buffer.from('01', 'hex'), //prefix for unconfidential asset
+    Buffer.from(x, 'hex').reverse(),
+  ]);
 }
 
 export function toNumber(x: Buffer): number {
@@ -61,6 +69,10 @@ export function calculateProposeAmount(
   return JSBI.toNumber(proposeAmountPlusFee);
 }
 
+/**
+ * Generates a random id of a fixed length.
+ * @param length size of the string id.
+ */
 export function makeid(length: number): string {
   let result = '';
   const characters =
@@ -73,11 +85,11 @@ export function makeid(length: number): string {
 }
 
 export function decodePsbt(
-  psbtBase64: string
+  psetBase64: string
 ): { psbt: Psbt; transaction: Transaction } {
   let psbt: Psbt;
   try {
-    psbt = Psbt.fromBase64(psbtBase64);
+    psbt = Psbt.fromBase64(psetBase64);
   } catch (ignore) {
     throw new Error('Invalid psbt');
   }
@@ -90,41 +102,92 @@ export function decodePsbt(
   };
 }
 
-export interface UtxoInterface {
-  txid: string;
-  vout: number;
-  asset: string;
-  value: number;
-  script?: string;
-}
-
-export function coinselect(utxos: Array<UtxoInterface>, amount: number) {
-  let unspents = [];
-  let availableSat = 0;
-  let change = 0;
-
-  for (let i = 0; i < utxos.length; i++) {
-    const utxo = utxos[i];
-    unspents.push({
-      txid: utxo.txid,
-      vout: utxo.vout,
-      value: utxo.value,
-      asset: utxo.asset,
-    });
-    availableSat += utxo.value;
-
-    if (availableSat >= amount) break;
-  }
-
-  if (availableSat < amount)
-    throw new Error('You do not have enough in your wallet');
-
-  change = availableSat - amount;
-
-  return { unspents, change };
-}
-
 export function isValidAmount(amount: number): boolean {
   if (amount <= 0 || !Number.isSafeInteger(amount)) return false;
   return true;
+}
+
+/**
+ * The unblind output function's result interface.
+ */
+export interface UnblindResult {
+  asset: Buffer;
+  // in satoshis
+  value: number;
+}
+
+/**
+ * Unblind an output using confidential.unblindOutput function from liquidjs-lib.
+ * @param output the output to unblind.
+ * @param blindKey the private blinding key.
+ */
+export function unblindOutput(
+  output: TxOutput,
+  blindKey: Buffer
+): UnblindResult {
+  const result: UnblindResult = { asset: Buffer.alloc(0), value: 0 };
+
+  if (!output.rangeProof) {
+    throw new Error('The output does not contain rangeProof.');
+  }
+
+  const unblindedResult: UnblindOutputResult = confidential.unblindOutput(
+    output.nonce,
+    blindKey,
+    output.rangeProof,
+    output.value,
+    output.asset,
+    output.script
+  );
+
+  result.asset = Buffer.concat([
+    // add the prefix a the beginning (confidential.unblindOutput remove it)
+    Buffer.alloc(1, 10),
+    unblindedResult.asset,
+  ]);
+  result.value = parseInt(unblindedResult.value, 10);
+  return result;
+}
+
+const emptyNonce: Buffer = Buffer.from('0x00', 'hex');
+
+function bufferNotEmptyOrNull(buffer?: Buffer): boolean {
+  return buffer != null && buffer.length > 0;
+}
+
+/**
+ * Checks if a given output is a confidential one.
+ * @param output the ouput to check.
+ */
+export function isConfidentialOutput(output: TxOutput): boolean {
+  return (
+    bufferNotEmptyOrNull(output.rangeProof) &&
+    bufferNotEmptyOrNull(output.surjectionProof) &&
+    output.nonce !== emptyNonce
+  );
+}
+
+export class BufferMap<T> {
+  private map: Map<string, T>;
+
+  constructor() {
+    this.map = new Map<string, T>();
+  }
+
+  private bufferToStringPrimitive(buffer: Buffer): string {
+    return buffer.toString('hex').valueOf();
+  }
+
+  get(key: Buffer): T | undefined {
+    return this.map.get(this.bufferToStringPrimitive(key));
+  }
+
+  set(key: Buffer, value: T): this {
+    this.map.set(this.bufferToStringPrimitive(key), value);
+    return this;
+  }
+
+  values(): Array<T> {
+    return Array.from(this.map.values());
+  }
 }

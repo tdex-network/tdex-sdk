@@ -1,19 +1,26 @@
 import * as grpc from '@grpc/grpc-js';
-import * as services from 'tdex-protobuf/js/trade_grpc_pb';
-import * as messages from 'tdex-protobuf/js/trade_pb';
-import { SwapRequest, SwapComplete } from 'tdex-protobuf/js/swap_pb';
+import * as services from 'tdex-protobuf/generated/js/trade_grpc_pb';
+import * as messages from 'tdex-protobuf/generated/js/trade_pb';
+import * as types from 'tdex-protobuf/generated/js/types_pb';
+import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 
 import TraderClientInterface from './grpcClientInterface';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.TradeClient;
-  constructor(providerUrl: string) {
-    this.providerUrl = providerUrl;
-    this.client = new services.TradeClient(
-      providerUrl,
-      grpc.credentials.createInsecure()
-    );
+
+  constructor(providerUrlString: string) {
+    let creds = grpc.credentials.createInsecure();
+
+    this.providerUrl = providerUrlString;
+    const url = new URL(providerUrlString);
+    this.client = new services.TradeClient(this.providerUrl, creds);
+
+    if (url.protocol.includes('https')) {
+      creds = grpc.credentials.createSsl();
+      this.client = new services.TradeClient(url.host, creds);
+    }
   }
 
   /**
@@ -22,14 +29,13 @@ export class TraderClient implements TraderClientInterface {
    * @param tradeType
    * @param swapRequestSerialized
    */
-
   tradePropose(
     { baseAsset, quoteAsset }: any,
     tradeType: number,
     swapRequestSerialized: Uint8Array
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      const market = new messages.Market();
+      const market = new types.Market();
       market.setBaseAsset(baseAsset);
       market.setQuoteAsset(quoteAsset);
 
@@ -43,6 +49,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradePropose(request);
       let data: Uint8Array;
       call.on('data', (reply: messages.TradeProposeReply) => {
+        throwErrorIfSwapFail(reply);
         const swapAcceptMsg = reply!.getSwapAccept();
         data = swapAcceptMsg!.serializeBinary();
       });
@@ -56,7 +63,6 @@ export class TraderClient implements TraderClientInterface {
    * tradeComplete
    * @param swapCompleteSerialized
    */
-
   tradeComplete(swapCompleteSerialized: Uint8Array): Promise<any> {
     return new Promise((resolve, reject) => {
       const request = new messages.TradeCompleteRequest();
@@ -66,6 +72,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradeComplete(request);
       let data: string;
       call.on('data', (reply: messages.TradeCompleteReply) => {
+        throwErrorIfSwapFail(reply);
         data = reply!.getTxid();
       });
       call.on('end', () => resolve(data));
@@ -89,6 +96,38 @@ export class TraderClient implements TraderClientInterface {
     });
   }
 
+  marketPrice(
+    {
+      baseAsset,
+      quoteAsset,
+    }: {
+      baseAsset: string;
+      quoteAsset: string;
+    },
+    tradeType: number,
+    amount: number
+  ): Promise<Array<any>> {
+    const market = new types.Market();
+    market.setBaseAsset(baseAsset);
+    market.setQuoteAsset(quoteAsset);
+    const request = new messages.MarketPriceRequest();
+    request.setMarket(market);
+    request.setType(tradeType);
+    request.setAmount(amount);
+
+    return new Promise((resolve, reject) => {
+      this.client.marketPrice(request, (err, response) => {
+        if (err) return reject(err);
+
+        const list = response
+          .getPricesList()
+          .map((priceWithFee: types.PriceWithFee) => priceWithFee.toObject());
+
+        resolve(list);
+      });
+    });
+  }
+
   balances({
     baseAsset,
     quoteAsset,
@@ -96,7 +135,7 @@ export class TraderClient implements TraderClientInterface {
     baseAsset: string;
     quoteAsset: string;
   }): Promise<any> {
-    const market = new messages.Market();
+    const market = new types.Market();
     market.setBaseAsset(baseAsset);
     market.setQuoteAsset(quoteAsset);
     const request = new messages.BalancesRequest();
@@ -106,23 +145,24 @@ export class TraderClient implements TraderClientInterface {
       this.client.balances(request, (err, response) => {
         if (err) return reject(err);
 
-        const baseAmount: number = response
+        const reply = response
           .getBalancesList()
-          .find(b => b.getAsset() === baseAsset)!
-          .getAmount();
-        const quoteAmount: number = response
-          .getBalancesList()
-          .find(b => b.getAsset() === quoteAsset)!
-          .getAmount();
-        const reply = {
-          fee: response!.getFee(),
-          balances: {
-            [baseAsset]: baseAmount,
-            [quoteAsset]: quoteAmount,
-          },
-        };
+          .map((balanceWithFee: types.BalanceWithFee) =>
+            balanceWithFee.toObject()
+          );
+
         resolve(reply);
       });
     });
+  }
+}
+
+export function throwErrorIfSwapFail(
+  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply
+) {
+  const swapFail = tradeReply.getSwapFail();
+  if (swapFail) {
+    const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
+    throw new Error(errorMessage);
   }
 }

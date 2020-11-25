@@ -107,3 +107,6 @@ dist-web
 .tern-port
 
 .idea
+
+# vscode
+.vscode/
