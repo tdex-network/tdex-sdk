@@ -25,6 +25,16 @@ interface AddressInterfaceExtended {
   derivationPath: string;
 }
 
+// util function that parse a derivation path and return the index
+function getIndex(addrExtended: AddressInterfaceExtended) {
+  const derivationPathSplitted = addrExtended.derivationPath.split('/');
+  const index: number = parseInt(
+    derivationPathSplitted[derivationPathSplitted.length - 1]
+  );
+
+  return index;
+}
+
 /**
  * @class Mnemonic
  * Get a mnemonic as parameter to set up an HD Wallet.
@@ -270,11 +280,7 @@ export class Mnemonic extends Identity implements IdentityInterface {
   private async addressToChangeAddressAsync(
     address: AddressInterfaceExtended
   ): Promise<AddressInterfaceExtended> {
-    const derivationPathSplitted = address.derivationPath.split('/');
-    const index: number = parseInt(
-      derivationPathSplitted[derivationPathSplitted.length - 1]
-    );
-
+    const index = getIndex(address);
     return this.getAddress(true, index);
   }
 
@@ -329,6 +335,10 @@ export class Mnemonic extends Identity implements IdentityInterface {
       index += NOT_USED_ADDRESSES_LIMIT;
     }
 
+    // Set the index
+    const allIndex = restoredAddresses.map(getIndex);
+    this.index = Math.max(...allIndex) + 1;
+
     // check for change address
     const changeAddresses: AddressInterfaceExtended[] = await Promise.all(
       restoredAddresses.map(addr => this.addressToChangeAddressAsync(addr))
@@ -338,12 +348,16 @@ export class Mnemonic extends Identity implements IdentityInterface {
       changeAddresses
     );
 
-    hasBeenUsedArrayChange.forEach((hasBeenUsed: boolean, index: number) => {
-      if (hasBeenUsed) {
-        restoredAddresses.push(changeAddresses[index]);
-      }
-    });
+    const usedChangeAddresses: AddressInterfaceExtended[] = changeAddresses.filter(
+      (_: AddressInterfaceExtended, index: number) =>
+        hasBeenUsedArrayChange[index]
+    );
 
+    // Set the index
+    const allChangeIndex = usedChangeAddresses.map(getIndex);
+    this.changeIndex = Math.max(...allChangeIndex) + 1;
+
+    restoredAddresses.push(...usedChangeAddresses);
     // return the restored address
     return restoredAddresses;
   }

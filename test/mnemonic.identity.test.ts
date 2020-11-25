@@ -242,5 +242,31 @@ describe('Identity: Private key', () => {
           .sort()
       );
     });
+
+    it('should update the index when restored', () => {
+      const addressesKnown = toRestoreMnemonic
+        .getAddresses()
+        .map(a => a.confidentialAddress);
+
+      const next = toRestoreMnemonic.getNextAddress();
+      const nextIsAlreadyKnownByMnemonic = addressesKnown.includes(
+        next.confidentialAddress
+      );
+
+      assert.deepStrictEqual(nextIsAlreadyKnownByMnemonic, false);
+    });
+
+    it('should update the change index when restored', () => {
+      const addressesKnown = toRestoreMnemonic
+        .getAddresses()
+        .map(a => a.confidentialAddress);
+
+      const next = toRestoreMnemonic.getNextChangeAddress();
+      const nextIsAlreadyKnownByMnemonic = addressesKnown.includes(
+        next.confidentialAddress
+      );
+
+      assert.deepStrictEqual(nextIsAlreadyKnownByMnemonic, false);
+    });
   });
 });
