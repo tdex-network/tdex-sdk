@@ -462,7 +462,7 @@ export async function fetchAndUnblindTxs(
   blindingPrivateKey: string,
   explorerUrl: string,
   network: networks.Network
-): Promise<Psbt[]> {
+): Promise<Transaction[]> {
   const txsIds: string[] = [];
   let lastSeenTxid = undefined;
 
@@ -483,9 +483,25 @@ export async function fetchAndUnblindTxs(
     )
   );
 
-  const psbts = hexs.map(hex => Psbt.fromHex(hex, { network }));
+  const transactions = hexs.map(hex => Transaction.fromHex(hex));
+  const blindPrivKeyBuffer = Buffer.from(blindingPrivateKey, 'hex');
 
-  return psbts;
+  // unblind all the outputs
+  transactions.forEach((transaction: Transaction) => {
+    transaction.outs
+      .filter(isConfidentialOutput)
+      .forEach((output: TxOutput) => {
+        const unblindedResult = unblindOutput(output, blindPrivKeyBuffer);
+        output.asset = unblindedResult.asset;
+        output.value = confidential.satoshiToConfidentialValue(
+          unblindedResult.value
+        );
+        output.surjectionProof = undefined;
+        output.rangeProof = undefined;
+      });
+  });
+
+  return transactions;
 }
 
 async function fetch25newestTxsForAddress(
