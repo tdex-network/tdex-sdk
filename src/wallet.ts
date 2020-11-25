@@ -454,10 +454,9 @@ export async function fetchBalances(
 /**
  * Fetch all the txs associated to a given address and unblind them using the blindingPrivateKey.
  * @param address the confidential address
- * @param blindingPrivateKey the blinding private key associated with the confidential address.
  * @param explorerUrl the Esplora URL API using to fetch blockchain data.
  */
-export async function fetchAndUnblindTxs(
+export async function fetchTxs(
   address: string,
   explorerUrl: string
 ): Promise<Transaction[]> {
