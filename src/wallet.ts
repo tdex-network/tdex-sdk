@@ -242,3 +242,54 @@ export async function fetchBalances(address: string, url: string) {
     {}
   ); // {} is the initial value of the storage
 }
+
+/**
+ * Fetch all the txs associated to a given address and unblind them using the blindingPrivateKey.
+ * @param address the confidential address
+ * @param blindingPrivateKey the blinding private key associated with the confidential address.
+ * @param explorerUrl the Esplora URL API using to fetch blockchain data.
+ */
+export async function fetchAndUnblindTxs(
+  address: string,
+  blindingPrivateKey: string,
+  explorerUrl: string,
+  network: networks.Network
+): Promise<Psbt[]> {
+  const txsIds: string[] = [];
+  let lastSeenTxid = undefined;
+
+  do {
+    const newTxs: any[] = await fetch25newestTxsForAddress(
+      address,
+      explorerUrl,
+      lastSeenTxid
+    );
+
+    txsIds.push(...newTxs.map(tx => tx.txid));
+    if (newTxs.length === 25) lastSeenTxid = newTxs[24].txid;
+  } while (lastSeenTxid != null);
+
+  const hexs = await Promise.all(
+    txsIds.map((txid: string) =>
+      axios.get(`${explorerUrl}/tx/${txid}/hex`).then(({ data }) => data)
+    )
+  );
+
+  const psbts = hexs.map(hex => Psbt.fromHex(hex, { network }));
+
+  return txs;
+}
+
+async function fetch25newestTxsForAddress(
+  address: string,
+  explorerUrl: string,
+  lastSeenTxid?: string
+): Promise<any[]> {
+  let url = `${explorerUrl}/address/${address}/txs/chain`;
+  if (lastSeenTxid) {
+    url += `/${lastSeenTxid}`;
+  }
+
+  const response = await axios.get(url);
+  return response.data;
+}
