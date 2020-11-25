@@ -459,9 +459,7 @@ export async function fetchBalances(
  */
 export async function fetchAndUnblindTxs(
   address: string,
-  blindingPrivateKey: string,
-  explorerUrl: string,
-  network: networks.Network
+  explorerUrl: string
 ): Promise<Transaction[]> {
   const txsIds: string[] = [];
   let lastSeenTxid = undefined;
@@ -484,24 +482,46 @@ export async function fetchAndUnblindTxs(
   );
 
   const transactions = hexs.map(hex => Transaction.fromHex(hex));
-  const blindPrivKeyBuffer = Buffer.from(blindingPrivateKey, 'hex');
-
-  // unblind all the outputs
-  transactions.forEach((transaction: Transaction) => {
-    transaction.outs
-      .filter(isConfidentialOutput)
-      .forEach((output: TxOutput) => {
-        const unblindedResult = unblindOutput(output, blindPrivKeyBuffer);
-        output.asset = unblindedResult.asset;
-        output.value = confidential.satoshiToConfidentialValue(
-          unblindedResult.value
-        );
-        output.surjectionProof = undefined;
-        output.rangeProof = undefined;
-      });
-  });
 
   return transactions;
+}
+
+/**
+ * return the same transaction with unblinded outputs (if it is possible according to blindingPrivateKeys)
+ * @param tx transaction to unblind
+ * @param blindingPrivateKeys the privateKeys using to unblind the outputs.
+ */
+export function unblindTransaction(
+  tx: Transaction,
+  blindingPrivateKeys: string[]
+): Transaction {
+  // unblind all the outputs
+  tx.outs
+    .filter(isConfidentialOutput)
+    .forEach((output: TxOutput, index: number) => {
+      for (let i = 0; i < blindingPrivateKeys.length; i++) {
+        let unblindedResult;
+        const blindPrivKey = Buffer.from(blindingPrivateKeys[i], 'hex');
+
+        try {
+          unblindedResult = unblindOutput(output, blindPrivKey);
+        } catch (_) {
+          // go to next iteration if the unblind failed with the current priv key.
+          continue;
+        }
+
+        tx.outs[index].asset = unblindedResult.asset;
+        tx.outs[index].value = confidential.satoshiToConfidentialValue(
+          unblindedResult.value
+        );
+        tx.outs[index].surjectionProof = undefined;
+        tx.outs[index].rangeProof = undefined;
+        // if we success to unblind the output, break the loop
+        break;
+      }
+    });
+
+  return tx;
 }
 
 async function fetch25newestTxsForAddress(
