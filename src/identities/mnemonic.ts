@@ -337,7 +337,8 @@ export class Mnemonic extends Identity implements IdentityInterface {
 
     // Set the index
     const allIndex = restoredAddresses.map(getIndex);
-    this.index = Math.max(...allIndex) + 1;
+    this.index =
+      allIndex.length > 0 ? Math.max(...allIndex) + 1 : Mnemonic.INITIAL_INDEX;
 
     // check for change address
     const changeAddresses: AddressInterfaceExtended[] = await Promise.all(
@@ -355,7 +356,10 @@ export class Mnemonic extends Identity implements IdentityInterface {
 
     // Set the index
     const allChangeIndex = usedChangeAddresses.map(getIndex);
-    this.changeIndex = Math.max(...allChangeIndex) + 1;
+    this.changeIndex =
+      allChangeIndex.length > 0
+        ? Math.max(...allChangeIndex) + 1
+        : Mnemonic.INITIAL_INDEX;
 
     restoredAddresses.push(...usedChangeAddresses);
     // return the restored address
