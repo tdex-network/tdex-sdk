@@ -1,22 +1,24 @@
 # 🛠 tdex-sdk
+
 JavaScript SDK for building trader-facing applications on top of TDEX
 
 ## ⬇️ Install
 
-* Install with **yarn**
+- Install with **yarn**
+
 ```sh
 $ yarn add tdex-sdk@beta
 ```
+
 * Install with **npm**
+
 ```sh
 $ npm install --save tdex-sdk@beta
 ```
 
-
 ## 📄 Usage
 
 In-depth documentation for using the tdex-sdk is available at [docs.tdex.network](https://docs.tdex.network/tdex-sdk.html)
-
 
 ## 🛣 Roadmap
 
@@ -31,7 +33,6 @@ In-depth documentation for using the tdex-sdk is available at [docs.tdex.network
 * [ ] Sign with Ledger Nano
 * [ ] Sign with Trezor
 
-
 ## 🖥 Local Development
 
 Below is a list of commands you will probably find useful.
@@ -45,10 +46,7 @@ Runs the project in development/watch mode. Your project will be rebuilt upon ch
 Bundles the package to the `dist` and `dist-web` folder.
 The package is optimized and bundled with Rollup into multiple formats (CommonJS, UMD, and ES Module).
 
-
 ### `yarn test`
 
 Runs the test watcher (Jest) in an interactive mode.
 By default, runs tests related to files changed since the last commit.
-
- 

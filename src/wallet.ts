@@ -379,6 +379,37 @@ export interface UtxoInterface {
   prevout: TxOutput;
 }
 
+export interface TxInterface {
+  txid: string;
+  version: number;
+  locktime: number;
+  size: number;
+  weight: number;
+  fee: number;
+  status: {
+    confirmed: boolean;
+    block_height: number;
+    block_hash: string;
+    block_time: number;
+  };
+  vin: Array<{
+    txid: string;
+    vout: number;
+    scriptsig: string;
+    witness: string[];
+    is_coinbase: boolean;
+    sequence: number;
+    is_pegin: boolean;
+  }>;
+  vout: Array<{
+    scriptpubkey: string;
+    scriptpubkey_type: string;
+    valuecommitment: string;
+    assetcommitment: string;
+    txOutput?: TxOutput;
+  }>;
+}
+
 export async function fetchTxHex(txId: string, url: string): Promise<string> {
   return (await axios.get(`${url}/tx/${txId}/hex`)).data;
 }
@@ -452,6 +483,105 @@ export async function fetchBalances(
 }
 
 /**
+ * Fetch all the txs associated to a given address and unblind them using the blindingPrivateKey.
+ * @param address the confidential address
+ * @param explorerUrl the Esplora URL API using to fetch blockchain data.
+ */
+export async function fetchTxs(
+  address: string,
+  explorerUrl: string
+): Promise<TxInterface[]> {
+  const txs: TxInterface[] = [];
+  let lastSeenTxid = undefined;
+
+  do {
+    const newTxs: TxInterface[] = await fetch25newestTxsForAddress(
+      address,
+      explorerUrl,
+      lastSeenTxid
+    );
+
+    txs.push(...newTxs);
+    if (newTxs.length === 25) lastSeenTxid = newTxs[24].txid;
+  } while (lastSeenTxid != null);
+
+  const hexs = await Promise.all(
+    txs
+      .map(tx => tx.txid)
+      .map((txid: string) =>
+        axios.get(`${explorerUrl}/tx/${txid}/hex`).then(({ data }) => data)
+      )
+  );
+
+  const transactionsOutputs = hexs.map(hex => Transaction.fromHex(hex).outs);
+
+  txs.map((tx: TxInterface, index: number) => {
+    transactionsOutputs[index].forEach((out: TxOutput, outIndex: number) => {
+      tx.vout[outIndex].txOutput = out;
+    });
+    return tx;
+  });
+
+  return txs;
+}
+
+/**
+ * return the same transaction with unblinded outputs (if it is possible according to blindingPrivateKeys)
+ * @param tx transaction to unblind
+ * @param blindingPrivateKeys the privateKeys using to unblind the outputs.
+ */
+export function unblindTransaction(
+  tx: TxInterface,
+  blindingPrivateKeys: string[]
+): TxInterface {
+  // unblind all the outputs
+  tx.vout
+    .filter(o => o.txOutput != null)
+    .map(o => o.txOutput!)
+    .filter(isConfidentialOutput)
+    .forEach((output: TxOutput, index: number) => {
+      for (let i = 0; i < blindingPrivateKeys.length; i++) {
+        let unblindedResult;
+        const blindPrivKey = Buffer.from(blindingPrivateKeys[i], 'hex');
+
+        try {
+          unblindedResult = unblindOutput(output, blindPrivKey);
+        } catch (_) {
+          // go to next iteration if the unblind failed with the current priv key.
+          continue;
+        }
+
+        tx.vout[index].txOutput!.asset = unblindedResult.asset;
+        tx.vout[
+          index
+        ].txOutput!.value = confidential.satoshiToConfidentialValue(
+          unblindedResult.value
+        );
+        tx.vout[index].txOutput!.surjectionProof = undefined;
+        tx.vout[index].txOutput!.rangeProof = undefined;
+        // if we success to unblind the output, break the loop
+        break;
+      }
+    });
+
+  return tx;
+}
+
+async function fetch25newestTxsForAddress(
+  address: string,
+  explorerUrl: string,
+  lastSeenTxid?: string
+): Promise<TxInterface[]> {
+  let url = `${explorerUrl}/address/${address}/txs/chain`;
+  if (lastSeenTxid) {
+    url += `/${lastSeenTxid}`;
+  }
+
+  const response = await axios.get(url);
+  return response.data;
+}
+
+/*
  * Select a set of unspent in `utxos` such as sum(utxo.value) >= `amount` && where utxo.asset = `asset`.
  * Returns change and selected unspent outputs.
  * @param utxos the unspents to search in.

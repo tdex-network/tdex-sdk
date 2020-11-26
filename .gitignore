@@ -110,3 +110,5 @@ dist-web
 
 # vscode
 .vscode/
+
+.prettierignore
