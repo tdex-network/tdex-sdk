@@ -490,30 +490,39 @@ export async function fetchBalances(
 export async function fetchTxs(
   address: string,
   explorerUrl: string
-): Promise<Transaction[]> {
-  const txsIds: string[] = [];
+): Promise<TxInterface[]> {
+  const txs: TxInterface[] = [];
   let lastSeenTxid = undefined;
 
   do {
-    const newTxs: any[] = await fetch25newestTxsForAddress(
+    const newTxs: TxInterface[] = await fetch25newestTxsForAddress(
       address,
       explorerUrl,
       lastSeenTxid
     );
 
-    txsIds.push(...newTxs.map(tx => tx.txid));
+    txs.push(...newTxs);
     if (newTxs.length === 25) lastSeenTxid = newTxs[24].txid;
   } while (lastSeenTxid != null);
 
   const hexs = await Promise.all(
-    txsIds.map((txid: string) =>
-      axios.get(`${explorerUrl}/tx/${txid}/hex`).then(({ data }) => data)
-    )
+    txs
+      .map(tx => tx.txid)
+      .map((txid: string) =>
+        axios.get(`${explorerUrl}/tx/${txid}/hex`).then(({ data }) => data)
+      )
   );
 
-  const transactions = hexs.map(hex => Transaction.fromHex(hex));
+  const transactionsOutputs = hexs.map(hex => Transaction.fromHex(hex).outs);
 
-  return transactions;
+  txs.map((tx: TxInterface, index: number) => {
+    transactionsOutputs[index].forEach((out: TxOutput, outIndex: number) => {
+      tx.vout[outIndex].txOutput = out;
+    });
+    return tx;
+  });
+
+  return txs;
 }
 
 /**
@@ -522,11 +531,13 @@ export async function fetchTxs(
  * @param blindingPrivateKeys the privateKeys using to unblind the outputs.
  */
 export function unblindTransaction(
-  tx: Transaction,
+  tx: TxInterface,
   blindingPrivateKeys: string[]
-): Transaction {
+): TxInterface {
   // unblind all the outputs
-  tx.outs
+  tx.vout
+    .filter(o => o.txOutput != null)
+    .map(o => o.txOutput!)
     .filter(isConfidentialOutput)
     .forEach((output: TxOutput, index: number) => {
       for (let i = 0; i < blindingPrivateKeys.length; i++) {
@@ -540,12 +551,14 @@ export function unblindTransaction(
           continue;
         }
 
-        tx.outs[index].asset = unblindedResult.asset;
-        tx.outs[index].value = confidential.satoshiToConfidentialValue(
+        tx.vout[index].txOutput!.asset = unblindedResult.asset;
+        tx.vout[
+          index
+        ].txOutput!.value = confidential.satoshiToConfidentialValue(
           unblindedResult.value
         );
-        tx.outs[index].surjectionProof = undefined;
-        tx.outs[index].rangeProof = undefined;
+        tx.vout[index].txOutput!.surjectionProof = undefined;
+        tx.vout[index].txOutput!.rangeProof = undefined;
         // if we success to unblind the output, break the loop
         break;
       }
@@ -558,7 +571,7 @@ async function fetch25newestTxsForAddress(
   address: string,
   explorerUrl: string,
   lastSeenTxid?: string
-): Promise<any[]> {
+): Promise<TxInterface[]> {
   let url = `${explorerUrl}/address/${address}/txs/chain`;
   if (lastSeenTxid) {
     url += `/${lastSeenTxid}`;
