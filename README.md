@@ -10,7 +10,7 @@ JavaScript SDK for building trader-facing applications on top of TDEX
 $ yarn add tdex-sdk@beta
 ```
 
-- Install with **npm**
+* Install with **npm**
 
 ```sh
 $ npm install --save tdex-sdk@beta
@@ -22,16 +22,16 @@ In-depth documentation for using the tdex-sdk is available at [docs.tdex.network
 
 ## 🛣 Roadmap
 
-- [x] Swap protocol
-- [x] Trade protocol
-- [x] HD Wallet support
-- [x] Browser support
-- [x] Blinding support
-- [x] Sign with WIF
-- [x] Sign with Mnemonic
-- [ ] Sign with Liquality
-- [ ] Sign with Ledger Nano
-- [ ] Sign with Trezor
+* [x] Swap protocol
+* [x] Trade protocol
+* [x] HD Wallet support
+* [x] Browser support
+* [x] Blinding support
+* [x] Sign with WIF
+* [x] Sign with Mnemonic
+* [ ] Sign with Liquality
+* [ ] Sign with Ledger Nano
+* [ ] Sign with Trezor
 
 ## 🖥 Local Development
 
