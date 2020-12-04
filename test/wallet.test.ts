@@ -1,6 +1,13 @@
-import { UtxoInterface, Wallet, walletFromAddresses } from '../src/wallet';
+import {
+  fetchTxs,
+  TxInterface,
+  unblindTransaction,
+  UtxoInterface,
+  Wallet,
+  walletFromAddresses,
+} from '../src/wallet';
 import { networks, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
-import { faucet, fetchUtxos, fetchTxHex, mint } from './_regtest';
+import { faucet, fetchUtxos, fetchTxHex, mint, APIURL } from './_regtest';
 import * as assert from 'assert';
 import { Swap } from '../src/swap';
 import {
@@ -15,6 +22,7 @@ import {
   recipientAddress,
   sender,
 } from './fixtures/wallet.keys';
+import { isConfidentialOutput, toNumber } from '../src/utils';
 
 const network = networks.regtest;
 
@@ -250,6 +258,27 @@ describe('Wallet - Transaction builder', () => {
           inputBlindingKeys: inputsKeys,
           outputBlindingKeys: outputsKeys,
         });
+      });
+    });
+  });
+
+  describe('FetchTx function', () => {
+    it('should fetch all the transactions of an address', async () => {
+      console.log(senderAddress);
+      const txs = await fetchTxs(senderAddress, APIURL);
+      txs.forEach((tx: TxInterface) => {
+        const vouts = unblindTransaction(tx, [
+          sender.getNextAddress().blindingPrivateKey,
+        ]).vout;
+        vouts
+          .map(out => out.txOutput)
+          .filter(output => !isConfidentialOutput(output!))
+          .forEach(txOutput => {
+            console.log(txOutput);
+            const withoutFirstByte = txOutput!.asset.slice(1);
+            console.log((withoutFirstByte.reverse() as Buffer).toString('hex'));
+            console.log(toNumber(txOutput!.value));
+          });
       });
     });
   });
