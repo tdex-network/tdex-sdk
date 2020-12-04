@@ -23,7 +23,8 @@ export default interface TraderClientInterface {
       quoteAsset: string;
     },
     tradeType: number,
-    amount: number
+    amount: number,
+    asset: string
   ): Promise<Array<any>>;
   balances({
     baseAsset,

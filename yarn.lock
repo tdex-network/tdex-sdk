@@ -6123,7 +6123,7 @@ table@^5.2.3:
 
 tdex-protobuf@tdex-network/tdex-protobuf#beta:
   version "2.0.0"
-  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/18019eb92b888f5bf6aeb0713df94b0c8cc87465"
+  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/8272d771c91f16012e83881d65b8f71bed8eca4f"
   dependencies:
     grpc-web "1.2.0"
 
