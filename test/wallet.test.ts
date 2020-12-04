@@ -1,13 +1,20 @@
 import {
-  fetchTxs,
-  TxInterface,
-  unblindTransaction,
+  fetchAndUnblindTxs,
   UtxoInterface,
   Wallet,
   walletFromAddresses,
+  isBlindedOutputInterface,
+  UnblindedOutputInterface,
 } from '../src/wallet';
 import { networks, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
-import { faucet, fetchUtxos, fetchTxHex, mint, APIURL } from './_regtest';
+import {
+  faucet,
+  fetchUtxos,
+  fetchTxHex,
+  mint,
+  APIURL,
+  sleep,
+} from './_regtest';
 import * as assert from 'assert';
 import { Swap } from '../src/swap';
 import {
@@ -22,11 +29,11 @@ import {
   recipientAddress,
   sender,
 } from './fixtures/wallet.keys';
-import { isConfidentialOutput, toNumber } from '../src/utils';
+import axios from 'axios';
 
 const network = networks.regtest;
 
-jest.setTimeout(15000);
+jest.setTimeout(45000);
 
 describe('Wallet - Transaction builder', () => {
   let messageSwapRequest: Uint8Array;
@@ -262,24 +269,37 @@ describe('Wallet - Transaction builder', () => {
     });
   });
 
-  describe('FetchTx function', () => {
-    it('should fetch all the transactions of an address', async () => {
-      console.log(senderAddress);
-      const txs = await fetchTxs(senderAddress, APIURL);
-      txs.forEach((tx: TxInterface) => {
-        const vouts = unblindTransaction(tx, [
-          sender.getNextAddress().blindingPrivateKey,
-        ]).vout;
-        vouts
-          .map(out => out.txOutput)
-          .filter(output => !isConfidentialOutput(output!))
-          .forEach(txOutput => {
-            console.log(txOutput);
-            const withoutFirstByte = txOutput!.asset.slice(1);
-            console.log((withoutFirstByte.reverse() as Buffer).toString('hex'));
-            console.log(toNumber(txOutput!.value));
-          });
+  describe('FetchAndUnblindTx function', () => {
+    it('should fetch all the transactions of an address & unblind it', async () => {
+      const { txId } = (
+        await axios.post(`${APIURL}/faucet`, { address: senderAddress })
+      ).data;
+
+      // sleep 5s for nigiri
+      await sleep(5000);
+
+      const txs = await fetchAndUnblindTxs(
+        senderAddress,
+        [sender.getNextAddress().blindingPrivateKey],
+        APIURL
+      );
+
+      const faucetTx = txs.find(tx => tx.txid === txId);
+      expect(faucetTx).not.toBeUndefined();
+
+      const LBTC = networks.regtest.assetHash;
+      const hasOutputWithValue1LBTC = faucetTx!.vout.some(out => {
+        if (!isBlindedOutputInterface(out)) {
+          const unblindOutput = out as UnblindedOutputInterface;
+          console.log(unblindOutput);
+          return (
+            unblindOutput.value === 1_0000_0000 && unblindOutput.asset === LBTC
+          );
+        }
+        return false;
       });
+
+      expect(hasOutputWithValue1LBTC).toEqual(true);
     });
   });
 });

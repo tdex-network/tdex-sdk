@@ -483,7 +483,7 @@ export interface TxInterface {
   vout: Array<BlindedOutputInterface | UnblindedOutputInterface>;
 }
 
-function isBlindedOutputInterface(
+export function isBlindedOutputInterface(
   object: any
 ): object is BlindedOutputInterface {
   return 'surjectionProof' in object && 'rangeProof' in object;
