@@ -9,7 +9,12 @@ import {
   TxOutput,
 } from 'liquidjs-lib';
 import { AddressInterface } from './types';
-import { isConfidentialOutput, toAssetHash, unblindOutput } from './utils';
+import {
+  isConfidentialOutput,
+  toAssetHash,
+  toNumber,
+  unblindOutput,
+} from './utils';
 
 /**
  * Wallet abstraction.
@@ -379,37 +384,6 @@ export interface UtxoInterface {
   prevout: TxOutput;
 }
 
-export interface TxInterface {
-  txid: string;
-  version: number;
-  locktime: number;
-  size: number;
-  weight: number;
-  fee: number;
-  status: {
-    confirmed: boolean;
-    block_height: number;
-    block_hash: string;
-    block_time: number;
-  };
-  vin: Array<{
-    txid: string;
-    vout: number;
-    scriptsig: string;
-    witness: string[];
-    is_coinbase: boolean;
-    sequence: number;
-    is_pegin: boolean;
-  }>;
-  vout: Array<{
-    scriptpubkey: string;
-    scriptpubkey_type: string;
-    valuecommitment: string;
-    assetcommitment: string;
-    txOutput?: TxOutput;
-  }>;
-}
-
 export async function fetchTxHex(txId: string, url: string): Promise<string> {
   return (await axios.get(`${url}/tx/${txId}/hex`)).data;
 }
@@ -482,20 +456,102 @@ export async function fetchBalances(
   ); // {} is the initial value of the storage
 }
 
+export interface BlindedOutputInterface {
+  script: string;
+  blindedValue: Buffer;
+  blindedAsset: Buffer;
+  nonce: Buffer;
+  rangeProof: Buffer;
+  surjectionProof: Buffer;
+}
+
+export interface UnblindedOutputInterface {
+  script: string;
+  value: number;
+  asset: string;
+}
+
+export interface InputInterface {
+  txid: string;
+  vout: number;
+  prevout: BlindedOutputInterface | UnblindedOutputInterface;
+}
+
+export interface TxInterface {
+  txid: string;
+  vin: Array<InputInterface>;
+  vout: Array<BlindedOutputInterface | UnblindedOutputInterface>;
+}
+
+function isBlindedOutputInterface(
+  object: any
+): object is BlindedOutputInterface {
+  return 'surjectionProof' in object && 'rangeProof' in object;
+}
+
+// Esplora tx format
+interface EsploraTx {
+  txid: string;
+  version: number;
+  locktime: number;
+  size: number;
+  weight: number;
+  fee: number;
+  status: {
+    confirmed: boolean;
+    block_height: number;
+    block_hash: string;
+    block_time: number;
+  };
+  vin: Array<{
+    txid: string;
+    vout: number;
+    scriptsig: string;
+    witness: string[];
+    is_coinbase: boolean;
+    sequence: number;
+    is_pegin: boolean;
+  }>;
+  vout: Array<{
+    scriptpubkey: string;
+    scriptpubkey_type: string;
+    valuecommitment: string;
+    assetcommitment: string;
+  }>;
+}
+
+/**
+ * fetch all tx associated to an address and unblind the tx's outputs and prevouts.
+ * @param address address to fetch
+ * @param blindingPrivateKeys private blinding key used to unblind prevouts and outputs
+ * @param explorerUrl the esplora endpoint
+ */
+export async function fetchAndUnblindTxs(
+  address: string,
+  blindingPrivateKeys: string[],
+  explorerUrl: string
+): Promise<TxInterface[]> {
+  const txs = await fetchTxs(address, explorerUrl);
+  const unblindedTxs = txs.map(tx =>
+    unblindTransactionPrevoutsAndOutputs(tx, blindingPrivateKeys)
+  );
+  return unblindedTxs;
+}
+
 /**
  * Fetch all the txs associated to a given address and unblind them using the blindingPrivateKey.
  * @param address the confidential address
  * @param explorerUrl the Esplora URL API using to fetch blockchain data.
  */
-export async function fetchTxs(
+async function fetchTxs(
   address: string,
   explorerUrl: string
 ): Promise<TxInterface[]> {
-  const txs: TxInterface[] = [];
+  const txs: EsploraTx[] = [];
   let lastSeenTxid = undefined;
 
   do {
-    const newTxs: TxInterface[] = await fetch25newestTxsForAddress(
+    const newTxs: EsploraTx[] = await fetch25newestTxsForAddress(
       address,
       explorerUrl,
       lastSeenTxid
@@ -505,73 +561,150 @@ export async function fetchTxs(
     if (newTxs.length === 25) lastSeenTxid = newTxs[24].txid;
   } while (lastSeenTxid != null);
 
-  const hexs = await Promise.all(
-    txs
-      .map(tx => tx.txid)
-      .map((txid: string) =>
-        axios.get(`${explorerUrl}/tx/${txid}/hex`).then(({ data }) => data)
-      )
+  return Promise.all(txs.map(tx => esploraTxToTxInterface(tx, explorerUrl)));
+}
+
+async function esploraTxToTxInterface(
+  esploraTx: EsploraTx,
+  explorerUrl: string
+): Promise<TxInterface> {
+  const inputTxIds = esploraTx.vin.map(input => input.txid);
+  const inputVouts = esploraTx.vin.map(input => input.vout);
+  const prevoutTxHexs = await Promise.all(
+    inputTxIds.map(txid => fetchTxHex(txid, explorerUrl))
   );
 
-  const transactionsOutputs = hexs.map(hex => Transaction.fromHex(hex).outs);
+  const prevouts = prevoutTxHexs.map(
+    (hex: string, index: number) =>
+      Transaction.fromHex(hex).outs[inputVouts[index]]
+  );
+  const prevoutAsOutput = prevouts.map(txOutputToOutputInterface);
+  const txInputs: InputInterface[] = inputTxIds.map(
+    (txid: string, index: number) => {
+      return {
+        prevout: prevoutAsOutput[index],
+        txid: txid,
+        vout: inputVouts[index],
+      };
+    }
+  );
 
-  txs.map((tx: TxInterface, index: number) => {
-    transactionsOutputs[index].forEach((out: TxOutput, outIndex: number) => {
-      tx.vout[outIndex].txOutput = out;
-    });
-    return tx;
-  });
+  const txHex = await fetchTxHex(esploraTx.txid, explorerUrl);
+  const txOutputs = Transaction.fromHex(txHex).outs.map(
+    txOutputToOutputInterface
+  );
 
-  return txs;
+  const tx: TxInterface = {
+    txid: esploraTx.txid,
+    vin: txInputs,
+    vout: txOutputs,
+  };
+
+  return tx;
+}
+
+function txOutputToOutputInterface(
+  txOutput: TxOutput
+): BlindedOutputInterface | UnblindedOutputInterface {
+  if (isConfidentialOutput(txOutput)) {
+    const blindedOutput: BlindedOutputInterface = {
+      blindedAsset: txOutput.asset,
+      blindedValue: txOutput.value,
+      nonce: txOutput.nonce,
+      rangeProof: txOutput.rangeProof!,
+      surjectionProof: txOutput.surjectionProof!,
+      script: txOutput.script.toString('hex'),
+    };
+    return blindedOutput;
+  }
+
+  const unblindedOutput: UnblindedOutputInterface = {
+    asset: toAssetHash(txOutput.asset),
+    value: toNumber(txOutput.value),
+    script: txOutput.script.toString('hex'),
+  };
+
+  return unblindedOutput;
 }
 
 /**
- * return the same transaction with unblinded outputs (if it is possible according to blindingPrivateKeys)
+ * takes the a TxInterface and try to transform BlindedOutputInterface to UnblindedOutputInterface (prevouts & outputs)
  * @param tx transaction to unblind
  * @param blindingPrivateKeys the privateKeys using to unblind the outputs.
  */
-export function unblindTransaction(
+function unblindTransactionPrevoutsAndOutputs(
   tx: TxInterface,
   blindingPrivateKeys: string[]
 ): TxInterface {
-  // unblind all the outputs
-  tx.vout
-    .filter(o => o.txOutput != null)
-    .map(o => o.txOutput!)
-    .filter(isConfidentialOutput)
-    .forEach((output: TxOutput, index: number) => {
+  // try to unblind prevouts, if success replace blinded prevout by unblinded prevout
+  for (let inputIndex = 0; inputIndex < tx.vin.length; inputIndex++) {
+    const prevout = tx.vin[inputIndex].prevout;
+    if (isBlindedOutputInterface(prevout)) {
       for (let i = 0; i < blindingPrivateKeys.length; i++) {
-        let unblindedResult;
-        const blindPrivKey = Buffer.from(blindingPrivateKeys[i], 'hex');
-
         try {
-          unblindedResult = unblindOutput(output, blindPrivKey);
+          const unblindOutput = tryToUnblindOutput(
+            prevout,
+            blindingPrivateKeys[i]
+          );
+          tx.vin[inputIndex].prevout = unblindOutput;
+          break;
         } catch (_) {
-          // go to next iteration if the unblind failed with the current priv key.
           continue;
         }
-
-        tx.vout[index].txOutput!.asset = unblindedResult.asset;
-        tx.vout[
-          index
-        ].txOutput!.value = confidential.satoshiToConfidentialValue(
-          unblindedResult.value
-        );
-        tx.vout[index].txOutput!.surjectionProof = undefined;
-        tx.vout[index].txOutput!.rangeProof = undefined;
-        // if we success to unblind the output, break the loop
-        break;
       }
-    });
+    }
+  }
+
+  // try to unblind outputs
+  for (let outputIndex = 0; outputIndex < tx.vout.length; outputIndex++) {
+    const output = tx.vout[outputIndex];
+    if (isBlindedOutputInterface(output)) {
+      for (let i = 0; i < blindingPrivateKeys.length; i++) {
+        try {
+          const unblindOutput = tryToUnblindOutput(
+            output,
+            blindingPrivateKeys[i]
+          );
+          tx.vout[outputIndex] = unblindOutput;
+          break;
+        } catch (_) {
+          continue;
+        }
+      }
+    }
+  }
 
   return tx;
+}
+
+function tryToUnblindOutput(
+  output: BlindedOutputInterface,
+  BlindingPrivateKey: string
+): UnblindedOutputInterface {
+  const blindPrivateKeyBuffer = Buffer.from(BlindingPrivateKey, 'hex');
+  const unblindedResult = confidential.unblindOutput(
+    output.nonce,
+    blindPrivateKeyBuffer,
+    output.rangeProof,
+    output.blindedValue,
+    output.blindedAsset,
+    Buffer.from(output.script, 'hex')
+  );
+
+  const unblindedOutput: UnblindedOutputInterface = {
+    asset: unblindedResult.asset.reverse().toString('hex'),
+    value: parseInt(unblindedResult.value, 10),
+    script: output.script,
+  };
+
+  return unblindedOutput;
 }
 
 async function fetch25newestTxsForAddress(
   address: string,
   explorerUrl: string,
   lastSeenTxid?: string
-): Promise<TxInterface[]> {
+): Promise<EsploraTx[]> {
   let url = `${explorerUrl}/address/${address}/txs/chain`;
   if (lastSeenTxid) {
     url += `/${lastSeenTxid}`;
