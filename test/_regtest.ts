@@ -1,6 +1,6 @@
 const axios = require('axios');
 // Nigiri Chopstick Liquid base URI
-const APIURL = process.env.EXPLORER || `http://localhost:3001`;
+export const APIURL = process.env.EXPLORER || `http://localhost:3001`;
 
 export function sleep(ms: number): Promise<any> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -57,4 +57,15 @@ export async function mint(
     throw e;
   }
   return ret;
+}
+
+export async function broadcastTx(hex: string): Promise<string> {
+  try {
+    const response = await axios.post(`${APIURL}/tx`, hex);
+    await sleep(3000);
+    return response.data;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }
