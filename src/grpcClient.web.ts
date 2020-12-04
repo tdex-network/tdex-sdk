@@ -101,7 +101,8 @@ export class TraderClient implements TraderClientInterface {
       quoteAsset: string;
     },
     tradeType: number,
-    amount: number
+    amount: number,
+    asset: string
   ): Promise<Array<any>> {
     const market = new types.Market();
     market.setBaseAsset(baseAsset);
@@ -110,6 +111,7 @@ export class TraderClient implements TraderClientInterface {
     request.setMarket(market);
     request.setType(tradeType);
     request.setAmount(amount);
+    request.setAsset(asset);
 
     return new Promise((resolve, reject) => {
       this.client.marketPrice(request, null, (err, response) => {
