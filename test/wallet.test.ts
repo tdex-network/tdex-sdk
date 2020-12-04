@@ -303,11 +303,11 @@ describe('Wallet - Transaction builder', () => {
       expect(hasOutputWithValue1LBTC).toEqual(true);
     });
 
-    it('should fetch all the transactions of an address & unblind it the prevouts', async () => {
+    it('should fetch all the transactions of an address & unblind the prevouts', async () => {
       const { txId } = (
         await axios.post(`${APIURL}/faucet`, { address: senderAddress })
       ).data;
-      await sleep(3000);
+      await sleep(5000);
 
       const utxos = await fetchAndUnblindUtxos(
         senderAddress,
