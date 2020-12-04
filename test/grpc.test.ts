@@ -12,7 +12,8 @@ describe('grpc client', () => {
           quoteAsset: 'bar',
         },
         0,
-        100000
+        100000,
+        'foo'
       );
     } catch (e) {
       expect(e).toBeTruthy();
