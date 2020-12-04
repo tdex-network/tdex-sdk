@@ -1,6 +1,6 @@
 {
   "include": [
-    "src", 
+    "src",
     "types"
   ],
   "exclude": [
@@ -9,7 +9,8 @@
   "compilerOptions": {
     "module": "esnext",
     "lib": [
-      "dom", 
+      "dom",
+      "es2019",
       "esnext"
     ],
     "importHelpers": true,
@@ -35,7 +36,7 @@
     "outDir": "./dist",
     "paths": {
       "*": [
-        "src/*", 
+        "src/*",
         "node_modules/*"
       ]
     },

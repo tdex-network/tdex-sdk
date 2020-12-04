@@ -1,4 +1,5 @@
 import { Trade, IdentityType, TradeType } from '../src/index';
+import { sleep } from './_regtest';
 
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
@@ -72,7 +73,7 @@ describe('Integration tests with a local daemon', () => {
     try {
       const txid = await trade.sell({
         market,
-        amount: 500000,
+        amount: 100000,
         asset: market.baseAsset,
       });
       console.log(txid);
@@ -81,15 +82,14 @@ describe('Integration tests with a local daemon', () => {
       console.error(e);
     }
 
-    //await sleep(1500);
+    await sleep(1500);
 
-    /*     const params3 = {
-          market,
-          amount: 400000,
-          //address: 'ert1ql5eframnl3slllu8xtwh472zzz8ws4hpm49ta9',
-          privateKey: 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV',
-        };
-        const txid3 = await trade.buy(params3);
-        expect(txid3).toBeDefined(); */
+    const txid3 = await trade.buy({
+      market,
+      amount: 10000,
+      asset: market.baseAsset,
+    });
+    console.log(txid3);
+    expect(txid3).toBeDefined();
   }, 60000);
 });

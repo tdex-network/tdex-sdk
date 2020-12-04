@@ -12,6 +12,7 @@
     "module": "esnext",
     "lib": [
       "dom",
+      "ES2019",
       "esnext"
     ],
     "importHelpers": true,
