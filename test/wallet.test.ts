@@ -5,6 +5,7 @@ import {
   walletFromAddresses,
   isBlindedOutputInterface,
   UnblindedOutputInterface,
+  fetchAndUnblindUtxos,
 } from '../src/wallet';
 import { networks, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
 import {
@@ -14,6 +15,7 @@ import {
   mint,
   APIURL,
   sleep,
+  broadcastTx,
 } from './_regtest';
 import * as assert from 'assert';
 import { Swap } from '../src/swap';
@@ -33,7 +35,7 @@ import axios from 'axios';
 
 const network = networks.regtest;
 
-jest.setTimeout(45000);
+jest.setTimeout(500000);
 
 describe('Wallet - Transaction builder', () => {
   let messageSwapRequest: Uint8Array;
@@ -270,7 +272,7 @@ describe('Wallet - Transaction builder', () => {
   });
 
   describe('FetchAndUnblindTx function', () => {
-    it('should fetch all the transactions of an address & unblind it', async () => {
+    it('should fetch all the transactions of an address & unblind the outputs', async () => {
       const { txId } = (
         await axios.post(`${APIURL}/faucet`, { address: senderAddress })
       ).data;
@@ -291,7 +293,6 @@ describe('Wallet - Transaction builder', () => {
       const hasOutputWithValue1LBTC = faucetTx!.vout.some(out => {
         if (!isBlindedOutputInterface(out)) {
           const unblindOutput = out as UnblindedOutputInterface;
-          console.log(unblindOutput);
           return (
             unblindOutput.value === 1_0000_0000 && unblindOutput.asset === LBTC
           );
@@ -300,6 +301,58 @@ describe('Wallet - Transaction builder', () => {
       });
 
       expect(hasOutputWithValue1LBTC).toEqual(true);
+    });
+
+    it('should fetch all the transactions of an address & unblind it the prevouts', async () => {
+      const { txId } = (
+        await axios.post(`${APIURL}/faucet`, { address: senderAddress })
+      ).data;
+      await sleep(3000);
+
+      const utxos = await fetchAndUnblindUtxos(
+        senderAddress,
+        sender.getNextAddress().blindingPrivateKey,
+        APIURL
+      );
+
+      const tx = senderWallet.createTx();
+      const unsignedTx = senderWallet.buildTx(
+        tx,
+        utxos.filter(utxo => utxo.txid === txId),
+        recipientAddress!,
+        100,
+        networks.regtest.assetHash,
+        sender.getNextChangeAddress().confidentialAddress
+      );
+
+      const signedPset = await sender.signPset(unsignedTx);
+      const hex = Psbt.fromBase64(signedPset)
+        .finalizeAllInputs()
+        .extractTransaction()
+        .toHex();
+      const txIdBroadcasted = await broadcastTx(hex);
+
+      const txs = await fetchAndUnblindTxs(
+        senderAddress,
+        [sender.getNextAddress().blindingPrivateKey],
+        APIURL
+      );
+      const faucetTx = txs.find(tx => tx.txid === txIdBroadcasted);
+      expect(faucetTx).not.toBeUndefined();
+
+      const hasUnblindedPrevout = faucetTx!.vin
+        .map(input => input.prevout)
+        .some(prevout => {
+          if (!isBlindedOutputInterface(prevout)) {
+            const unblindOutput = prevout as UnblindedOutputInterface;
+            return (
+              unblindOutput.value === 1_0000_0000 &&
+              unblindOutput.asset === networks.regtest.assetHash
+            );
+          }
+          return false;
+        });
+      expect(hasUnblindedPrevout).toEqual(true);
     });
   });
 });

@@ -58,3 +58,14 @@ export async function mint(
   }
   return ret;
 }
+
+export async function broadcastTx(hex: string): Promise<string> {
+  try {
+    const response = await axios.post(`${APIURL}/tx`, hex);
+    await sleep(3000);
+    return response.data;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
