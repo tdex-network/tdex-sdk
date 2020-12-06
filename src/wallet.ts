@@ -479,6 +479,16 @@ export interface InputInterface {
 
 export interface TxInterface {
   txid: string;
+  fee: {
+    asset: string;
+    amount: number;
+  };
+  status: {
+    confirmed: boolean;
+    blockHeight?: number;
+    blockHash?: string;
+    blockTime?: number;
+  };
   vin: Array<InputInterface>;
   vout: Array<BlindedOutputInterface | UnblindedOutputInterface>;
 }
@@ -590,14 +600,37 @@ async function esploraTxToTxInterface(
   );
 
   const txHex = await fetchTxHex(esploraTx.txid, explorerUrl);
-  const txOutputs = Transaction.fromHex(txHex).outs.map(
-    txOutputToOutputInterface
-  );
+  const transaction = Transaction.fromHex(txHex);
+
+  const txOutputs = transaction.outs.map(txOutputToOutputInterface);
+
+  const feeOutput = transaction.outs
+    // fee output is never blinded
+    .filter((out: TxOutput) => !isConfidentialOutput(out))
+    .find((out: TxOutput) => out.script.toString('hex').valueOf() === '');
+
+  if (!feeOutput) throw new Error('Fee output is not found.');
 
   const tx: TxInterface = {
     txid: esploraTx.txid,
     vin: txInputs,
     vout: txOutputs,
+    fee: {
+      amount: toNumber(feeOutput.value),
+      asset: toAssetHash(feeOutput.asset),
+    },
+    status: {
+      confirmed: esploraTx.status.confirmed,
+      blockHash: esploraTx.status.confirmed
+        ? esploraTx.status.block_hash
+        : undefined,
+      blockHeight: esploraTx.status.confirmed
+        ? esploraTx.status.block_height
+        : undefined,
+      blockTime: esploraTx.status.confirmed
+        ? esploraTx.status.block_time
+        : undefined,
+    },
   };
 
   return tx;
