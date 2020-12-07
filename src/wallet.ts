@@ -479,10 +479,7 @@ export interface InputInterface {
 
 export interface TxInterface {
   txid: string;
-  fee: {
-    asset: string;
-    amount: number;
-  };
+  fee: number;
   status: {
     confirmed: boolean;
     blockHeight?: number;
@@ -604,32 +601,16 @@ async function esploraTxToTxInterface(
 
   const txOutputs = transaction.outs.map(txOutputToOutputInterface);
 
-  const feeOutput = transaction.outs
-    // fee output is never blinded
-    .filter((out: TxOutput) => !isConfidentialOutput(out))
-    .find((out: TxOutput) => out.script.toString('hex').valueOf() === '');
-
-  if (!feeOutput) throw new Error('Fee output is not found.');
-
   const tx: TxInterface = {
     txid: esploraTx.txid,
     vin: txInputs,
     vout: txOutputs,
-    fee: {
-      amount: toNumber(feeOutput.value),
-      asset: toAssetHash(feeOutput.asset),
-    },
+    fee: esploraTx.fee,
     status: {
       confirmed: esploraTx.status.confirmed,
-      blockHash: esploraTx.status.confirmed
-        ? esploraTx.status.block_hash
-        : undefined,
-      blockHeight: esploraTx.status.confirmed
-        ? esploraTx.status.block_height
-        : undefined,
-      blockTime: esploraTx.status.confirmed
-        ? esploraTx.status.block_time
-        : undefined,
+      blockHash: esploraTx.status.block_hash,
+      blockHeight: esploraTx.status.block_height,
+      blockTime: esploraTx.status.block_time,
     },
   };
 
