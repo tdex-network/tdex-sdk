@@ -337,7 +337,9 @@ describe('Wallet - Transaction builder', () => {
         [sender.getNextAddress().blindingPrivateKey],
         APIURL
       );
-      const faucetTx = txs.find(tx => tx.txid === txIdBroadcasted);
+      const faucetTx = txs.find(
+        tx => tx.txid.valueOf() === txIdBroadcasted.valueOf()
+      );
       expect(faucetTx).not.toBeUndefined();
 
       const hasUnblindedPrevout = faucetTx!.vin

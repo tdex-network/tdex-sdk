@@ -479,6 +479,13 @@ export interface InputInterface {
 
 export interface TxInterface {
   txid: string;
+  fee: number;
+  status: {
+    confirmed: boolean;
+    blockHeight?: number;
+    blockHash?: string;
+    blockTime?: number;
+  };
   vin: Array<InputInterface>;
   vout: Array<BlindedOutputInterface | UnblindedOutputInterface>;
 }
@@ -590,14 +597,21 @@ async function esploraTxToTxInterface(
   );
 
   const txHex = await fetchTxHex(esploraTx.txid, explorerUrl);
-  const txOutputs = Transaction.fromHex(txHex).outs.map(
-    txOutputToOutputInterface
-  );
+  const transaction = Transaction.fromHex(txHex);
+
+  const txOutputs = transaction.outs.map(txOutputToOutputInterface);
 
   const tx: TxInterface = {
     txid: esploraTx.txid,
     vin: txInputs,
     vout: txOutputs,
+    fee: esploraTx.fee,
+    status: {
+      confirmed: esploraTx.status.confirmed,
+      blockHash: esploraTx.status.block_hash,
+      blockHeight: esploraTx.status.block_height,
+      blockTime: esploraTx.status.block_time,
+    },
   };
 
   return tx;
