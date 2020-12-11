@@ -71,7 +71,7 @@
     "google-protobuf": "^3.11.4",
     "jsbi": "^3.1.2",
     "liquidjs-lib": "vulpemventures/liquidjs-lib",
-    "slip77": "github:vulpemventures/slip77",
+    "slip77": "vulpemventures/slip77",
     "tdex-protobuf": "tdex-network/tdex-protobuf#beta",
     "tslib": "^2.0.0"
   }
