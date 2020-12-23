@@ -11,6 +11,7 @@ import { AddressInterface } from './types';
 export enum IdentityType {
   PrivateKey = 1,
   Mnemonic,
+  MasterPublicKey,
   Inject,
   Ledger,
   Trezor,
