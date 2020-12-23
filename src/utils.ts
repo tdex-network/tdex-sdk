@@ -175,7 +175,7 @@ const prefixes = new Map([
  * @param xpub: an extended public key in base58 format. Example: xpub6CpihtY9HVc1jNJWCiXnRbpXm5BgVNKqZMsM4XqpDcQigJr6AHNwaForLZ3kkisDcRoaXSUms6DJNhxFtQGeZfWAQWCZQe1esNetx5Wqe4M
  * @param targetFormat: a string representing the desired prefix; must exist in the "prefixes" mapping defined above. Example: Zpub
  */
-export function changeVersionBytes(xpub: string, targetFormat: string) {
+function changeVersionBytes(xpub: string, targetFormat: string) {
   if (!prefixes.has(targetFormat)) {
     return 'Invalid target version';
   }
@@ -196,6 +196,15 @@ export function changeVersionBytes(xpub: string, targetFormat: string) {
       "Invalid extended public key! Please double check that you didn't accidentally paste extra data."
     );
   }
+}
+
+export function fromXpub(xub: string, chain: string) {
+  const format = chain === 'regtest' ? 'vpub' : 'zpub';
+  return changeVersionBytes(xub, format);
+}
+
+export function toXpub(anyPub: string) {
+  return changeVersionBytes(anyPub, 'xpub');
 }
 
 export function isValidXpub(xpub: string, network: Network): Boolean {

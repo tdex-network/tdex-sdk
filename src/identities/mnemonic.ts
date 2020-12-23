@@ -7,7 +7,7 @@ import Identity, {
   IdentityOpts,
   IdentityType,
 } from '../identity';
-import { BufferMap } from '../utils';
+import { BufferMap, fromXpub } from '../utils';
 import { AddressInterface } from '../types';
 
 export interface MnemonicOptsValue {
@@ -58,6 +58,9 @@ export class Mnemonic extends Identity implements IdentityInterface {
   readonly masterPrivateKeyNode: BIP32Interface;
   readonly masterBlindingKeyNode: Slip77Interface;
 
+  public masterPublicKey: string;
+  public masterBlindingKey: string;
+
   readonly isRestored: Promise<boolean>;
 
   constructor(args: IdentityOpts) {
@@ -90,8 +93,15 @@ export class Mnemonic extends Identity implements IdentityInterface {
     const walletSeed = bip39.mnemonicToSeedSync(args.value.mnemonic);
     // generate the master private key from the wallet seed
     this.masterPrivateKeyNode = bip32fromSeed(walletSeed, this.network);
+    this.masterPublicKey = fromXpub(
+      this.masterPrivateKeyNode.toBase58(),
+      args.chain
+    );
     // generate the master blinding key from the seed
     this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
+    this.masterBlindingKey = this.masterBlindingKeyNode.masterKey.toString(
+      'hex'
+    );
 
     this.isRestored = new Promise(() => true);
     if (args.initializeFromRestorer) {

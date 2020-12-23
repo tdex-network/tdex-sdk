@@ -4,20 +4,20 @@ import Identity, {
   IdentityType,
   IdentityOpts,
 } from '../identity';
-import { BufferMap, isValidXpub, isValidBlindPub } from '../utils';
+import { BufferMap, isValidXpub, isValidBlindPub, toXpub } from '../utils';
 import { BIP32Interface, fromBase58 } from 'bip32';
 import { Slip77Interface, fromMasterBlindingKey } from 'slip77';
 import { payments } from 'liquidjs-lib';
 
 export interface MasterPublicKeyOptsValue {
   masterPublicKey: string;
-  masterBlindKey: string;
+  masterBlindingKey: string;
 }
 
 function instanceOfMasterPublicKeyOptsValue(
   value: any
 ): value is MasterPublicKeyOptsValue {
-  return 'masterPublicKey' in value && 'masterBlindKey' in value;
+  return 'masterPublicKey' in value && 'masterBlindingKey' in value;
 }
 
 interface AddressInterfaceExtended {
@@ -72,16 +72,16 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
       throw new Error('Master public key is not valid');
     }
     // validate master blinding key
-    if (!isValidBlindPub(args.value.masterBlindKey)) {
+    if (!isValidBlindPub(args.value.masterBlindingKey)) {
       throw new Error('Master blinding key is not valid');
     }
 
     this.masterPublicKeyNode = fromBase58(
-      args.value.masterPublicKey,
+      toXpub(args.value.masterPublicKey),
       this.network
     );
     this.masterBlindingKeyNode = fromMasterBlindingKey(
-      args.value.masterBlindKey
+      args.value.masterBlindingKey
     );
 
     this.isRestored = new Promise(() => true);
