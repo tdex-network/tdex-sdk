@@ -151,7 +151,7 @@ export class BufferMap<T> {
   }
 }
 
-// This has benne taken from https://github.com/Casa/xpub-converter/blob/master/js/xpubConvert.js
+// This has been taken from https://github.com/Casa/xpub-converter/blob/master/js/xpubConvert.js
 /*
   This script uses version bytes as described in SLIP-132
   https://github.com/satoshilabs/slips/blob/master/slip-0132.md
