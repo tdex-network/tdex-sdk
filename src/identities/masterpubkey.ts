@@ -72,7 +72,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
       throw new Error('Master public key is not valid');
     }
     // validate master blinding key
-    if (!isValidBlindPub(args.value.masterBlindingKey)) {
+    if (!isValidExtendedBlindKey(args.value.masterBlindingKey)) {
       throw new Error('Master blinding key is not valid');
     }
 
