@@ -111,6 +111,13 @@ describe('Identity: Private key', () => {
     });
   });
 
+  describe('Mnemonic.isAbleToSign', () => {
+    it('should return true', () => {
+      const mnemonic = new Mnemonic(validOpts);
+      assert.deepStrictEqual(mnemonic.isAbleToSign(), true);
+    });
+  });
+
   describe('Mnemonic.signPset', () => {
     it('should sign the inputs of the previously generated addresses', async () => {
       const mnemonic = new Mnemonic(validOpts);

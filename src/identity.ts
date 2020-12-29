@@ -34,6 +34,7 @@ export interface IdentityInterface {
   signPset(psetBase64: string): string | Promise<string>;
   getAddresses(): AddressInterface[];
   getBlindingPrivateKey(script: string): string;
+  isAbleToSign(): boolean;
 }
 
 /**

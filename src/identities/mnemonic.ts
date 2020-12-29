@@ -112,6 +112,10 @@ export class Mnemonic extends Identity implements IdentityInterface {
     }
   }
 
+  isAbleToSign(): boolean {
+    return true;
+  }
+
   private getCurrentDerivationPath(isChange: boolean): string {
     const changeValue: number = isChange ? 1 : 0;
     return `${this.baseDerivationPath}/${changeValue}`;

@@ -81,6 +81,10 @@ export class PrivateKey extends Identity implements IdentityInterface {
     this.scriptPubKey = p2wpkh.output!;
   }
 
+  isAbleToSign(): boolean {
+    return true;
+  }
+
   private decodeFromWif(wif: string): ECPairInterface {
     return ECPair.fromWIF(wif, this.network);
   }

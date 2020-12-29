@@ -72,7 +72,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
       throw new Error('Master public key is not valid');
     }
     // validate master blinding key
-    if (!isValidExtendedBlindKey(args.value.masterBlindingKey)) {
+    if (!isValidBlindPub(args.value.masterBlindingKey)) {
       throw new Error('Master blinding key is not valid');
     }
 
@@ -91,6 +91,10 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
         throw new Error(`Error during restoration step: ${reason}`);
       });
     }
+  }
+
+  isAbleToSign(): boolean {
+    return false;
   }
 
   private getCurrentDerivationPath(isChange: boolean): string {

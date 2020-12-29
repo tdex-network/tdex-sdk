@@ -72,6 +72,13 @@ describe('Identity: Private key', () => {
     });
   });
 
+  describe('Mnemonic.isAbleToSign', () => {
+    it('should return true', () => {
+      const privKey = new PrivateKey(validOpts);
+      assert.deepStrictEqual(privKey.isAbleToSign(), true);
+    });
+  });
+
   describe('PrivateKey.signPset', () => {
     it("should sign all the inputs with scriptPubKey = PrivateKey instance p2wpkh's scriptPubKey", async () => {
       await faucet(p2wpkh.confidentialAddress!);
