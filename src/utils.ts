@@ -217,7 +217,7 @@ export function isValidXpub(xpub: string, network?: Network): Boolean {
   return true;
 }
 
-export function isValidBlindPub(masterBlind: string): Boolean {
+export function isValidExtendedBlindKey(masterBlind: string): Boolean {
   try {
     slip77.fromMasterBlindingKey(masterBlind);
   } catch (e) {

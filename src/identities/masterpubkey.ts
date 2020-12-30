@@ -4,7 +4,12 @@ import Identity, {
   IdentityType,
   IdentityOpts,
 } from '../identity';
-import { BufferMap, isValidXpub, isValidBlindPub, toXpub } from '../utils';
+import {
+  BufferMap,
+  isValidXpub,
+  isValidExtendedBlindKey,
+  toXpub,
+} from '../utils';
 import { BIP32Interface, fromBase58 } from 'bip32';
 import { Slip77Interface, fromMasterBlindingKey } from 'slip77';
 import { payments } from 'liquidjs-lib';
@@ -72,7 +77,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
       throw new Error('Master public key is not valid');
     }
     // validate master blinding key
-    if (!isValidBlindPub(args.value.masterBlindingKey)) {
+    if (!isValidExtendedBlindKey(args.value.masterBlindingKey)) {
       throw new Error('Master blinding key is not valid');
     }
 
