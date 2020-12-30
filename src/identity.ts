@@ -11,6 +11,7 @@ import { AddressInterface } from './types';
 export enum IdentityType {
   PrivateKey = 1,
   Mnemonic,
+  MasterPublicKey,
   Inject,
   Ledger,
   Trezor,
@@ -33,6 +34,7 @@ export interface IdentityInterface {
   signPset(psetBase64: string): string | Promise<string>;
   getAddresses(): AddressInterface[];
   getBlindingPrivateKey(script: string): string;
+  isAbleToSign(): boolean;
 }
 
 /**
