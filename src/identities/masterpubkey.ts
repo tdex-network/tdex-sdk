@@ -37,10 +37,8 @@ function getIndex(addrExtended: AddressInterfaceExtended) {
 }
 
 export class MasterPublicKey extends Identity implements IdentityInterface {
-  static INITIAL_BASE_PATH: string = "m/84'/0'/0'";
   static INITIAL_INDEX: number = 0;
 
-  private baseDerivationPath: string = MasterPublicKey.INITIAL_BASE_PATH;
   private index: number = MasterPublicKey.INITIAL_INDEX;
   private changeIndex: number = MasterPublicKey.INITIAL_INDEX;
   private scriptToAddressCache: BufferMap<
@@ -55,6 +53,8 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
   constructor(args: IdentityOpts) {
     super(args);
 
+    const xpub = toXpub(args.value.masterPublicKey);
+
     // check the identity type
     if (args.type !== IdentityType.MasterPublicKey) {
       throw new Error(
@@ -68,7 +68,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
       );
     }
     // validate xpub
-    if (!isValidXpub(args.value.masterPublicKey, this.network)) {
+    if (!isValidXpub(xpub)) {
       throw new Error('Master public key is not valid');
     }
     // validate master blinding key
@@ -76,10 +76,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
       throw new Error('Master blinding key is not valid');
     }
 
-    this.masterPublicKeyNode = fromBase58(
-      toXpub(args.value.masterPublicKey),
-      this.network
-    );
+    this.masterPublicKeyNode = fromBase58(xpub);
     this.masterBlindingKeyNode = fromMasterBlindingKey(
       args.value.masterBlindingKey
     );
@@ -97,21 +94,14 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
     return false;
   }
 
-  private getCurrentDerivationPath(isChange: boolean): string {
-    const changeValue: number = isChange ? 1 : 0;
-    return `${this.baseDerivationPath}/${changeValue}`;
-  }
-
   /**
    * return the next public key derivated from the baseNode.
    * increment the private member index +1.
    */
   private derivePublicKeyWithIndex(isChange: boolean, index: number): Buffer {
-    const baseNode = this.masterPublicKeyNode.derivePath(
-      this.getCurrentDerivationPath(isChange)
-    );
-    const child: BIP32Interface = baseNode.deriveHardened(index);
-
+    const changeIndex = isChange ? 1 : 0;
+    const baseNode = this.masterPublicKeyNode.derive(changeIndex);
+    const child: BIP32Interface = baseNode.derive(index);
     return child.publicKey;
   }
 
@@ -174,7 +164,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
         confidentialAddress: confidentialAddress!,
         blindingPrivateKey: blindingKeyPair.privateKey!.toString('hex'),
       },
-      derivationPath: `${this.baseDerivationPath}/${index}`,
+      derivationPath: `${isChange ? 1 : 0}/${index}`,
       publicKey: publicKey.toString('hex'),
     };
     // return the generation data
@@ -202,7 +192,7 @@ export class MasterPublicKey extends Identity implements IdentityInterface {
     );
   }
 
-  async signPset(): Promise<string> {
+  signPset(_: string): string {
     throw new Error(
       'MasterPublicKey is a watch only identity. Use Mnemonic to sign transactions'
     );
