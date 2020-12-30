@@ -80,12 +80,12 @@ describe('Identity: Private key', () => {
 
     it('should generate a slip77 master blinding key and a bip32 master private key from the mnemonic', () => {
       assert.deepStrictEqual(
-        validMnemonic.masterBlindingKeyNode,
-        masterBlindingKeyFromValidMnemonic
+        validMnemonic.masterBlindingKeyNode.privateKey,
+        masterBlindingKeyFromValidMnemonic.privateKey
       );
       assert.deepStrictEqual(
-        validMnemonic.masterPrivateKeyNode,
-        masterPrivateKeyFromValidMnemonic
+        validMnemonic.masterPrivateKeyNode.privateKey,
+        masterPrivateKeyFromValidMnemonic.privateKey
       );
     });
 
