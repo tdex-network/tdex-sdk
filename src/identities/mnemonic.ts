@@ -140,7 +140,7 @@ export class Mnemonic extends Identity implements IdentityInterface {
     const baseNode = this.masterPrivateKeyNode.derivePath(
       this.getCurrentDerivationPath(isChange)
     );
-    const wif: string = baseNode.deriveHardened(index).toWIF();
+    const wif: string = baseNode.derive(index).toWIF();
     const { publicKey, privateKey } = ECPair.fromWIF(wif, this.network);
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
