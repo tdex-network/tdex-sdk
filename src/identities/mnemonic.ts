@@ -1,4 +1,4 @@
-import { ECPair, payments, Psbt } from 'liquidjs-lib';
+import { bip32, ECPair, payments, Psbt } from 'liquidjs-lib';
 import * as bip39 from 'bip39';
 import { fromSeed as slip77fromSeed, Slip77Interface } from 'slip77';
 import { fromSeed as bip32fromSeed, BIP32Interface } from 'bip32';
@@ -93,10 +93,18 @@ export class Mnemonic extends Identity implements IdentityInterface {
     const walletSeed = bip39.mnemonicToSeedSync(args.value.mnemonic);
     // generate the master private key from the wallet seed
     this.masterPrivateKeyNode = bip32fromSeed(walletSeed, this.network);
-    this.masterPublicKey = fromXpub(
-      this.masterPrivateKeyNode.toBase58(),
-      args.chain
+
+    // compute and expose the masterPublicKey in this.masterPublicKey
+    const baseNode = this.masterPrivateKeyNode.derivePath(
+      this.baseDerivationPath
     );
+    const pubkey = baseNode.publicKey;
+    const accountPublicKey = bip32
+      .fromPublicKey(pubkey, baseNode.chainCode, baseNode.network)
+      .toBase58();
+
+    this.masterPublicKey = fromXpub(accountPublicKey, args.chain);
+
     // generate the master blinding key from the seed
     this.masterBlindingKeyNode = slip77fromSeed(walletSeed);
     this.masterBlindingKey = this.masterBlindingKeyNode.masterKey.toString(
