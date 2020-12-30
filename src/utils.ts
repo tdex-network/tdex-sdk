@@ -207,7 +207,7 @@ export function toXpub(anyPub: string) {
   return changeVersionBytes(anyPub, 'xpub');
 }
 
-export function isValidXpub(xpub: string, network: Network): Boolean {
+export function isValidXpub(xpub: string, network?: Network): Boolean {
   try {
     bip32.fromBase58(xpub, network);
   } catch (e) {
