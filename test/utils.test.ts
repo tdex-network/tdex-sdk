@@ -5,8 +5,8 @@ import { bip32 } from 'liquidjs-lib';
 const xpub =
   'xpub661MyMwAqRbcGC851SCJ22vDfA3ModMuFd9NozAt1d3diLCW31jN13wF2tx6uYCKTkjMuKDUNjVuvyMuvieXfv64Fm44MhjMdFFJ2hXcTp4';
 
-const vpub =
-  'vpub5SLqN2bLY4WeYmUCFE9XRcHV9vrSfD7XY1T32SEaChQREh1KxgvNPpDWq3wnpguqYR4kSzTxW5yyV562WEnAGvb6zcMuB4ZrYJArvtryJjc';
+// const vpub =
+//   'vpub5SLqN2bLY4WeYmUCFE9XRcHV9vrSfD7XY1T32SEaChQREh1KxgvNPpDWq3wnpguqYR4kSzTxW5yyV562WEnAGvb6zcMuB4ZrYJArvtryJjc';
 
 describe('changeVersionBytes', () => {
   it('should be reversable', () => {
@@ -16,7 +16,11 @@ describe('changeVersionBytes', () => {
   });
 
   it('should be a valid point', () => {
-    const vpubToXpub = toXpub(vpub);
-    assert.doesNotThrow(() => bip32.fromBase58(vpubToXpub));
+    const x =
+      'xpub6CpihtY9HVc1jNJWCiXnRbpXm5BgVNKqZMsM4XqpDcQigJr6AHNwaForLZ3kkisDcRoaXSUms6DJNhxFtQGeZfWAQWCZQe1esNetx5Wqe4M';
+    const v = fromXpub(x, 'regtest');
+    const xFromV = toXpub(v);
+    assert.doesNotThrow(() => bip32.fromBase58(x));
+    assert.doesNotThrow(() => bip32.fromBase58(xFromV));
   });
 });
