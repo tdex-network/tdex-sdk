@@ -5,8 +5,8 @@ import {
   TxOutput,
   Network,
 } from 'liquidjs-lib';
-import * as bip32 from 'bip32';
-import * as slip77 from 'slip77';
+import { fromBase58 } from 'bip32';
+import { fromMasterBlindingKey } from 'slip77';
 
 import { UnblindOutputResult } from 'liquidjs-lib/types/confidential';
 // @ts-ignore
@@ -209,7 +209,7 @@ export function toXpub(anyPub: string) {
 
 export function isValidXpub(xpub: string, network?: Network): Boolean {
   try {
-    bip32.fromBase58(xpub, network);
+    fromBase58(xpub, network);
   } catch (e) {
     return false;
   }
@@ -219,7 +219,7 @@ export function isValidXpub(xpub: string, network?: Network): Boolean {
 
 export function isValidExtendedBlindKey(masterBlind: string): Boolean {
   try {
-    slip77.fromMasterBlindingKey(masterBlind);
+    fromMasterBlindingKey(masterBlind);
   } catch (e) {
     return false;
   }
