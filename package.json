@@ -65,7 +65,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.0.4",
     "@types/google-protobuf": "^3.7.2",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bip32": "^2.0.6",
     "bip39": "^3.0.2",
     "bs58check": "^2.1.2",
