@@ -13,5 +13,5 @@ export {
   toXpub,
   fromXpub,
   isValidXpub,
-  isValidExtendedBlindKey
+  isValidExtendedBlindKey,
 } from './utils';
