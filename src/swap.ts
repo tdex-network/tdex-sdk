@@ -40,7 +40,7 @@ export class Swap extends Core {
    * Create and serialize a SwapRequest Message.
    * @param args the args of swap.request see requestOpts.
    */
-  request({
+  async request({
     amountToBeSent,
     assetToBeSent,
     amountToReceive,
@@ -48,7 +48,7 @@ export class Swap extends Core {
     psetBase64,
     inputBlindingKeys,
     outputBlindingKeys,
-  }: requestOpts): Uint8Array {
+  }: requestOpts): Promise<Uint8Array> {
     // Check amounts
     const msg = new proto.SwapRequest();
     msg.setId(makeid(8));
@@ -73,7 +73,7 @@ export class Swap extends Core {
     }
 
     // check the message content and transaction.
-    compareMessagesAndTransaction(msg);
+    await compareMessagesAndTransaction(msg);
 
     if (this.verbose) console.log(msg.toObject());
 
@@ -84,12 +84,12 @@ export class Swap extends Core {
    * Create and serialize an accept message.
    * @param args the Swap.accept args, see AcceptOpts.
    */
-  accept({
+  async accept({
     message,
     psetBase64,
     inputBlindingKeys,
     outputBlindingKeys,
-  }: acceptOpts): Uint8Array {
+  }: acceptOpts): Promise<Uint8Array> {
     // deserialize message parameter to get the SwapRequest message.
     const msgRequest = proto.SwapRequest.deserializeBinary(message);
     // Build Swap Accept message
@@ -113,7 +113,7 @@ export class Swap extends Core {
     }
 
     // compare messages and transaction data
-    compareMessagesAndTransaction(msgRequest, msgAccept);
+    await compareMessagesAndTransaction(msgRequest, msgAccept);
 
     if (this.verbose) console.log(msgAccept.toObject());
 

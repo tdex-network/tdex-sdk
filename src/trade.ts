@@ -220,7 +220,7 @@ export class Trade extends Core implements TradeInterface {
     );
 
     const swap = new Swap();
-    const swapRequestSerialized = swap.request({
+    const swapRequestSerialized = await swap.request({
       assetToBeSent,
       amountToBeSent,
       assetToReceive,

@@ -41,8 +41,8 @@ describe('Swap', () => {
     });
   });
 
-  test('Bob can import a SwapRequest and create a SwapAccept message', () => {
-    const swapRequestMessage = swap.request({
+  test('Bob can import a SwapRequest and create a SwapAccept message', async () => {
+    const swapRequestMessage = await swap.request({
       assetToBeSent: fixtures.assets.USDT,
       amountToBeSent: 30000000000,
       assetToReceive: fixtures.assets.LBTC,
@@ -56,8 +56,8 @@ describe('Swap', () => {
     expect(bytes).toBeDefined();
   });
 
-  test('Alice can import a SwapAccept message and create a SwapComplete message', () => {
-    const swapRequestMessage = swap.request({
+  test('Alice can import a SwapAccept message and create a SwapComplete message', async () => {
+    const swapRequestMessage = await swap.request({
       assetToBeSent: fixtures.assets.USDT,
       amountToBeSent: 30000000000,
       assetToReceive: fixtures.assets.LBTC,
@@ -65,7 +65,7 @@ describe('Swap', () => {
       psetBase64: initialPsbtOfAlice,
     });
 
-    const swapAcceptMessage = swap.accept({
+    const swapAcceptMessage = await swap.accept({
       message: swapRequestMessage,
       psetBase64: initialPsbtOfBob,
     });
@@ -149,7 +149,7 @@ describe('Swap', () => {
     let requestMessage: Uint8Array;
     let acceptMessage: Uint8Array;
 
-    test('should create a valid SwapRequest message if the transaction is confidential.', () => {
+    test('should create a valid SwapRequest message if the transaction is confidential.', async () => {
       const fixture = fixtures.confidentialSwaps[0];
       const decodedRequestPsbt = Psbt.fromBase64(fixture.request.psbt);
       // init blind keys maps
@@ -166,8 +166,8 @@ describe('Swap', () => {
         }
       );
 
-      assert.doesNotThrow(() => {
-        requestMessage = swap.request({
+      assert.doesNotThrow(async () => {
+        requestMessage = await swap.request({
           assetToBeSent: fixture.toBeSent.asset,
           amountToBeSent: fixture.toBeSent.amount,
           assetToReceive: fixture.toReceive.asset,
@@ -179,7 +179,7 @@ describe('Swap', () => {
       });
     });
 
-    test('should create a valid SwapAccept message if the transaction is confidential.', () => {
+    test('should create a valid SwapAccept message if the transaction is confidential.', async () => {
       const fixture = fixtures.confidentialSwaps[0];
       const decodedAcceptPsbt = Psbt.fromBase64(fixture.accept.psbt);
       // init blind keys maps
@@ -201,8 +201,8 @@ describe('Swap', () => {
       );
 
       // assertions
-      assert.doesNotThrow(() => {
-        acceptMessage = swap.accept({
+      assert.doesNotThrow(async () => {
+        acceptMessage = await swap.accept({
           psetBase64: fixture.accept.psbt,
           message: requestMessage,
           inputBlindingKeys: inKeys,
