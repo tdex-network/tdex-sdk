@@ -1,4 +1,4 @@
-import { networks, Psbt, address, confidential } from 'liquidjs-lib';
+import { Psbt, confidential } from 'liquidjs-lib';
 import { Swap } from '../src/swap';
 import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
@@ -9,7 +9,7 @@ import {
   responder,
   responderAddress,
 } from './fixtures/swap.keys';
-import { UtxoInterface } from 'ldk';
+import { UtxoInterface, networks, address } from 'ldk';
 
 const toOutputScript = (addr: string) =>
   address.toOutputScript(addr, networks.regtest);
