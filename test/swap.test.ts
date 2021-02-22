@@ -9,7 +9,7 @@ import {
   responder,
   responderAddress,
 } from './fixtures/swap.keys';
-import { UtxoInterface } from '../src/wallet';
+import { UtxoInterface } from 'ldk';
 
 const toOutputScript = (addr: string) =>
   address.toOutputScript(addr, networks.regtest);
