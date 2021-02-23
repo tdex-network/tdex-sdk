@@ -1,19 +1,20 @@
 import Core, { CoreInterface } from './core';
 import { Swap } from './swap';
 import {
-  WalletInterface,
   fetchAndUnblindUtxos,
-  walletFromAddresses,
   UtxoInterface,
-} from './wallet';
+  IdentityInterface,
+  IdentityOpts,
+  IdentityType,
+  PrivateKey,
+  Mnemonic,
+  AddressInterface,
+  isValidAmount,
+} from 'ldk';
 import { TraderClient } from './grpcClient';
 import TraderClientInterface from './grpcClientInterface';
-import { isValidAmount } from './utils';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
-import { IdentityInterface, IdentityOpts, IdentityType } from './identity';
-import { PrivateKey } from './identities/privatekey';
-import { Mnemonic } from './identities/mnemonic';
-import { AddressInterface } from './types';
+import { SwapTransaction } from './transaction';
 
 export interface MarketInterface {
   baseAsset: string;
@@ -90,14 +91,13 @@ export class Trade extends Core implements TradeInterface {
     asset: string;
   }): Promise<string> {
     const addresses = this.identity.getAddresses();
-    const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
     const swapAccept = await this.marketOrderRequest(
       market,
       TradeType.BUY,
       amount,
       asset,
-      wallet
+      addresses
     );
     const txid = await this.marketOrderComplete(swapAccept);
     return txid;
@@ -117,14 +117,13 @@ export class Trade extends Core implements TradeInterface {
     asset: string;
   }): Promise<string> {
     const addresses = this.identity.getAddresses();
-    const wallet: WalletInterface = walletFromAddresses(addresses, this.chain!);
 
     const swapAccept = await this.marketOrderRequest(
       market,
       TradeType.SELL,
       amount,
       asset,
-      wallet
+      addresses
     );
     const txid = await this.marketOrderComplete(swapAccept);
     return txid;
@@ -140,7 +139,12 @@ export class Trade extends Core implements TradeInterface {
     tradeType: TradeType;
     amount: number;
     asset: string;
-  }): Promise<any> {
+  }): Promise<{
+    assetToBeSent: string;
+    amountToBeSent: number;
+    assetToReceive: string;
+    amountToReceive: number;
+  }> {
     if (!isValidAmount(amount)) {
       throw new Error('Amount is not valid');
     }
@@ -179,7 +183,7 @@ export class Trade extends Core implements TradeInterface {
     tradeType: TradeType,
     amountInSatoshis: number,
     assetHash: string,
-    wallet: WalletInterface
+    addressesAndBlindingKeys: Array<AddressInterface>
   ): Promise<Uint8Array> {
     const {
       assetToBeSent,
@@ -193,46 +197,37 @@ export class Trade extends Core implements TradeInterface {
       asset: assetHash,
     });
 
-    const arrayOfArrayOfUtxos = await Promise.all(
-      wallet.addresses.map((a: AddressInterface) =>
-        fetchAndUnblindUtxos(
-          a.confidentialAddress,
-          a.blindingPrivateKey,
-          this.explorerUrl!
-        )
-      )
+    const traderUnblindedUtxos: UtxoInterface[] = await fetchAndUnblindUtxos(
+      addressesAndBlindingKeys,
+      this.explorerUrl!
     );
-
-    const traderUnblindedUtxos: UtxoInterface[] = arrayOfArrayOfUtxos.flat();
 
     const addressForOutput = this.identity.getNextAddress();
     const addressForChange = this.identity.getNextChangeAddress();
 
-    const emptyPsbt = wallet.createTx();
-    const {
-      psetBase64,
-      inputBlindingKeys,
-      outputBlindingKeys,
-    } = wallet.updateTx(
-      emptyPsbt,
+    const swapTx = new SwapTransaction(
+      this.chain!,
+      this.identity.getBlindingPrivateKey
+    );
+    swapTx.create(
       traderUnblindedUtxos,
       amountToBeSent,
       amountToReceive,
       assetToBeSent,
       assetToReceive,
-      addressForOutput,
-      addressForChange
+      addressForOutput.confidentialAddress,
+      addressForChange.confidentialAddress
     );
 
     const swap = new Swap();
-    const swapRequestSerialized = swap.request({
+    const swapRequestSerialized = await swap.request({
       assetToBeSent,
       amountToBeSent,
       assetToReceive,
       amountToReceive,
-      psetBase64: psetBase64,
-      inputBlindingKeys,
-      outputBlindingKeys,
+      psetBase64: swapTx.pset.toBase64(),
+      inputBlindingKeys: swapTx.inputBlindingKeys,
+      outputBlindingKeys: swapTx.outputBlindingKeys,
     });
 
     // 0 === Buy === receiving base_asset; 1 === sell === receiving base_asset

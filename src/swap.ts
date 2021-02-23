@@ -1,15 +1,9 @@
 import Core from './core';
+import { confidential, TxOutput, Transaction } from 'liquidjs-lib';
 import * as proto from 'tdex-protobuf/generated/js/swap_pb';
 import * as jspb from 'google-protobuf';
-
-import {
-  makeid,
-  toNumber,
-  decodePsbt,
-  isConfidentialOutput,
-  unblindOutput,
-} from './utils';
-import { TxOutput, Transaction } from 'liquidjs-lib';
+import { isConfidentialOutput, unblindOutput } from 'ldk';
+import { makeid, decodePsbt } from './utils';
 
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
@@ -44,7 +38,7 @@ export class Swap extends Core {
    * Create and serialize a SwapRequest Message.
    * @param args the args of swap.request see requestOpts.
    */
-  request({
+  async request({
     amountToBeSent,
     assetToBeSent,
     amountToReceive,
@@ -52,7 +46,7 @@ export class Swap extends Core {
     psetBase64,
     inputBlindingKeys,
     outputBlindingKeys,
-  }: requestOpts): Uint8Array {
+  }: requestOpts): Promise<Uint8Array> {
     // Check amounts
     const msg = new proto.SwapRequest();
     msg.setId(makeid(8));
@@ -77,7 +71,7 @@ export class Swap extends Core {
     }
 
     // check the message content and transaction.
-    compareMessagesAndTransaction(msg);
+    await compareMessagesAndTransaction(msg);
 
     if (this.verbose) console.log(msg.toObject());
 
@@ -88,12 +82,12 @@ export class Swap extends Core {
    * Create and serialize an accept message.
    * @param args the Swap.accept args, see AcceptOpts.
    */
-  accept({
+  async accept({
     message,
     psetBase64,
     inputBlindingKeys,
     outputBlindingKeys,
-  }: acceptOpts): Uint8Array {
+  }: acceptOpts): Promise<Uint8Array> {
     // deserialize message parameter to get the SwapRequest message.
     const msgRequest = proto.SwapRequest.deserializeBinary(message);
     // Build Swap Accept message
@@ -117,7 +111,7 @@ export class Swap extends Core {
     }
 
     // compare messages and transaction data
-    compareMessagesAndTransaction(msgRequest, msgAccept);
+    await compareMessagesAndTransaction(msgRequest, msgAccept);
 
     if (this.verbose) console.log(msgAccept.toObject());
 
@@ -160,10 +154,10 @@ export class Swap extends Core {
  * @param msgRequest the swap request message.
  * @param msgAccept the swap accept message.
  */
-function compareMessagesAndTransaction(
+async function compareMessagesAndTransaction(
   msgRequest: proto.SwapRequest,
   msgAccept?: proto.SwapAccept
-): void {
+): Promise<void> {
   // decode the transaction.
   const decodedFromRequest = decodePsbt(msgRequest.getTransaction());
 
@@ -179,19 +173,20 @@ function compareMessagesAndTransaction(
   });
 
   // check the amount of the transaction
-  const totalP = countUtxos(
+  const totalP = await countUtxos(
     decodedFromRequest.psbt.data.inputs,
     msgRequest.getAssetP(),
     blindKeysMap(msgRequest.getInputBlindingKeyMap())
   );
 
-  if (totalP < msgRequest.getAmountP())
+  if (totalP < msgRequest.getAmountP()) {
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
+  }
 
   // check if the output if found in the transaction
-  const outputRFound: boolean = outputFoundInTransaction(
+  const outputRFound: boolean = await outputFoundInTransaction(
     decodedFromRequest.transaction.outs,
     msgRequest.getAmountR(),
     msgRequest.getAssetR(),
@@ -213,7 +208,7 @@ function compareMessagesAndTransaction(
       );
 
     // check the amount of utxos.
-    const totalR = countUtxos(
+    const totalR = await countUtxos(
       decodedFromAccept.psbt.data.inputs,
       msgRequest.getAssetR(),
       blindKeysMap(msgAccept.getInputBlindingKeyMap())
@@ -247,14 +242,13 @@ function compareMessagesAndTransaction(
  * @param asset hex encoded asset of the output.
  * @param outputBlindKeys optional, only if blinded outputs. Blinding keys map (scriptPukKey -> blindingKey).
  */
-function outputFoundInTransaction(
+async function outputFoundInTransaction(
   outputs: Array<TxOutput>,
   value: number,
   asset: string,
   outputBlindKeys: BlindKeysMap = {}
-): boolean {
-  const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
-  return outputs.some((o: TxOutput) => {
+): Promise<boolean> {
+  return outputs.some(async (o: TxOutput) => {
     // unblind first if confidential ouput
     const isConfidential = isConfidentialOutput(o);
     if (isConfidential === true) {
@@ -263,22 +257,32 @@ function outputFoundInTransaction(
       if (blindKey === undefined)
         throw new Error(`no blind key for ${o.script.toString('hex')}`);
       try {
-        const { value: unblindValue, asset: unblindAsset } = unblindOutput(
-          o,
-          blindKey
+        const {
+          value: unblindValue,
+          asset: unblindAsset,
+        } = await unblindOutput(
+          {
+            blindedAsset: o.asset,
+            blindedValue: o.value,
+            script: o.script.toString('hex'),
+            surjectionProof: o.surjectionProof!,
+            rangeProof: o.rangeProof!,
+            nonce: o.nonce,
+          },
+          blindKey.toString('hex')
         );
         // check unblind value and unblind asset
-        return (
-          unblindValue === value && assetBuffer.equals(unblindAsset.slice(1))
-        );
+        return unblindValue === value && unblindAsset === asset;
       } catch (_) {
         // if unblind fail --> return false
         return false;
       }
     }
     // check value and asset
+    const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
     const isAsset: boolean = assetBuffer.equals(o.asset.slice(1));
-    const isValue: boolean = toNumber(o.value) === value;
+    const isValue: boolean =
+      confidential.confidentialValueToSatoshi(o.value) === value;
     return isAsset && isValue;
   });
 }
@@ -289,49 +293,63 @@ function outputFoundInTransaction(
  * @param asset the asset to fetch value.
  * @param inputBlindKeys optional, the blinding keys using to unblind witnessUtxo if blinded.
  */
-function countUtxos(
+async function countUtxos(
   utxos: Array<any>,
   asset: string,
   inputBlindKeys: BlindKeysMap = {}
-): number {
+): Promise<number> {
   const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
-  return (
-    utxos
-      // checks if witness utxo exists
-      .filter((i: any) => i.witnessUtxo != null)
-      // unblind confidential output.
-      .map((i: any) => {
-        if (isConfidentialOutput(i.witnessUtxo)) {
-          const blindKey = inputBlindKeys[i.witnessUtxo.script.toString('hex')];
-          if (blindKey === undefined) {
-            throw new Error(
-              'no blindKey for script: ' + i.witnessUtxo.script.toString('hex')
-            );
-          }
-          const { value: unblindValue, asset: unblindAsset } = unblindOutput(
-            i.witnessUtxo,
-            blindKey
+  const filteredByWitness = utxos.filter((i: any) => i.witnessUtxo != null);
+
+  // unblind confidential prevouts
+  const unblindedUtxos: any[] = await Promise.all(
+    filteredByWitness.map(async (i: any) => {
+      if (i.witnessUtxo && isConfidentialOutput(i.witnessUtxo)) {
+        const blindKey = inputBlindKeys[i.witnessUtxo.script.toString('hex')];
+        if (blindKey === undefined) {
+          throw new Error(
+            'no blindKey for script: ' + i.witnessUtxo.script.toString('hex')
           );
-          i.witnessUtxo.value = unblindValue;
-          i.witnessUtxo.asset = unblindAsset;
         }
-        return i;
-      })
-      // filter inputs by asset
-      .filter((i: any) => {
-        return assetBuffer.equals(i.witnessUtxo.asset.slice(1));
-      })
-      // get the value
-      .map((i: any) => {
-        const valAsNumber: number =
-          i.witnessUtxo.value instanceof Buffer
-            ? toNumber(i.witnessUtxo!.value)
-            : i.witnessUtxo!.value;
-        return valAsNumber;
-      })
-      // apply reducer to values (add the values)
-      .reduce((a: any, b: any) => a + b, 0)
+        const {
+          value: unblindValue,
+          asset: unblindAsset,
+        } = await unblindOutput(
+          {
+            blindedAsset: i.witnessUtxo.asset,
+            blindedValue: i.witnessUtxo.value,
+            script: i.witnessUtxo.script.toString('hex'),
+            surjectionProof: i.witnessUtxo.surjectionProof!,
+            rangeProof: i.witnessUtxo.rangeProof!,
+            nonce: i.witnessUtxo.nonce,
+          },
+          blindKey.toString('hex')
+        );
+        i.value = unblindValue;
+        i.asset = unblindAsset;
+        i.witnessUtxo.value = unblindValue;
+      }
+      return i;
+    })
   );
+
+  // filter inputs by asset and return the the count
+  const filteredByAsset = unblindedUtxos.filter((i: any) => {
+    return (
+      assetBuffer.equals(i.witnessUtxo.asset.slice(1)) || i.asset === asset
+    );
+  });
+
+  const queryValues = filteredByAsset.map((i: any) => {
+    const valAsNumber: number =
+      i.witnessUtxo.value instanceof Buffer
+        ? confidential.confidentialValueToSatoshi(i.witnessUtxo!.value)
+        : i.witnessUtxo!.value;
+    return valAsNumber;
+  });
+
+  // apply reducer to values (add the values)
+  return queryValues.reduce((a: any, b: any) => a + b, 0);
 }
 
 function parse({

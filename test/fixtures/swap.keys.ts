@@ -1,5 +1,4 @@
-import { PrivateKey } from '../../src/identities/privatekey';
-import { IdentityType } from '../../src/identity';
+import { PrivateKey, IdentityType } from 'ldk';
 
 export const proposer = new PrivateKey({
   chain: 'regtest',
