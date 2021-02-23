@@ -180,7 +180,6 @@ async function compareMessagesAndTransaction(
   );
 
   if (totalP < msgRequest.getAmountP()) {
-    console.log(totalP, msgRequest.getAmountP());
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
