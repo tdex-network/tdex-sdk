@@ -179,10 +179,12 @@ async function compareMessagesAndTransaction(
     blindKeysMap(msgRequest.getInputBlindingKeyMap())
   );
 
-  if (totalP < msgRequest.getAmountP())
+  if (totalP < msgRequest.getAmountP()) {
+    console.log(totalP, msgRequest.getAmountP());
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
+  }
 
   // check if the output if found in the transaction
   const outputRFound: boolean = await outputFoundInTransaction(
@@ -326,6 +328,7 @@ async function countUtxos(
         );
         i.value = unblindValue;
         i.asset = unblindAsset;
+        i.witnessUtxo.value = unblindValue;
       }
       return i;
     })
@@ -333,7 +336,9 @@ async function countUtxos(
 
   // filter inputs by asset and return the the count
   const filteredByAsset = unblindedUtxos.filter((i: any) => {
-    return assetBuffer.equals(i.witnessUtxo.asset.slice(1));
+    return (
+      assetBuffer.equals(i.witnessUtxo.asset.slice(1)) || i.asset === asset
+    );
   });
 
   const queryValues = filteredByAsset.map((i: any) => {
