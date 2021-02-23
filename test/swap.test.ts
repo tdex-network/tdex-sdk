@@ -131,19 +131,18 @@ describe('Swap', () => {
         .toBase64();
     });
 
-    test('should create a valid swap request message', () => {
-      assert.doesNotThrow(
-        async () =>
-          await swap.request({
-            amountToBeSent: 1_0000_0000,
-            assetToBeSent: networks.regtest.assetHash,
-            amountToReceive: 100_0000_0000,
-            assetToReceive: altcoin,
-            psetBase64: requestTx,
-            inputBlindingKeys,
-            outputBlindingKeys: {},
-          })
-      );
+    test('should create a valid swap request message', async () => {
+      const swapMsg = await swap.request({
+        amountToBeSent: 1_0000_0000,
+        assetToBeSent: networks.regtest.assetHash,
+        amountToReceive: 100_0000_0000,
+        assetToReceive: altcoin,
+        psetBase64: requestTx,
+        inputBlindingKeys,
+        outputBlindingKeys: {},
+      });
+
+      expect(swapMsg).toBeDefined();
     });
   });
 
@@ -168,17 +167,17 @@ describe('Swap', () => {
         }
       );
 
-      assert.doesNotThrow(async () => {
-        requestMessage = await swap.request({
-          assetToBeSent: fixture.toBeSent.asset,
-          amountToBeSent: fixture.toBeSent.amount,
-          assetToReceive: fixture.toReceive.asset,
-          amountToReceive: fixture.toReceive.amount,
-          psetBase64: fixture.request.psbt,
-          inputBlindingKeys: inKeys,
-          outputBlindingKeys: outKeys,
-        });
+      requestMessage = await swap.request({
+        assetToBeSent: fixture.toBeSent.asset,
+        amountToBeSent: fixture.toBeSent.amount,
+        assetToReceive: fixture.toReceive.asset,
+        amountToReceive: fixture.toReceive.amount,
+        psetBase64: fixture.request.psbt,
+        inputBlindingKeys: inKeys,
+        outputBlindingKeys: outKeys,
       });
+
+      expect(requestMessage).toBeDefined();
     });
 
     test('should create a valid SwapAccept message if the transaction is confidential.', async () => {
@@ -203,14 +202,14 @@ describe('Swap', () => {
       );
 
       // assertions
-      assert.doesNotThrow(async () => {
-        acceptMessage = await swap.accept({
-          psetBase64: fixture.accept.psbt,
-          message: requestMessage,
-          inputBlindingKeys: inKeys,
-          outputBlindingKeys: outKeys,
-        });
+      acceptMessage = await swap.accept({
+        psetBase64: fixture.accept.psbt,
+        message: requestMessage,
+        inputBlindingKeys: inKeys,
+        outputBlindingKeys: outKeys,
       });
+
+      expect(acceptMessage).toBeDefined();
     });
 
     test('should create a valid SwapComplete message if the transaction is confidential.', () => {
