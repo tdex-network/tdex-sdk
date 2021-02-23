@@ -2,7 +2,7 @@ import Core from './core';
 import { confidential, TxOutput, Transaction } from 'liquidjs-lib';
 import * as proto from 'tdex-protobuf/generated/js/swap_pb';
 import * as jspb from 'google-protobuf';
-import { isConfidentialOutput, unblindOutput, UtxoInterface } from 'ldk';
+import { isConfidentialOutput, unblindOutput } from 'ldk';
 import { makeid, decodePsbt } from './utils';
 
 // type for BlindingKeys
@@ -179,6 +179,8 @@ async function compareMessagesAndTransaction(
     blindKeysMap(msgRequest.getInputBlindingKeyMap())
   );
 
+  console.log(totalP);
+
   if (totalP < msgRequest.getAmountP())
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
@@ -298,53 +300,54 @@ async function countUtxos(
   inputBlindKeys: BlindKeysMap = {}
 ): Promise<number> {
   const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
-  return (
-    utxos
-      // checks if witness utxo exists
-      .filter((i: any) => i.witnessUtxo != null)
-      // unblind confidential output.
-      .map(async (i: UtxoInterface) => {
-        if (i.prevout && isConfidentialOutput(i.prevout)) {
-          const blindKey = inputBlindKeys[i.prevout.script.toString('hex')];
-          if (blindKey === undefined) {
-            throw new Error(
-              'no blindKey for script: ' + i.prevout.script.toString('hex')
-            );
-          }
-          const {
-            value: unblindValue,
-            asset: unblindAsset,
-          } = await unblindOutput(
-            {
-              blindedAsset: i.prevout.asset,
-              blindedValue: i.prevout.value,
-              script: i.prevout.script.toString('hex'),
-              surjectionProof: i.prevout.surjectionProof!,
-              rangeProof: i.prevout.rangeProof!,
-              nonce: i.prevout.nonce,
-            },
-            blindKey.toString('hex')
+  const filteredByPrevout = utxos.filter((i: any) => i.witnessUtxo != null);
+
+  // unblind confidential prevouts
+  const unblindedUtxos: any[] = await Promise.all(
+    filteredByPrevout.map(async (i: any) => {
+      if (i.prevout && isConfidentialOutput(i.witnessUtxo)) {
+        const blindKey = inputBlindKeys[i.witnessUtxo.script.toString('hex')];
+        if (blindKey === undefined) {
+          throw new Error(
+            'no blindKey for script: ' + i.witnessUtxo.script.toString('hex')
           );
-          i.value = unblindValue;
-          i.asset = unblindAsset;
         }
-        return i;
-      })
-      // filter inputs by asset
-      .filter((i: any) => {
-        return assetBuffer.equals(i.witnessUtxo.asset.slice(1));
-      })
-      // get the value
-      .map((i: any) => {
-        const valAsNumber: number =
-          i.witnessUtxo.value instanceof Buffer
-            ? confidential.confidentialValueToSatoshi(i.witnessUtxo!.value)
-            : i.witnessUtxo!.value;
-        return valAsNumber;
-      })
-      // apply reducer to values (add the values)
-      .reduce((a: any, b: any) => a + b, 0)
+        const {
+          value: unblindValue,
+          asset: unblindAsset,
+        } = await unblindOutput(
+          {
+            blindedAsset: i.witnessUtxo.asset,
+            blindedValue: i.witnessUtxo.value,
+            script: i.witnessUtxo.script.toString('hex'),
+            surjectionProof: i.witnessUtxo.surjectionProof!,
+            rangeProof: i.witnessUtxo.rangeProof!,
+            nonce: i.witnessUtxo.nonce,
+          },
+          blindKey.toString('hex')
+        );
+        i.value = unblindValue;
+        i.asset = unblindAsset;
+      }
+      return i;
+    })
   );
+
+  // filter inputs by asset and return the the count
+  const filteredByAsset = unblindedUtxos.filter((i: any) => {
+    return assetBuffer.equals(i.witnessUtxo.asset.slice(1));
+  });
+
+  const queryValues = filteredByAsset.map((i: any) => {
+    const valAsNumber: number =
+      i.witnessUtxo.value instanceof Buffer
+        ? confidential.confidentialValueToSatoshi(i.witnessUtxo!.value)
+        : i.witnessUtxo!.value;
+    return valAsNumber;
+  });
+
+  // apply reducer to values (add the values)
+  return queryValues.reduce((a: any, b: any) => a + b, 0);
 }
 
 function parse({
