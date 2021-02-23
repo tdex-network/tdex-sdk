@@ -300,12 +300,12 @@ async function countUtxos(
   inputBlindKeys: BlindKeysMap = {}
 ): Promise<number> {
   const assetBuffer: Buffer = Buffer.from(asset, 'hex').reverse();
-  const filteredByPrevout = utxos.filter((i: any) => i.witnessUtxo != null);
+  const filteredByWitness = utxos.filter((i: any) => i.witnessUtxo != null);
 
   // unblind confidential prevouts
   const unblindedUtxos: any[] = await Promise.all(
-    filteredByPrevout.map(async (i: any) => {
-      if (i.prevout && isConfidentialOutput(i.witnessUtxo)) {
+    filteredByWitness.map(async (i: any) => {
+      if (i.witnessUtxo && isConfidentialOutput(i.witnessUtxo)) {
         const blindKey = inputBlindKeys[i.witnessUtxo.script.toString('hex')];
         if (blindKey === undefined) {
           throw new Error(
