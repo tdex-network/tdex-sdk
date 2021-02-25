@@ -205,10 +205,7 @@ export class Trade extends Core implements TradeInterface {
     const addressForOutput = this.identity.getNextAddress();
     const addressForChange = this.identity.getNextChangeAddress();
 
-    const swapTx = new SwapTransaction(
-      this.chain!,
-      this.identity.getBlindingPrivateKey
-    );
+    const swapTx = new SwapTransaction(this.identity);
     swapTx.create(
       traderUnblindedUtxos,
       amountToBeSent,
