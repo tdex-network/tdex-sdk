@@ -4,6 +4,7 @@ import {
   networks,
   address,
   RecipientInterface,
+  IdentityInterface,
 } from 'ldk';
 import { confidential, Psbt } from 'liquidjs-lib';
 
@@ -13,7 +14,6 @@ interface SwapTransactionInterface {
   pset: Psbt;
   inputBlindingKeys: Record<string, Buffer>;
   outputBlindingKeys: Record<string, Buffer>;
-  blindingPrivKeyHexByScript: (script: string) => string;
 }
 
 // SwapTransaction holds a pset and expose a create method to select coins and build a transaction for a SwapRequest message
@@ -22,15 +22,13 @@ export class SwapTransaction implements SwapTransactionInterface {
   pset: Psbt;
   inputBlindingKeys: Record<string, Buffer> = {};
   outputBlindingKeys: Record<string, Buffer> = {};
-  blindingPrivKeyHexByScript: (script: string) => string;
 
-  constructor(
-    chain: string,
-    blindingPrivKeyHexByScript: (script: string) => string
-  ) {
-    this.network = (networks as any)[chain];
+  private identity: IdentityInterface;
+
+  constructor(identity: IdentityInterface) {
+    this.identity = identity;
+    this.network = identity.network;
     this.pset = new Psbt({ network: this.network });
-    this.blindingPrivKeyHexByScript = blindingPrivKeyHexByScript;
   }
 
   create(
@@ -75,7 +73,7 @@ export class SwapTransaction implements SwapTransactionInterface {
       // we update the inputBlindingKeys map after we add an input to the transaction
       const scriptHex = i.prevout.script.toString('hex');
       this.inputBlindingKeys[scriptHex] = Buffer.from(
-        this.blindingPrivKeyHexByScript(scriptHex),
+        this.identity.getBlindingPrivateKey(scriptHex),
         'hex'
       );
     });
@@ -94,7 +92,7 @@ export class SwapTransaction implements SwapTransactionInterface {
 
     // we update the outputBlindingKeys map after we add the receiving output to the transaction
     this.outputBlindingKeys[receivingScript] = Buffer.from(
-      this.blindingPrivKeyHexByScript(receivingScript),
+      this.identity.getBlindingPrivateKey(receivingScript),
       'hex'
     );
 
@@ -114,7 +112,7 @@ export class SwapTransaction implements SwapTransactionInterface {
 
         // we update the outputBlindingKeys map after we add the change output to the transaction
         this.outputBlindingKeys[changeScript] = Buffer.from(
-          this.blindingPrivKeyHexByScript(changeScript),
+          this.identity.getBlindingPrivateKey(changeScript),
           'hex'
         );
       });
