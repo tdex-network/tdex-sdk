@@ -22,7 +22,6 @@ export class TraderClient implements TraderClientInterface {
       this.client = new services.TradeClient(url.host, creds);
     }
   }
-
   /**
    * tradePropose
    * @param market
@@ -30,10 +29,10 @@ export class TraderClient implements TraderClientInterface {
    * @param swapRequestSerialized
    */
   tradePropose(
-    { baseAsset, quoteAsset }: any,
+    { baseAsset, quoteAsset }: types.Market.AsObject,
     tradeType: number,
     swapRequestSerialized: Uint8Array
-  ): Promise<any> {
+  ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
       const market = new types.Market();
       market.setBaseAsset(baseAsset);
@@ -63,7 +62,7 @@ export class TraderClient implements TraderClientInterface {
    * tradeComplete
    * @param swapCompleteSerialized
    */
-  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<any> {
+  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string> {
     return new Promise((resolve, reject) => {
       const request = new messages.TradeCompleteRequest();
       request.setSwapComplete(
@@ -80,16 +79,18 @@ export class TraderClient implements TraderClientInterface {
     });
   }
 
-  markets(): Promise<Array<any>> {
+  markets(): Promise<
+    Array<{ baseAsset: string; quoteAsset: string; feeBasisPoint: number }>
+  > {
     return new Promise((resolve, reject) => {
       this.client.markets(new messages.MarketsRequest(), (err, response) => {
         if (err) return reject(err);
         const list = response!
           .getMarketsList()
-          .map((item: any) => item!.getMarket())
-          .map((market: any) => ({
-            baseAsset: market!.getBaseAsset(),
-            quoteAsset: market!.getQuoteAsset(),
+          .map((mktWithFee: types.MarketWithFee) => ({
+            baseAsset: mktWithFee!.getMarket()!.getBaseAsset(),
+            quoteAsset: mktWithFee!.getMarket()!.getQuoteAsset(),
+            feeBasisPoint: mktWithFee!.getFee()!.getBasisPoint(),
           }));
         resolve(list);
       });
@@ -107,7 +108,7 @@ export class TraderClient implements TraderClientInterface {
     tradeType: number,
     amount: number,
     asset: string
-  ): Promise<Array<any>> {
+  ): Promise<Array<types.PriceWithFee.AsObject>> {
     const market = new types.Market();
     market.setBaseAsset(baseAsset);
     market.setQuoteAsset(quoteAsset);
@@ -136,7 +137,7 @@ export class TraderClient implements TraderClientInterface {
   }: {
     baseAsset: string;
     quoteAsset: string;
-  }): Promise<any> {
+  }): Promise<Array<types.BalanceWithFee.AsObject>> {
     const market = new types.Market();
     market.setBaseAsset(baseAsset);
     market.setQuoteAsset(quoteAsset);

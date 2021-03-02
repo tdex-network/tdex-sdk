@@ -11,9 +11,11 @@ export default interface TraderClientInterface {
     },
     tradeType: number,
     swapRequestSerialized: Uint8Array
-  ): Promise<any>;
-  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<any>;
-  markets(): Promise<Array<any>>;
+  ): Promise<Uint8Array>;
+  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string>;
+  markets(): Promise<
+    Array<{ baseAsset: string; quoteAsset: string; feeBasisPoint: number }>
+  >;
   marketPrice(
     {
       baseAsset,
@@ -25,12 +27,24 @@ export default interface TraderClientInterface {
     tradeType: number,
     amount: number,
     asset: string
-  ): Promise<Array<any>>;
+  ): Promise<
+    Array<{
+      price?: { basePrice: number; quotePrice: number };
+      fee?: { basisPoint: number };
+      amount: number;
+      asset: string;
+    }>
+  >;
   balances({
     baseAsset,
     quoteAsset,
   }: {
     baseAsset: string;
     quoteAsset: string;
-  }): Promise<Array<any>>;
+  }): Promise<
+    Array<{
+      balance?: { baseAmount: number; quoteAmount: number };
+      fee?: { basisPoint: number };
+    }>
+  >;
 }
