@@ -5,6 +5,8 @@ import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 
 import TraderClientInterface from './grpcClientInterface';
 
+import { getClearTextTorProxyUrl } from './utils';
+
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.TradeClient;
@@ -21,13 +23,7 @@ export class TraderClient implements TraderClientInterface {
       //host:port/<just_onion_host_without_dot_onion>/[<grpc_package>.<grpc_service>/<grpc_method>]
       let torProxyEndpoint =
         process.env.TOR_PROXY_ENDPOINT || 'https://proxy.tdex.network';
-
-      // get just_onion_host_without_dot_onion
-      const splitted = url.hostname.split('.');
-      splitted.pop();
-      const onionPubKey = splitted.join('.');
-
-      this.providerUrl = `${torProxyEndpoint}/${onionPubKey}`;
+      this.providerUrl = getClearTextTorProxyUrl(torProxyEndpoint, url);
     }
 
     this.client = new services.TradeClient(this.providerUrl);
