@@ -11,7 +11,26 @@ export class TraderClient implements TraderClientInterface {
 
   constructor(providerUrl: string) {
     this.providerUrl = providerUrl;
-    this.client = new services.TradeClient(providerUrl);
+    const url = new URL(providerUrl);
+
+    // we assume we are in Liquid mainnet
+    // TODO check if socks5 proxy is running (ie. Tor Browser)
+    if (url.hostname.includes('onion') && !url.protocol.includes('https')) {
+      // We use the HTTP1 cleartext endpoint here provided by the public tor reverse proxy
+      // https://pkg.go.dev/github.com/tdex-network/tor-proxy@v0.0.3/pkg/torproxy#NewTorProxy
+      //host:port/<just_onion_host_without_dot_onion>/[<grpc_package>.<grpc_service>/<grpc_method>]
+      let torProxyEndpoint =
+        process.env.TOR_PROXY_ENDPOINT || 'https://proxy.tdex.network';
+
+      // get just_onion_host_without_dot_onion
+      const splitted = url.hostname.split('.');
+      splitted.pop();
+      const onionPubKey = splitted.join('.');
+
+      this.providerUrl = `${torProxyEndpoint}/${onionPubKey}`;
+    }
+
+    this.client = new services.TradeClient(this.providerUrl);
   }
 
   /**
