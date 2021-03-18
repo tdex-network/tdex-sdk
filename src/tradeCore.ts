@@ -192,7 +192,8 @@ export class TradeCore extends Core implements TradeInterface {
       assetToBeSent,
       assetToReceive,
       addressForOutput.confidentialAddress,
-      addressForChange.confidentialAddress
+      addressForChange.confidentialAddress,
+      this.coinSelector
     );
 
     const swap = new Swap();

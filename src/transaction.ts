@@ -1,5 +1,4 @@
 import {
-  greedyCoinSelector,
   UtxoInterface,
   networks,
   address,
@@ -40,7 +39,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     assetToReceive: string,
     addressForSwapOutput: string,
     addressForChangeOutput: string,
-    coinSelector: CoinSelector = greedyCoinSelector()
+    coinSelector: CoinSelector
   ) {
     const { selectedUtxos, changeOutputs } = coinSelector(
       unspents,
