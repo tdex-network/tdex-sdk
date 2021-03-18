@@ -1,4 +1,10 @@
-import { Trade, IdentityType, TradeType } from '../src/index';
+import { IdentityOpts, PrivateKey } from 'ldk';
+import {
+  Trade,
+  IdentityType,
+  TradeType,
+  greedyCoinSelector,
+} from '../src/index';
 import { sleep } from './_regtest';
 
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
@@ -10,16 +16,23 @@ const market = {
     '6d0910822769196b2a3bd3eaad9ca10d43b8adf0b851607460729ec2b0b8fed0',
 };
 
+const identityOpts: IdentityOpts = {
+  chain: 'regtest',
+  type: IdentityType.PrivateKey,
+  value: {
+    signingKeyWIF,
+    blindingKeyWIF,
+  },
+};
+
+const identity = new PrivateKey(identityOpts);
 describe('Integration tests with a local daemon', () => {
   test.skip('Should get the preview of a trade of a daemon with AMM', async () => {
     const trade = new Trade({
       providerUrl: 'localhost:9945',
       explorerUrl: 'localhost:3001',
-      identity: {
-        chain: 'regtest',
-        type: IdentityType.PrivateKey,
-        value: { signingKeyWIF, blindingKeyWIF },
-      },
+      utxos: [],
+      coinSelector: greedyCoinSelector(),
     });
 
     const preview = await trade.preview({
@@ -62,12 +75,9 @@ describe('Integration tests with a local daemon', () => {
     // 48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc
     const trade = new Trade({
       providerUrl: 'localhost:9945',
-      explorerUrl: 'http://localhost:3001',
-      identity: {
-        chain: 'regtest',
-        type: IdentityType.PrivateKey,
-        value: { signingKeyWIF, blindingKeyWIF },
-      },
+      explorerUrl: 'localhost:3001',
+      utxos: [],
+      coinSelector: greedyCoinSelector(),
     });
 
     try {
@@ -75,6 +85,7 @@ describe('Integration tests with a local daemon', () => {
         market,
         amount: 100000,
         asset: market.baseAsset,
+        identity,
       });
       console.log(txid);
       expect(txid).toBeDefined();
@@ -88,6 +99,7 @@ describe('Integration tests with a local daemon', () => {
       market,
       amount: 10000,
       asset: market.baseAsset,
+      identity,
     });
     console.log(txid3);
     expect(txid3).toBeDefined();
