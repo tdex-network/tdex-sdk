@@ -1,3 +1,10 @@
+import {
+  fetchAndUnblindUtxos,
+  greedyCoinSelector,
+  IdentityOpts,
+  PrivateKey,
+  UtxoInterface,
+} from 'ldk';
 import * as TDEX from '../src/index';
 import { Trade, IdentityType, throwErrorIfSwapFail } from '../src/index';
 import {
@@ -6,27 +13,54 @@ import {
 } from 'tdex-protobuf/generated/js/trade_pb';
 import { SwapFail } from 'tdex-protobuf/generated/js/swap_pb';
 import * as assert from 'assert';
+import { faucet, sleep } from './_regtest';
+
+jest.setTimeout(30000);
 
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 
+const identityOpts: IdentityOpts = {
+  chain: 'regtest',
+  type: IdentityType.PrivateKey,
+  value: {
+    signingKeyWIF,
+    blindingKeyWIF,
+  },
+};
+
+const identity = new PrivateKey(identityOpts);
+
 describe('TDEX SDK', () => {
-  it('Should throw if arguments not given', () => {
-    expect(() => new TDEX.Trade({})).toThrow();
+  let utxos: UtxoInterface[] = [];
+
+  beforeAll(async () => {
+    await faucet(identity.getNextAddress().confidentialAddress);
+    await sleep(3000);
+    utxos = await fetchAndUnblindUtxos(
+      identity.getAddresses(),
+      'http://localhost:3001'
+    );
+  });
+
+  it('Should throw if no utxos', () => {
+    expect(
+      () =>
+        new TDEX.Trade({
+          utxos: [],
+          explorerUrl: 'https://nigiri.network',
+          providerUrl: 'localhost:9945',
+          coinSelector: greedyCoinSelector(),
+        })
+    ).toThrow();
   });
 
   it('Should not throw', () => {
     const trade = new Trade({
       providerUrl: 'localhost:9945',
       explorerUrl: 'https://nigiri.network',
-      identity: {
-        chain: 'regtest',
-        type: IdentityType.PrivateKey,
-        value: {
-          signingKeyWIF,
-          blindingKeyWIF,
-        },
-      },
+      coinSelector: greedyCoinSelector(),
+      utxos,
     });
     expect(trade).toMatchObject({
       chain: 'regtest',

@@ -5,6 +5,7 @@ import {
   address,
   RecipientInterface,
   IdentityInterface,
+  CoinSelector,
 } from 'ldk';
 import { confidential, Psbt } from 'liquidjs-lib';
 
@@ -38,11 +39,9 @@ export class SwapTransaction implements SwapTransactionInterface {
     assetToBeSent: string,
     assetToReceive: string,
     addressForSwapOutput: string,
-    addressForChangeOutput: string
+    addressForChangeOutput: string,
+    coinSelector: CoinSelector = greedyCoinSelector()
   ) {
-    // We default to dumb coinselection. ie. se sort for value, first unspent found tha covers target, we use it.
-    const coinSelector = greedyCoinSelector();
-
     const { selectedUtxos, changeOutputs } = coinSelector(
       unspents,
       [
