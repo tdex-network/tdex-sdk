@@ -5,6 +5,8 @@ import {
   IdentityInterface,
   CoinSelector,
   isValidAmount,
+  AddressInterface,
+  IdentityType,
 } from 'ldk';
 import TraderClientInterface from './grpcClientInterface';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
@@ -181,11 +183,18 @@ export class TradeCore extends Core implements TradeInterface {
       asset: assetHash,
     });
 
-    const addressForOutput = identity.getNextAddress();
-    const addressForChange = identity.getNextChangeAddress();
+    let addressForOutput: AddressInterface, addressForChange: AddressInterface;
+
+    if (identity.type === IdentityType.Inject) {
+      addressForOutput = await identity.getNextAddress();
+      addressForChange = await identity.getNextChangeAddress();
+    } else {
+      addressForOutput = identity.getNextAddress() as AddressInterface;
+      addressForChange = identity.getNextChangeAddress() as AddressInterface;
+    }
 
     const swapTx = new SwapTransaction(identity);
-    swapTx.create(
+    await swapTx.create(
       this.utxos,
       amountToBeSent,
       amountToReceive,

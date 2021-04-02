@@ -71,7 +71,7 @@
     "bip39": "^3.0.2",
     "bs58check": "^2.1.2",
     "google-protobuf": "^3.11.4",
-    "ldk": "^0.2.5",
+    "ldk": "^0.3.0",
     "liquidjs-lib": "^5.1.7",
     "slip77": "^0.1.1",
     "tdex-protobuf": "tdex-network/tdex-protobuf#beta",

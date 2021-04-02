@@ -31,7 +31,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     this.pset = new Psbt({ network: this.network });
   }
 
-  create(
+  async create(
     unspents: Array<UtxoInterface>,
     amountToBeSent: number,
     amountToReceive: number,
@@ -53,7 +53,7 @@ export class SwapTransaction implements SwapTransactionInterface {
       (_: string) => addressForChangeOutput
     );
 
-    selectedUtxos.forEach((i: UtxoInterface) => {
+    selectedUtxos.forEach(async (i: UtxoInterface) => {
       this.pset.addInput({
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: i.txid,
@@ -70,10 +70,8 @@ export class SwapTransaction implements SwapTransactionInterface {
 
       // we update the inputBlindingKeys map after we add an input to the transaction
       const scriptHex = i.prevout.script.toString('hex');
-      this.inputBlindingKeys[scriptHex] = Buffer.from(
-        this.identity.getBlindingPrivateKey(scriptHex),
-        'hex'
-      );
+      const blindKey = await this.identity.getBlindingPrivateKey(scriptHex);
+      this.inputBlindingKeys[scriptHex] = Buffer.from(blindKey, 'hex');
     });
 
     const receivingScript = address
@@ -89,13 +87,16 @@ export class SwapTransaction implements SwapTransactionInterface {
     });
 
     // we update the outputBlindingKeys map after we add the receiving output to the transaction
+    const blindKeyForReceiving = await this.identity.getBlindingPrivateKey(
+      receivingScript
+    );
     this.outputBlindingKeys[receivingScript] = Buffer.from(
-      this.identity.getBlindingPrivateKey(receivingScript),
+      blindKeyForReceiving,
       'hex'
     );
 
     if (changeOutputs.length > 0) {
-      changeOutputs.forEach((changeOutput: RecipientInterface) => {
+      changeOutputs.forEach(async (changeOutput: RecipientInterface) => {
         const changeScript = address
           .toOutputScript(changeOutput.address, this.network)
           .toString('hex');
@@ -109,8 +110,11 @@ export class SwapTransaction implements SwapTransactionInterface {
         });
 
         // we update the outputBlindingKeys map after we add the change output to the transaction
+        const blindKeyForChange = await this.identity.getBlindingPrivateKey(
+          changeScript
+        );
         this.outputBlindingKeys[changeScript] = Buffer.from(
-          this.identity.getBlindingPrivateKey(changeScript),
+          blindKeyForChange,
           'hex'
         );
       });
