@@ -2,7 +2,6 @@ import {
   UtxoInterface,
   networks,
   address,
-  RecipientInterface,
   IdentityInterface,
   CoinSelector,
 } from 'ldk';
@@ -40,7 +39,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     addressForSwapOutput: string,
     addressForChangeOutput: string,
     coinSelector: CoinSelector
-  ) {
+  ): Promise<void> {
     const { selectedUtxos, changeOutputs } = coinSelector(
       unspents,
       [
@@ -53,7 +52,7 @@ export class SwapTransaction implements SwapTransactionInterface {
       (_: string) => addressForChangeOutput
     );
 
-    selectedUtxos.forEach(async (i: UtxoInterface) => {
+    for (const i of selectedUtxos) {
       this.pset.addInput({
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: i.txid,
@@ -72,7 +71,7 @@ export class SwapTransaction implements SwapTransactionInterface {
       const scriptHex = i.prevout.script.toString('hex');
       const blindKey = await this.identity.getBlindingPrivateKey(scriptHex);
       this.inputBlindingKeys[scriptHex] = Buffer.from(blindKey, 'hex');
-    });
+    }
 
     const receivingScript = address
       .toOutputScript(addressForSwapOutput, this.network)
@@ -96,7 +95,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     );
 
     if (changeOutputs.length > 0) {
-      changeOutputs.forEach(async (changeOutput: RecipientInterface) => {
+      for (const changeOutput of changeOutputs) {
         const changeScript = address
           .toOutputScript(changeOutput.address, this.network)
           .toString('hex');
@@ -117,7 +116,9 @@ export class SwapTransaction implements SwapTransactionInterface {
           blindKeyForChange,
           'hex'
         );
-      });
+      }
     }
+
+    return;
   }
 }
