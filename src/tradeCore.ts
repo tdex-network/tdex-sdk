@@ -185,7 +185,7 @@ export class TradeCore extends Core implements TradeInterface {
     const addressForChange = await identity.getNextChangeAddress();
 
     const swapTx = new SwapTransaction(identity);
-    swapTx.create(
+    await swapTx.create(
       this.utxos,
       amountToBeSent,
       amountToReceive,
