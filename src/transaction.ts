@@ -2,7 +2,6 @@ import {
   UtxoInterface,
   networks,
   address,
-  RecipientInterface,
   IdentityInterface,
   CoinSelector,
 } from 'ldk';
@@ -31,7 +30,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     this.pset = new Psbt({ network: this.network });
   }
 
-  create(
+  async create(
     unspents: Array<UtxoInterface>,
     amountToBeSent: number,
     amountToReceive: number,
@@ -53,28 +52,29 @@ export class SwapTransaction implements SwapTransactionInterface {
       (_: string) => addressForChangeOutput
     );
 
-    selectedUtxos.forEach((i: UtxoInterface) => {
+    for (const utxo of selectedUtxos) {
       this.pset.addInput({
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
-        hash: i.txid,
-        index: i.vout,
+        hash: utxo.txid,
+        index: utxo.vout,
         //We put here the blinded prevout
-        witnessUtxo: i.prevout,
+        witnessUtxo: utxo.prevout,
       });
 
-      if (!i.prevout) {
+      if (!utxo.prevout) {
         throw new Error(
-          'create tx: missing prevout member for input ' + i.txid + ':' + i.vout
+          'create tx: missing prevout member for input ' +
+            utxo.txid +
+            ':' +
+            utxo.vout
         );
       }
 
       // we update the inputBlindingKeys map after we add an input to the transaction
-      const scriptHex = i.prevout.script.toString('hex');
-      this.inputBlindingKeys[scriptHex] = Buffer.from(
-        this.identity.getBlindingPrivateKey(scriptHex),
-        'hex'
-      );
-    });
+      const scriptHex = utxo.prevout.script.toString('hex');
+      const blindKey = await this.identity.getBlindingPrivateKey(scriptHex);
+      this.inputBlindingKeys[scriptHex] = Buffer.from(blindKey, 'hex');
+    }
 
     const receivingScript = address
       .toOutputScript(addressForSwapOutput, this.network)
@@ -89,13 +89,11 @@ export class SwapTransaction implements SwapTransactionInterface {
     });
 
     // we update the outputBlindingKeys map after we add the receiving output to the transaction
-    this.outputBlindingKeys[receivingScript] = Buffer.from(
-      this.identity.getBlindingPrivateKey(receivingScript),
-      'hex'
-    );
+    const blindKey = await this.identity.getBlindingPrivateKey(receivingScript);
+    this.outputBlindingKeys[receivingScript] = Buffer.from(blindKey, 'hex');
 
     if (changeOutputs.length > 0) {
-      changeOutputs.forEach((changeOutput: RecipientInterface) => {
+      for (const changeOutput of changeOutputs) {
         const changeScript = address
           .toOutputScript(changeOutput.address, this.network)
           .toString('hex');
@@ -109,11 +107,11 @@ export class SwapTransaction implements SwapTransactionInterface {
         });
 
         // we update the outputBlindingKeys map after we add the change output to the transaction
-        this.outputBlindingKeys[changeScript] = Buffer.from(
-          this.identity.getBlindingPrivateKey(changeScript),
-          'hex'
+        const blindKey = await this.identity.getBlindingPrivateKey(
+          changeScript
         );
-      });
+        this.outputBlindingKeys[changeScript] = Buffer.from(blindKey, 'hex');
+      }
     }
   }
 }

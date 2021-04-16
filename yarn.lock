@@ -1272,6 +1272,14 @@
     semver "^7.3.2"
     tsutils "^3.17.1"
 
+"@vulpemventures/secp256k1-zkp@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@vulpemventures/secp256k1-zkp/-/secp256k1-zkp-2.0.0.tgz#d1bb464f50fa3693e95126c0409d773f6d0b7497"
+  integrity sha512-LhWeEp9pDWYpuE5Lvvb8QRuxG/9cd+NTxNaAzrg+JT0sO11D7hyxyvSgnHkuTVT7FDdmmQQGZ6lkutfynE45rQ==
+  dependencies:
+    "@types/node" "^13.9.2"
+    long "^4.0.0"
+
 abab@^2.0.0:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.5.tgz#c0b678fb32d60fc1219c784d6a826fe385aeb79a"
@@ -1772,7 +1780,7 @@ bindings@^1.3.0, bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-bip174@vulpemventures/bip174.git:
+"bip174@github:vulpemventures/bip174", bip174@vulpemventures/bip174.git:
   version "1.0.1"
   resolved "https://codeload.github.com/vulpemventures/bip174/tar.gz/d6a71254fa66b2ba84de80c67b7255ab65979c3b"
 
@@ -1810,6 +1818,10 @@ bitcoin-ops@^1.3.0, bitcoin-ops@^1.4.0:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/bitcoin-ops/-/bitcoin-ops-1.4.1.tgz#e45de620398e22fd4ca6023de43974ff42240278"
   integrity sha512-pef6gxZFztEhaE9RY9HmWVmiIHqCb2OyS4HPKkpc6CIiiOa3Qmuoylxc5P2EkU3w+5eTSifI9SEZC88idAIGow==
+
+"blech32@github:vulpemventures/blech32":
+  version "1.0.0"
+  resolved "https://codeload.github.com/vulpemventures/blech32/tar.gz/95595cf62f550905c3e312144f877c68ac128679"
 
 blech32@vulpemventures/blech32.git:
   version "1.0.0"
@@ -4383,16 +4395,17 @@ language-tags@^1.0.5:
   dependencies:
     language-subtag-registry "~0.3.2"
 
-ldk@^0.2.5:
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.2.6.tgz#52ed8b0b835b97eeb623e09d2bc87b8796bdf890"
-  integrity sha512-b6y0quSoS5Cl8jaQjdkvRlUPtipmsPNvx2J+NV0dCh3DCZffcY5485IXOst+O0xiAw+iQDhRZ32NUvigKexC/Q==
+ldk@^0.2.14:
+  version "0.2.14"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.2.14.tgz#d919b33e2c4ab00a41eb254888788e6fb3b39b0a"
+  integrity sha512-yaCgKf/u2LpqBnPn8chHl8XWDHEb9bRFitte0dNl5wdP4fA9R/UEy4iR8ae8HStUljmuStFUUpiH8xqFLRuf2w==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
-    liquidjs-lib "^5.1.7"
+    liquidjs-lib "5.1.12"
+    marina-provider "^1.0.0"
     slip77 "^0.1.1"
 
 left-pad@^1.3.0:
@@ -4417,6 +4430,29 @@ lines-and-columns@^1.1.6:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
+
+liquidjs-lib@5.1.12:
+  version "5.1.12"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.1.12.tgz#4ab22d9c9ae5514b647eb4b011d76d13f1a097dd"
+  integrity sha512-v01gO9zokMzQ4qRQ/ts5POgTL1ACZUqYgGWC/GE9oe1YXwnSdkho6m4M1zDOJLFwuew2DJ+RcQW8sFNMnHvWwA==
+  dependencies:
+    "@vulpemventures/secp256k1-zkp" "^2.0.0"
+    bech32 "^1.1.2"
+    bip174 vulpemventures/bip174.git
+    bip32 "^2.0.4"
+    bip66 "^1.1.0"
+    bitcoin-ops "^1.4.0"
+    blech32 vulpemventures/blech32.git
+    bs58check "^2.0.0"
+    create-hash "^1.1.0"
+    create-hmac "^1.1.3"
+    merkle-lib "^2.0.10"
+    pushdata-bitcoin "^1.0.1"
+    randombytes "^2.0.1"
+    tiny-secp256k1 "^1.1.1"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.0.4"
+    wif "^2.0.1"
 
 liquidjs-lib@^5.1.7:
   version "5.1.7"
@@ -4602,6 +4638,11 @@ map-visit@^1.0.0:
   integrity sha1-7Nyo8TFE5mDxtb1B8S80edmN+48=
   dependencies:
     object-visit "^1.0.0"
+
+marina-provider@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/marina-provider/-/marina-provider-1.0.0.tgz#dbd9897db117cc35d31755b41b4ea7054b7a3035"
+  integrity sha512-hpZGcH5D0ZVwPtRvWlv5BUw69ZnoQc4iCEVTI7/eUZAqoaUUzyp7OpDY/UTLoaRWo++4mTKHtAGps8pGmD05jw==
 
 md5.js@^1.3.4:
   version "1.3.5"
