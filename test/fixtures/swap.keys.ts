@@ -9,8 +9,6 @@ export const proposer = new PrivateKey({
   },
 });
 
-export const proposerAddress = proposer.getNextAddress().confidentialAddress;
-
 export const responder = new PrivateKey({
   chain: 'regtest',
   type: IdentityType.PrivateKey,
@@ -19,5 +17,3 @@ export const responder = new PrivateKey({
     signingKeyWIF: 'cVcDj9Td96x8jcG1eudxKL6hdwziCTgvPhqBoazkDeFGSAR8pCG8',
   },
 });
-
-export const responderAddress = responder.getNextAddress().confidentialAddress;

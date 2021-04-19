@@ -3,12 +3,7 @@ import { Swap } from '../src/swap';
 import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
 import { faucet, fetchUtxos, mint, fetchTxHex } from './_regtest';
-import {
-  proposer,
-  proposerAddress,
-  responder,
-  responderAddress,
-} from './fixtures/swap.keys';
+import { proposer, responder } from './fixtures/swap.keys';
 import { UtxoInterface, networks, address } from 'ldk';
 
 const toOutputScript = (addr: string) =>
@@ -85,10 +80,14 @@ describe('Swap', () => {
     const swap = new Swap();
     let requestTx: string;
     let altcoin: string;
+    let proposerAddress: string;
+    let responderAddress: string;
 
     const inputBlindingKeys: Record<string, Buffer> = {};
 
     beforeAll(async () => {
+      proposerAddress = (await proposer.getNextAddress()).confidentialAddress;
+      responderAddress = (await responder.getNextAddress()).confidentialAddress;
       await faucet(proposerAddress);
       const mintResult = await mint(responderAddress, 100);
 
@@ -105,10 +104,16 @@ describe('Swap', () => {
 
       inputBlindingKeys[
         toOutputScript(responderAddress).toString('hex')
-      ] = Buffer.from(responder.getNextAddress().blindingPrivateKey, 'hex');
+      ] = Buffer.from(
+        (await responder.getNextAddress()).blindingPrivateKey,
+        'hex'
+      );
       inputBlindingKeys[
         toOutputScript(proposerAddress).toString('hex')
-      ] = Buffer.from(proposer.getNextAddress().blindingPrivateKey, 'hex');
+      ] = Buffer.from(
+        (await proposer.getNextAddress()).blindingPrivateKey,
+        'hex'
+      );
 
       requestTx = new Psbt({ network: networks.regtest })
         .addInput({

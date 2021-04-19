@@ -181,11 +181,11 @@ export class TradeCore extends Core implements TradeInterface {
       asset: assetHash,
     });
 
-    const addressForOutput = identity.getNextAddress();
-    const addressForChange = identity.getNextChangeAddress();
+    const addressForOutput = await identity.getNextAddress();
+    const addressForChange = await identity.getNextChangeAddress();
 
     const swapTx = new SwapTransaction(identity);
-    swapTx.create(
+    await swapTx.create(
       this.utxos,
       amountToBeSent,
       amountToReceive,
