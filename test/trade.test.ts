@@ -35,12 +35,11 @@ describe('TDEX SDK', () => {
   let utxos: UtxoInterface[] = [];
 
   beforeAll(async () => {
-    await faucet(identity.getNextAddress().confidentialAddress);
+    const addr = await identity.getNextAddress();
+    await faucet(addr.confidentialAddress);
     await sleep(3000);
-    utxos = await fetchAndUnblindUtxos(
-      identity.getAddresses(),
-      'http://localhost:3001'
-    );
+    const addresses = await identity.getAddresses();
+    utxos = await fetchAndUnblindUtxos(addresses, 'http://localhost:3001');
   });
 
   it('Should throw if no utxos', () => {
