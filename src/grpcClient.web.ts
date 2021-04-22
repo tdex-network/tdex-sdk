@@ -56,7 +56,7 @@ export class TraderClient implements TraderClientInterface {
 
       let data: Uint8Array;
       call.on('data', (reply: messages.TradeProposeReply) => {
-        throwErrorIfSwapFail(reply);
+        reject(reply);
         const swapAcceptMsg = reply!.getSwapAccept();
         data = swapAcceptMsg!.serializeBinary();
       });
@@ -79,7 +79,7 @@ export class TraderClient implements TraderClientInterface {
       const call = this.client.tradeComplete(request);
       let data: string;
       call.on('data', (reply: messages.TradeCompleteReply) => {
-        throwErrorIfSwapFail(reply);
+        reject(reply);
         data = reply!.getTxid();
       });
       call.on('end', () => resolve(data));
@@ -169,15 +169,5 @@ export class TraderClient implements TraderClientInterface {
         resolve(reply);
       });
     });
-  }
-}
-
-export function throwErrorIfSwapFail(
-  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply
-) {
-  const swapFail = tradeReply.getSwapFail();
-  if (swapFail) {
-    const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
-    throw new Error(errorMessage);
   }
 }
