@@ -6,7 +6,7 @@ import {
   UtxoInterface,
 } from 'ldk';
 import * as TDEX from '../src/index';
-import { Trade, IdentityType, throwErrorIfSwapFail } from '../src/index';
+import { Trade, IdentityType, rejectIfSwapFail } from '../src/index';
 import {
   TradeCompleteReply,
   TradeProposeReply,
@@ -82,12 +82,20 @@ describe('TDEX SDK', () => {
       const tradeProposeReplyWithoutSwapFail = new TradeProposeReply();
 
       it('should throw an error if there is SwapFail in TradeProposeReply', () => {
-        assert.throws(() => throwErrorIfSwapFail(tradeProposeReply));
+        assert.rejects(
+          () =>
+            new Promise((_, reject) =>
+              rejectIfSwapFail(tradeProposeReply, reject)
+            )
+        );
       });
 
       it('should not throw an error if there is no SwapFail in TradeProposeReply', () => {
-        assert.doesNotThrow(() =>
-          throwErrorIfSwapFail(tradeProposeReplyWithoutSwapFail)
+        assert.doesNotReject(
+          () =>
+            new Promise((_, reject) =>
+              rejectIfSwapFail(tradeProposeReplyWithoutSwapFail, reject)
+            )
         );
       });
     });
@@ -99,12 +107,20 @@ describe('TDEX SDK', () => {
       const tradeCompleteReplyWithoutSwapFail = new TradeCompleteReply();
 
       it('should throw an error if there is SwapFail in TradeCompleteReply', () => {
-        assert.throws(() => throwErrorIfSwapFail(tradeCompleteReply));
+        assert.rejects(
+          () =>
+            new Promise((_, reject) =>
+              rejectIfSwapFail(tradeCompleteReply, reject)
+            )
+        );
       });
 
       it('should not throw an error if there is no SwapFail in TradeCompleteReply', () => {
-        assert.doesNotThrow(() =>
-          throwErrorIfSwapFail(tradeCompleteReplyWithoutSwapFail)
+        assert.doesNotReject(
+          () =>
+            new Promise((_, reject) =>
+              rejectIfSwapFail(tradeCompleteReplyWithoutSwapFail, reject)
+            )
         );
       });
     });
