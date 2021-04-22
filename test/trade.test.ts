@@ -6,7 +6,7 @@ import {
   UtxoInterface,
 } from 'ldk';
 import * as TDEX from '../src/index';
-import { Trade, IdentityType, rejectIfSwapFail } from '../src/index';
+import { Trade, IdentityType } from '../src/index';
 import {
   TradeCompleteReply,
   TradeProposeReply,
@@ -14,6 +14,7 @@ import {
 import { SwapFail } from 'tdex-protobuf/generated/js/swap_pb';
 import * as assert from 'assert';
 import { faucet, sleep } from './_regtest';
+import { rejectIfSwapFail } from '../src/utils';
 
 jest.setTimeout(30000);
 

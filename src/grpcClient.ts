@@ -3,8 +3,8 @@ import * as services from 'tdex-protobuf/generated/js/trade_grpc_pb';
 import * as messages from 'tdex-protobuf/generated/js/trade_pb';
 import * as types from 'tdex-protobuf/generated/js/types_pb';
 import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
-
 import TraderClientInterface from './grpcClientInterface';
+import { rejectIfSwapFail } from './utils';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
@@ -157,16 +157,5 @@ export class TraderClient implements TraderClientInterface {
         resolve(reply);
       });
     });
-  }
-}
-
-export function rejectIfSwapFail(
-  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply,
-  reject: (reason?: any) => void
-) {
-  const swapFail = tradeReply.getSwapFail();
-  if (swapFail) {
-    const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
-    reject(errorMessage);
   }
 }

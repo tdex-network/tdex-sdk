@@ -1,4 +1,5 @@
 import { Psbt, Transaction } from 'liquidjs-lib';
+import * as messages from 'tdex-protobuf/generated/js/trade_pb';
 
 /**
  * Generates a random id of a fixed length.
@@ -43,4 +44,20 @@ export function getClearTextTorProxyUrl(
   const onionPubKey = splitted.join('.');
 
   return `${torProxyEndpoint}/${onionPubKey}`;
+}
+
+/**
+ * used to inspect TradePropose or TradeComplete reply messages
+ * @param tradeReply TradePropose or TradeComplete protobuf messages
+ * @param reject the promise's reject function
+ */
+export function rejectIfSwapFail(
+  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply,
+  reject: (reason?: any) => void
+) {
+  const swapFail = tradeReply.getSwapFail();
+  if (swapFail) {
+    const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
+    reject(errorMessage);
+  }
 }
