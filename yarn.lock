@@ -6266,9 +6266,9 @@ table@^5.2.3:
     slice-ansi "^2.1.0"
     string-width "^3.0.0"
 
-tdex-protobuf@tdex-network/tdex-protobuf#beta:
+tdex-protobuf@tdex-network/tdex-protobuf:
   version "2.0.0"
-  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/77814a8c3ea3591e0843982b9c597be4a37d44ec"
+  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/78f6c6c0618bcf3bebc2cc3d13fd2fe335808b75"
   dependencies:
     grpc-web "1.2.0"
 
