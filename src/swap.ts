@@ -70,8 +70,11 @@ export class Swap extends Core {
       });
     }
 
-    // check the message content and transaction.
-    //await compareMessagesAndTransaction(msg);
+    try {
+      await compareMessagesAndTransaction(msg);
+    } catch (ignore) {
+      console.error(ignore);
+    }
 
     if (this.verbose) console.log(msg.toObject());
 
@@ -111,7 +114,11 @@ export class Swap extends Core {
     }
 
     // compare messages and transaction data
-    //await compareMessagesAndTransaction(msgRequest, msgAccept);
+    try {
+      await compareMessagesAndTransaction(msgRequest, msgAccept);
+    } catch (ignore) {
+      console.error(ignore);
+    }
 
     if (this.verbose) console.log(msgAccept.toObject());
 
