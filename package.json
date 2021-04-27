@@ -74,7 +74,7 @@
     "ldk": "^0.2.15",
     "liquidjs-lib": "^5.1.7",
     "slip77": "^0.1.1",
-    "tdex-protobuf": "tdex-network/tdex-protobuf#beta",
+    "tdex-protobuf": "tdex-network/tdex-protobuf",
     "tslib": "^2.0.0"
   }
 }

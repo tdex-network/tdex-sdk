@@ -71,7 +71,7 @@ export class Swap extends Core {
     }
 
     // check the message content and transaction.
-    await compareMessagesAndTransaction(msg);
+    //await compareMessagesAndTransaction(msg);
 
     if (this.verbose) console.log(msg.toObject());
 
@@ -111,7 +111,7 @@ export class Swap extends Core {
     }
 
     // compare messages and transaction data
-    await compareMessagesAndTransaction(msgRequest, msgAccept);
+    //await compareMessagesAndTransaction(msgRequest, msgAccept);
 
     if (this.verbose) console.log(msgAccept.toObject());
 
