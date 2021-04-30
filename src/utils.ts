@@ -54,10 +54,13 @@ export function getClearTextTorProxyUrl(
 export function rejectIfSwapFail(
   tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply,
   reject: (reason?: any) => void
-) {
+): boolean {
   const swapFail = tradeReply.getSwapFail();
   if (swapFail) {
     const errorMessage = `SwapFail for message id=${swapFail.getId()}. Failure code ${swapFail.getFailureCode()} | reason: ${swapFail.getFailureMessage()}`;
     reject(errorMessage);
+    return true;
   }
+
+  return false;
 }
