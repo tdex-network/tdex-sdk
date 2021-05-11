@@ -1831,7 +1831,7 @@ bitcoin-ops@^1.3.0, bitcoin-ops@^1.4.0:
 
 "blech32@github:vulpemventures/blech32":
   version "1.0.0"
-  resolved "https://codeload.github.com/vulpemventures/blech32/tar.gz/95595cf62f550905c3e312144f877c68ac128679"
+  resolved "https://codeload.github.com/vulpemventures/blech32/tar.gz/1c9acd89bdd2a2a5016fb942cf7d898579f84c8d"
 
 bn.js@^4.11.8, bn.js@^4.11.9:
   version "4.12.0"
