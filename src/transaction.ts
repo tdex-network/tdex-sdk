@@ -59,6 +59,8 @@ export class SwapTransaction implements SwapTransactionInterface {
         index: utxo.vout,
         //We put here the blinded prevout
         witnessUtxo: utxo.prevout,
+        redeemScript: utxo.redeemScript,
+        witnessScript: utxo.witnessScript,
       });
 
       if (!utxo.prevout) {
