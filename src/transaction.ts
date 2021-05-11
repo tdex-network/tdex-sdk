@@ -53,13 +53,20 @@ export class SwapTransaction implements SwapTransactionInterface {
     );
 
     for (const utxo of selectedUtxos) {
-      this.pset.addInput({
+      const inputData: any = {
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: utxo.txid,
         index: utxo.vout,
         //We put here the blinded prevout
         witnessUtxo: utxo.prevout,
-      });
+      };
+      if (utxo.redeemScript) {
+        inputData.redeemScript = utxo.redeemScript;
+      }
+      if (utxo.witnessScript) {
+        inputData.witnessScript = utxo.witnessScript;
+      }
+      this.pset.addInput(inputData);
 
       if (!utxo.prevout) {
         throw new Error(
