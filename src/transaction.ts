@@ -53,7 +53,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     );
 
     for (const utxo of selectedUtxos) {
-      let inputData: any = {
+      const inputData: any = {
         // if hash is string, txid, if hash is Buffer, is reversed compared to txid
         hash: utxo.txid,
         index: utxo.vout,
