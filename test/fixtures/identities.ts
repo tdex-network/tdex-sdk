@@ -123,7 +123,6 @@ export class Legacy extends Identity implements IdentityInterface {
     return {
       confidentialAddress: this.confidentialAddress,
       blindingPrivateKey: this.blindingPrivateKey,
-      derivationPath: undefined,
     };
   }
 
@@ -174,7 +173,6 @@ export class Legacy extends Identity implements IdentityInterface {
       {
         confidentialAddress: this.confidentialAddress,
         blindingPrivateKey: this.blindingPrivateKey,
-        derivationPath: undefined,
       },
     ];
   }
@@ -253,7 +251,6 @@ export class WrappedSegwit extends Identity implements IdentityInterface {
     return {
       confidentialAddress: this.confidentialAddress,
       blindingPrivateKey: this.blindingPrivateKey,
-      derivationPath: undefined,
     };
   }
 
@@ -304,7 +301,6 @@ export class WrappedSegwit extends Identity implements IdentityInterface {
       {
         confidentialAddress: this.confidentialAddress,
         blindingPrivateKey: this.blindingPrivateKey,
-        derivationPath: undefined,
       },
     ];
   }
