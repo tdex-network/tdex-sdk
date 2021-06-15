@@ -3,6 +3,7 @@ import {
   greedyCoinSelector,
   IdentityOpts,
   PrivateKey,
+  PrivateKeyOpts,
   UtxoInterface,
 } from 'ldk';
 import * as TDEX from '../src/index';
@@ -21,10 +22,10 @@ jest.setTimeout(30000);
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 
-const identityOpts: IdentityOpts = {
+const identityOpts: IdentityOpts<PrivateKeyOpts> = {
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     signingKeyWIF,
     blindingKeyWIF,
   },

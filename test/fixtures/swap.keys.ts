@@ -3,7 +3,7 @@ import { PrivateKey, IdentityType } from 'ldk';
 export const proposer = new PrivateKey({
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
@@ -12,7 +12,7 @@ export const proposer = new PrivateKey({
 export const responder = new PrivateKey({
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     blindingKeyWIF: 'cSv4PQtTpvYKHjfp9qih2RMeieBQAVADqc8JGXPvA7mkJ8yD5QC1',
     signingKeyWIF: 'cVcDj9Td96x8jcG1eudxKL6hdwziCTgvPhqBoazkDeFGSAR8pCG8',
   },

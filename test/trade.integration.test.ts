@@ -1,4 +1,4 @@
-import { IdentityOpts, PrivateKey } from 'ldk';
+import { IdentityOpts, PrivateKey, PrivateKeyOpts } from 'ldk';
 import {
   Trade,
   IdentityType,
@@ -16,10 +16,10 @@ const market = {
     '6d0910822769196b2a3bd3eaad9ca10d43b8adf0b851607460729ec2b0b8fed0',
 };
 
-const identityOpts: IdentityOpts = {
+const identityOpts: IdentityOpts<PrivateKeyOpts> = {
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     signingKeyWIF,
     blindingKeyWIF,
   },

@@ -3,20 +3,17 @@ import {
   IdentityInterface,
   IdentityOpts,
   IdentityType,
-  IdentityRestorerInterface,
-  EsploraIdentityRestorer,
   networks,
   PrivateKey,
+  PrivateKeyOpts,
 } from 'ldk';
 import { ECPair, ECPairInterface, payments, Network, Psbt } from 'liquidjs-lib';
 
 class Identity {
-  static DEFAULT_RESTORER: IdentityRestorerInterface = new EsploraIdentityRestorer();
   network: Network;
   type: IdentityType;
-  restorer: IdentityRestorerInterface;
 
-  constructor(args: IdentityOpts) {
+  constructor(args: IdentityOpts<any>) {
     if (!args.chain || !networks.hasOwnProperty(args.chain)) {
       throw new Error('Network is missing or not valid');
     }
@@ -27,13 +24,6 @@ class Identity {
 
     this.network = (networks as Record<string, Network>)[args.chain];
     this.type = args.type;
-
-    // set the restorer if the user specified it.
-    if (args.restorer) {
-      this.restorer = args.restorer;
-    } else {
-      this.restorer = Identity.DEFAULT_RESTORER;
-    }
   }
 
   async blindPsetWithBlindKeysGetter(
@@ -64,13 +54,11 @@ export class Legacy extends Identity implements IdentityInterface {
   private blindingPrivateKey: string;
   private scriptPubKey: Buffer;
 
-  readonly isRestored: Promise<boolean> = new Promise(() => true);
-
-  constructor(args: IdentityOpts) {
+  constructor(args: IdentityOpts<PrivateKeyOpts>) {
     super(args);
 
-    this.signingKeyPair = this.decodeFromWif(args.value.signingKeyWIF);
-    this.blindingKeyPair = this.decodeFromWif(args.value.blindingKeyWIF);
+    this.signingKeyPair = this.decodeFromWif(args.opts.signingKeyWIF);
+    this.blindingKeyPair = this.decodeFromWif(args.opts.blindingKeyWIF);
 
     const p2pkh = payments.p2pkh({
       pubkey: this.signingKeyPair.publicKey,
@@ -186,13 +174,11 @@ export class WrappedSegwit extends Identity implements IdentityInterface {
   private blindingPrivateKey: string;
   private scriptPubKey: Buffer;
 
-  readonly isRestored: Promise<boolean> = new Promise(() => true);
-
-  constructor(args: IdentityOpts) {
+  constructor(args: IdentityOpts<PrivateKeyOpts>) {
     super(args);
 
-    this.signingKeyPair = this.decodeFromWif(args.value.signingKeyWIF);
-    this.blindingKeyPair = this.decodeFromWif(args.value.blindingKeyWIF);
+    this.signingKeyPair = this.decodeFromWif(args.opts.signingKeyWIF);
+    this.blindingKeyPair = this.decodeFromWif(args.opts.blindingKeyWIF);
 
     const p2wpkh = payments.p2wpkh({
       pubkey: this.signingKeyPair.publicKey,
@@ -309,7 +295,7 @@ export class WrappedSegwit extends Identity implements IdentityInterface {
 export const proposerP2PKH = new Legacy({
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
@@ -318,7 +304,7 @@ export const proposerP2PKH = new Legacy({
 export const proposerP2SH = new WrappedSegwit({
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
@@ -327,7 +313,7 @@ export const proposerP2SH = new WrappedSegwit({
 export const proposerP2WPKH = new PrivateKey({
   chain: 'regtest',
   type: IdentityType.PrivateKey,
-  value: {
+  opts: {
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
