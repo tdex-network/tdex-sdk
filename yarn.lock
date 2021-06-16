@@ -4284,10 +4284,10 @@ language-tags@^1.0.5:
   dependencies:
     language-subtag-registry "~0.3.2"
 
-ldk@^0.3.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.3.tgz#f9b8b04a48e34acb0dcbd70914fdba6a36b3303d"
-  integrity sha512-rbD2RvdwTXu12j+qJHZ5mYRjS9dvM/HDSSf7eLDm1UZH3qGrdlMaE/jWP/Nb/2LwAlSZmms9qUKVtjJTvgfhNg==
+ldk@^0.3.4:
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.4.tgz#53d7df73676bb7aa28a64bb6fbe499c5dababa2a"
+  integrity sha512-pw9nvS24w8+reWMRCmrzcOgA5hUST5z6LLSxJfN2ROfElh3beANg2mAiAUYmppd7eODJLCGqFc+oUi0L99gmpw==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
