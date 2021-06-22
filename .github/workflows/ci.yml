@@ -4,20 +4,20 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [master, beta]
+    branches: [master]
   pull_request:
-    branches: [master, beta]
+    branches: [master]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
+  test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: "12"
       - name: Install Nigiri
@@ -28,4 +28,11 @@ jobs:
       - run: yarn
       - run: yarn build
       - run: yarn lint
-      - run: yarn test
+
+      #- name: Install and Run TDEX Daemon
+      #  shell: 'script -q -e -c "bash {0}"'
+      #  run: bash ./scripts/tdexd-run
+
+      # Unit and Integration test
+      - name: Run Integration Tests
+        run: yarn test

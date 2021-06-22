@@ -23,6 +23,7 @@ export function decodePsbt(
   try {
     psbt = Psbt.fromBase64(psetBase64);
   } catch (ignore) {
+    console.log(ignore);
     throw new Error('Invalid psbt');
   }
 

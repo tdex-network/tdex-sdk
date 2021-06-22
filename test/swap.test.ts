@@ -70,7 +70,7 @@ describe('Swap', () => {
 
     const bytes = swap.complete({
       message: swapAcceptMessage,
-      psetBase64: finalPsbtOfAlice,
+      psetBase64OrHex: finalPsbtOfAlice,
     });
 
     expect(bytes).toBeDefined();
@@ -221,7 +221,7 @@ describe('Swap', () => {
       assert.doesNotThrow(() => {
         swap.complete({
           message: acceptMessage,
-          psetBase64: fixtures.confidentialSwaps[0].complete.psbt,
+          psetBase64OrHex: fixtures.confidentialSwaps[0].complete.psbt,
         });
       });
     });

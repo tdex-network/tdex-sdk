@@ -4,3 +4,4 @@ export * from './trade.web';
 export * from './tradeCore';
 export * from './grpcClient.web';
 export * from './transaction';
+export * from './tdexMnemonic';

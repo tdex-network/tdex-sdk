@@ -112,3 +112,5 @@ dist-web
 .vscode/
 
 .prettierignore
+
+/tdexd/
