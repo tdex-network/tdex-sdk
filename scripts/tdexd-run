@@ -24,13 +24,13 @@ addressfee=$($tdex depositfee | jq -r '.address_with_blinding_key[0].address')
 echo ""
 echo "fee address: ${addressfee}"
 
-feetxid1=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
-feetxid2=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
-feetxid3=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+feetxid1=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressfee'", "amount": 0.1}' "http://localhost:3001/faucet")
+feetxid2=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressfee'", "amount": 0.1}' "http://localhost:3001/faucet")
+feetxid3=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressfee'", "amount": 0.1}' "http://localhost:3001/faucet")
 
 sleep 5
 
-feevout1=$(nigiri rpc --liquid gettransaction $feetxid1 | jq -r '.details[0].vout')
+feevout1=$(curl -s -X GET "http://localhost:3001/tx/'$feetxid1'" | jq -r '.details[0].vout')
 feevout2=$(nigiri rpc --liquid gettransaction $feetxid2 | jq -r '.details[0].vout')
 feevout3=$(nigiri rpc --liquid gettransaction $feetxid3 | jq -r '.details[0].vout')
 

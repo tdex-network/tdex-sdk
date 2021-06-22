@@ -1,8 +1,14 @@
-import { IdentityOpts, fetchAndUnblindUtxos, MnemonicOpts } from 'ldk';
+import {
+  IdentityOpts,
+  fetchAndUnblindUtxos,
+  MnemonicOpts,
+  AddressInterface,
+} from 'ldk';
 import { Trade, IdentityType, greedyCoinSelector } from '../src/index';
 import { TDEXMnemonic } from '../src/tdexMnemonic';
 
 import tradeFixture from './fixtures/trade.integration.json';
+import { faucet } from './_regtest';
 
 //import { sleep } from './_regtest';
 
@@ -22,16 +28,20 @@ const explorerUrl = 'http://localhost:3001';
 const identity = new TDEXMnemonic(identityOpts);
 
 describe('Integration tests with a local daemon', () => {
-  test.skip('Should sell some LBTCs with a daemon', async () => {
-    /*     const restoredMnemonic = await mnemonicRestorerFromEsplora(identity)({
-          gapLimit: 30,
-          esploraURL: explorerUrl,
-        }); */
+  let addresses: AddressInterface[];
 
+  beforeAll(async () => {
+    const proposerAddress = (await identity.getNextAddress())
+      .confidentialAddress;
+    await faucet(proposerAddress);
+
+    addresses = await identity.getAddresses();
+  });
+
+  test('Should sell some LBTCs with a daemon', async () => {
     // address
     //el1qqdjz2azu3wkwvsxpy499er7ar6rxwdwcn8cc2zcl3achutwuhv65rd6spsrf2lnsrddyrlhxahj0cluzczam2pt960mkdpa9u
-    await identity.getNextAddress();
-    const addresses = await identity.getAddresses();
+
     const utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
     // blidning
     // 48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc
