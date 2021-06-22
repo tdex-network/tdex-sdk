@@ -10,7 +10,7 @@ import { TDEXMnemonic } from '../src/tdexMnemonic';
 import tradeFixture from './fixtures/trade.integration.json';
 import { faucet } from './_regtest';
 
-//import { sleep } from './_regtest';
+import { sleep } from './_regtest';
 
 const market = tradeFixture.market;
 
@@ -34,9 +34,10 @@ describe('Integration tests with a local daemon', () => {
     const proposerAddress = (await identity.getNextAddress())
       .confidentialAddress;
     await faucet(proposerAddress);
+    await sleep(3000);
 
     addresses = await identity.getAddresses();
-  });
+  }, 36000);
 
   test('Should sell some LBTCs with a daemon', async () => {
     // address
