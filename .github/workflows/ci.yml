@@ -30,7 +30,7 @@ jobs:
       - run: yarn lint
 
       - name: Install and Run TDEX Daemon
-        run: bash ./scripts/tdexd-run
+        run: sh ./scripts/tdexd-run
 
       # Unit and Integration test
       - name: Run Integration Tests
