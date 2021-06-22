@@ -1,5 +1,5 @@
 {
-  "version": "1.6.10",
+  "version": "1.6.11",
   "license": "MIT",
   "main": "dist/index.js",
   "browser": "dist-web/index.js",
@@ -56,9 +56,9 @@
     }
   ],
   "devDependencies": {
-    "axios": "^0.21.1",
     "@types/jest": "^25.2.1",
     "@types/node": "^14.14.2",
+    "axios": "^0.21.1",
     "husky": "^4.2.3",
     "ts-protoc-gen": "^0.12.0",
     "tsdx": "^0.13.1",
