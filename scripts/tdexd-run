@@ -79,7 +79,4 @@ echo ""
 echo "opening market"
 $tdex open
 
-echo ""
-echo "You should start the app with the following exported variable"
-echo ""
-echo "export LIQUID_USDT='${shitcoin}'"
+echo '{"market": {"baseAsset": "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225","quoteAsset": "'$shitcoin'"}} ' >./test/fixtures/trade.integration.json

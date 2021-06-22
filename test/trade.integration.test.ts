@@ -2,13 +2,11 @@ import { IdentityOpts, fetchAndUnblindUtxos, MnemonicOpts } from 'ldk';
 import { Trade, IdentityType, greedyCoinSelector } from '../src/index';
 import { TDEXMnemonic } from '../src/tdexMnemonic';
 
+import tradeFixture from './fixtures/trade.integration.json';
+
 //import { sleep } from './_regtest';
 
-const market = {
-  baseAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-  quoteAsset:
-    '26cb2cfecb742a78ba0c76bc99ec82bc15f8e46239e46200e9b4d50df09533e4',
-};
+const market = tradeFixture.market;
 
 const identityOpts: IdentityOpts<MnemonicOpts> = {
   chain: 'regtest',
