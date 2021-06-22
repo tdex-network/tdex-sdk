@@ -9,7 +9,6 @@ import {
 import TraderClientInterface from './grpcClientInterface';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
 import { SwapTransaction } from './transaction';
-
 export interface MarketInterface {
   baseAsset: string;
   quoteAsset: string;
@@ -227,13 +226,14 @@ export class TradeCore extends Core implements TradeInterface {
       swapAcceptSerialized
     );
     const transaction = swapAcceptMessage.getTransaction();
-    const signedPset = await identity.signPset(transaction);
+
+    const signedHex = await identity.signPset(transaction);
 
     // Trader  adds his signed inputs to the transaction
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
       message: swapAcceptSerialized,
-      psetBase64: signedPset,
+      psetBase64OrHex: signedHex,
     });
 
     // Trader call the tradeComplete endpoint to finalize the swap

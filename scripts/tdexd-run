@@ -24,13 +24,17 @@ addressfee=$($tdex depositfee | jq -r '.address_with_blinding_key[0].address')
 echo ""
 echo "fee address: ${addressfee}"
 
-feetxid=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+feetxid1=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+feetxid2=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+feetxid3=$(nigiri faucet --liquid $addressfee | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+
 sleep 5
 
-feevout=$(nigiri rpc --liquid gettransaction $feetxid | jq -r '.details[0].vout')
-echo "fee outpoint: ${feetxid} ${feevout}"
+feevout1=$(nigiri rpc --liquid gettransaction $feetxid1 | jq -r '.details[0].vout')
+feevout2=$(nigiri rpc --liquid gettransaction $feetxid2 | jq -r '.details[0].vout')
+feevout3=$(nigiri rpc --liquid gettransaction $feetxid3 | jq -r '.details[0].vout')
 
-$tdex claimfee --outpoints '[{"hash":"'$feetxid'", "index":'$feevout'}]'
+$tdex claimfee --outpoints '[{"hash":"'$feetxid1'", "index":'$feevout1'}, {"hash":"'$feetxid2'", "index":'$feevout2'}, {"hash":"'$feetxid3'", "index":'$feevout3'}]'
 sleep 1
 
 addressmarket=$($tdex depositmarket | jq -r '.addresses[0]')
@@ -45,22 +49,30 @@ btcvout=$(nigiri rpc --liquid gettransaction $btctxid | jq -r '.details[0].vout'
 
 echo "market base outpoint: ${btctxid} ${btcvout}"
 
-mintresponse=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket'", "amount": 500000, "name": "Liquid Tether", "ticker":"USDt"}' "http://localhost:3001/mint")
+addressresponse=$(curl -s -X GET http://localhost:3001/getnewaddress)
+addressnigiri=$(echo $addressresponse | jq -r '.address')
+
+mintresponse=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount": 500000, "name": "Liquid Tether", "ticker":"USDt"}' "http://localhost:3001/mint")
 sleep 5
 
 shitcoin=$(echo $mintresponse | jq -r '.asset')
-shittxid=$(echo $mintresponse | jq -r '.txId')
 
-shitvout=$(nigiri rpc --liquid gettransaction $shittxid | jq -r '.details[0].vout')
+shittxid1=$(nigiri faucet --liquid $addressmarket 100000 $shitcoin | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+shittxid2=$(nigiri faucet --liquid $addressmarket 100000 $shitcoin | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+shittxid3=$(nigiri faucet --liquid $addressmarket 100000 $shitcoin | grep '^txId: ' | cut -d ':' -f 2 | tr -d ' ')
+sleep 5
 
-shitcoin=$(echo $mintresponse | jq -r '.asset')
+shitvout1=$(nigiri rpc --liquid gettransaction $shittxid1 | jq -r '.details[0].vout')
+shitvout2=$(nigiri rpc --liquid gettransaction $shittxid2 | jq -r '.details[0].vout')
+shitvout3=$(nigiri rpc --liquid gettransaction $shittxid3 | jq -r '.details[0].vout')
+
 echo "market quote asset: ${shitcoin}"
-echo "market quote outpoint: ${shittxid} ${shitvout}"
+#echo "market quote outpoint: ${shittxid1} ${shitvout}"
 
 $tdex config set base_asset 5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225 &>/dev/null
 $tdex config set quote_asset $shitcoin &>/dev/null
 
-$tdex claimmarket --outpoints '[{"hash":"'$btctxid'", "index":'$btcvout'}, {"hash":"'$shittxid'", "index":'$shitvout'}]'
+$tdex claimmarket --outpoints '[{"hash":"'$btctxid'", "index":'$btcvout'}, {"hash":"'$shittxid1'", "index":'$shitvout1'}, {"hash":"'$shittxid2'", "index":'$shitvout2'}, {"hash":"'$shittxid3'", "index":'$shitvout3'}]'
 sleep 1
 
 echo ""
