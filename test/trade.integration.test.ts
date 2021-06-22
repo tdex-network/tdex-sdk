@@ -22,7 +22,7 @@ const explorerUrl = 'http://localhost:3001';
 const identity = new TDEXMnemonic(identityOpts);
 
 describe('Integration tests with a local daemon', () => {
-  test('Should sell some LBTCs with a daemon', async () => {
+  test.skip('Should sell some LBTCs with a daemon', async () => {
     /*     const restoredMnemonic = await mnemonicRestorerFromEsplora(identity)({
           gapLimit: 30,
           esploraURL: explorerUrl,
