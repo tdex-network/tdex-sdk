@@ -3,6 +3,8 @@ import {
   fetchAndUnblindUtxos,
   MnemonicOpts,
   AddressInterface,
+  Mnemonic,
+  // Mnemonic,
 } from 'ldk';
 import { Trade, IdentityType, greedyCoinSelector } from '../src/index';
 import { TDEXMnemonic } from '../src/tdexMnemonic';
@@ -25,56 +27,111 @@ const identityOpts: IdentityOpts<MnemonicOpts> = {
 
 const explorerUrl = 'http://localhost:3001';
 
-const identity = new TDEXMnemonic(identityOpts);
-
 describe('Integration tests with a local daemon', () => {
-  let addresses: AddressInterface[];
+  describe('With TDEXMnemonic', () => {
+    const identity = new TDEXMnemonic(identityOpts);
+    let addresses: AddressInterface[];
 
-  beforeAll(async () => {
-    const proposerAddress = (await identity.getNextAddress())
-      .confidentialAddress;
-    await faucet(proposerAddress);
-    await sleep(3000);
+    beforeAll(async () => {
+      const proposerAddress = (await identity.getNextAddress())
+        .confidentialAddress;
+      await faucet(proposerAddress);
+      await sleep(3000);
 
-    addresses = await identity.getAddresses();
-  }, 36000);
+      addresses = await identity.getAddresses();
+    }, 36000);
 
-  test('Should sell some LBTCs with a daemon', async () => {
-    // address
-    //el1qqdjz2azu3wkwvsxpy499er7ar6rxwdwcn8cc2zcl3achutwuhv65rd6spsrf2lnsrddyrlhxahj0cluzczam2pt960mkdpa9u
+    test('Should sell some LBTCs with a daemon (TDEXMnemonic)', async () => {
+      let utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
 
-    const utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
-    // blidning
-    // 48566cd9b86dfd4107d615bc4b929fc63347d72238a16844e657c60fe4593ffc
-    const trade = new Trade({
-      providerUrl: 'localhost:9945',
-      explorerUrl,
-      utxos,
-      coinSelector: greedyCoinSelector(),
-    });
+      const tradeSell = new Trade({
+        providerUrl: 'localhost:9945',
+        explorerUrl,
+        utxos,
+        coinSelector: greedyCoinSelector(),
+      });
 
-    try {
-      const txid = await trade.sell({
+      const txidSell = await tradeSell.sell({
         market,
         amount: 5000,
         asset: market.baseAsset,
         identity,
       });
-      console.log(txid);
-      expect(txid).toBeDefined();
-    } catch (e) {
-      console.error(e);
-    }
 
-    /*     await sleep(1500);
-    
-        const txid3 = await trade.buy({
-          market,
-          amount: 10000,
-          asset: market.baseAsset,
-          identity,
-        });
-        console.log(txid3);
-        expect(txid3).toBeDefined(); */
-  }, 360000);
+      expect(txidSell).toBeDefined();
+      addresses = await identity.getAddresses();
+
+      await sleep(1500);
+
+      utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+      const tradeBuy = new Trade({
+        providerUrl: 'localhost:9945',
+        explorerUrl,
+        utxos,
+        coinSelector: greedyCoinSelector(),
+      });
+
+      const txidBuy = await tradeBuy.buy({
+        market,
+        amount: 1000,
+        asset: market.baseAsset,
+        identity,
+      });
+
+      expect(txidBuy).toBeDefined();
+    }, 360000);
+  });
+
+  describe('With Mnemonic', () => {
+    const identity = new Mnemonic(identityOpts);
+    let addresses: AddressInterface[];
+
+    beforeAll(async () => {
+      const proposerAddress = (await identity.getNextAddress())
+        .confidentialAddress;
+      await faucet(proposerAddress);
+      await sleep(3000);
+
+      addresses = await identity.getAddresses();
+    }, 36000);
+    test('Should sell some LBTCs with a daemon (LDK Mnemonic)', async () => {
+      let utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+
+      const tradeSell = new Trade({
+        providerUrl: 'localhost:9945',
+        explorerUrl,
+        utxos,
+        coinSelector: greedyCoinSelector(),
+      });
+
+      const txidSell = await tradeSell.sell({
+        market,
+        amount: 5000,
+        asset: market.baseAsset,
+        identity,
+      });
+
+      expect(txidSell).toBeDefined();
+      addresses = await identity.getAddresses();
+
+      await sleep(1500);
+
+      utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+      const tradeBuy = new Trade({
+        providerUrl: 'localhost:9945',
+        explorerUrl,
+        utxos,
+        coinSelector: greedyCoinSelector(),
+      });
+
+      const txidBuy = await tradeBuy.buy({
+        market,
+        amount: 1000,
+        asset: market.baseAsset,
+        identity,
+      });
+
+      expect(txidBuy).toBeDefined();
+    }, 360000);
+  });
 });

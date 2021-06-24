@@ -1796,6 +1796,11 @@ bip174-liquid@^1.0.1-liquid:
   resolved "https://registry.yarnpkg.com/bip174-liquid/-/bip174-liquid-1.0.1-liquid.revert1.tgz#16be96813066207a095979ac0648a14cafc73110"
   integrity sha512-rvosIa9LmoWTHMuSRch44Iufs9YTii7Z9H1PWXKuYZtijFeNpIm/RmdF7+VcX9USwEZDOw9iPCysZN2rAb9kVw==
 
+bip174-liquid@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/bip174-liquid/-/bip174-liquid-1.0.3.tgz#5009444091da80277c45ee90c255d7919646f907"
+  integrity sha512-e69sC0Cq2tBJuhG2+wieXv40DN13YBR/wbIjZp4Mqwpar5vQm8Ldqijdd6N33XG7LtfvQi/zKm5fSzdPY/9mgw==
+
 bip32@^2.0.4, bip32@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/bip32/-/bip32-2.0.6.tgz#6a81d9f98c4cd57d05150c60d8f9e75121635134"
@@ -1831,7 +1836,7 @@ bitcoin-ops@^1.3.0, bitcoin-ops@^1.4.0:
   resolved "https://registry.yarnpkg.com/bitcoin-ops/-/bitcoin-ops-1.4.1.tgz#e45de620398e22fd4ca6023de43974ff42240278"
   integrity sha512-pef6gxZFztEhaE9RY9HmWVmiIHqCb2OyS4HPKkpc6CIiiOa3Qmuoylxc5P2EkU3w+5eTSifI9SEZC88idAIGow==
 
-"blech32@github:vulpemventures/blech32":
+"blech32@github:vulpemventures/blech32", blech32@vulpemventures/blech32.git:
   version "1.0.0"
   resolved "https://codeload.github.com/vulpemventures/blech32/tar.gz/1c9acd89bdd2a2a5016fb942cf7d898579f84c8d"
 
@@ -4282,16 +4287,16 @@ language-tags@^1.0.5:
   dependencies:
     language-subtag-registry "~0.3.2"
 
-ldk@^0.3.5:
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.5.tgz#c4a3dfac60a6e2b526b3834de01dd5892a7906b8"
-  integrity sha512-zzGwZEifdRYNOGaYD2rKwNPn+nGdE7Vxc4fyXtrZRnxLqJ2OxIHa8nhLktvRpovtC5Y9O12d0Bj3karzeClCPg==
+ldk@^0.3.7:
+  version "0.3.7"
+  resolved "https://registry.yarnpkg.com/ldk/-/ldk-0.3.7.tgz#a3f97d77764c31e79755918c338f0368c13c127f"
+  integrity sha512-KPwO/rjgkTrKo8LxNrBZ3hf6K5cYbS/SFDato6WuM44SAQVlJG8K+G/yrPBMt0vjQdRjWIZqWL6HEr25SKx8/Q==
   dependencies:
     axios "^0.21.1"
     bip32 "^2.0.6"
     bip39 "^3.0.3"
     bs58check "^2.1.2"
-    liquidjs-lib "^5.1.13"
+    liquidjs-lib "^5.1.14"
     marina-provider "^1.0.0"
     slip77 "^0.1.1"
 
@@ -4326,6 +4331,29 @@ liquidjs-lib@^5.1.13:
     "@vulpemventures/secp256k1-zkp" "^2.0.0"
     bech32 "^1.1.2"
     bip174-liquid "^1.0.1-liquid"
+    bip32 "^2.0.4"
+    bip66 "^1.1.0"
+    bitcoin-ops "^1.4.0"
+    blech32 vulpemventures/blech32.git
+    bs58check "^2.0.0"
+    create-hash "^1.1.0"
+    create-hmac "^1.1.3"
+    merkle-lib "^2.0.10"
+    pushdata-bitcoin "^1.0.1"
+    randombytes "^2.0.1"
+    tiny-secp256k1 "^1.1.1"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.0.4"
+    wif "^2.0.1"
+
+liquidjs-lib@^5.1.14:
+  version "5.1.14"
+  resolved "https://registry.yarnpkg.com/liquidjs-lib/-/liquidjs-lib-5.1.14.tgz#105ab9cdc6c5723897d516d83e726424a2de8e25"
+  integrity sha512-Qwskr6J3+XeItzMG3c/mly0zMmGA9XYM10sBrlnc5/dwAENrUAof7AqWjBDEUk2GuVaEvpSUT+m2wO+vMrP8bQ==
+  dependencies:
+    "@vulpemventures/secp256k1-zkp" "^2.0.0"
+    bech32 "^1.1.2"
+    bip174-liquid "^1.0.3"
     bip32 "^2.0.4"
     bip66 "^1.1.0"
     bitcoin-ops "^1.4.0"
