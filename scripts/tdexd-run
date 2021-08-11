@@ -100,36 +100,39 @@ btcvout=$(curl -s -X GET "http://localhost:3001/address/$addressmarket0/utxo" | 
 echo "market base outpoint: ${btctxid} ${btcvout}"
 
 addressnigiri=$(curl -s -X GET "http://localhost:3001/getnewaddress" | jq -r '.address')
-shitcoin=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":300000, "name": "Liquid Tether", "ticker":"USDt"}' "http://localhost:3001/mint" | jq -r '.asset')
+usdt=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":300000, "name": "Liquid Tether",
+"ticker":"USDt"}' "http://localhost:3001/mint" | jq -r '.asset')
 sleep 5
 
-echo "market quote asset: ${shitcoin}"
+echo "market quote asset: ${usdt}"
 
-shittxid1=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket1'", "asset": "'$shitcoin'", "amount": 100000}' "http://localhost:3001/faucet" | jq -r '.txId')
-shittxid2=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket2'", "asset": "'$shitcoin'", "amount": 100000}' "http://localhost:3001/faucet" | jq -r '.txId')
-shittxid3=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket3'", "asset": "'$shitcoin'", "amount": 100000}' "http://localhost:3001/faucet" | jq -r '.txId')
+usdttxid1=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket1'", "asset": "'$usdt'", "amount":
+100000}' "http://localhost:3001/faucet" | jq -r '.txId')
+usdttxid2=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket2'", "asset": "'$usdt'", "amount":
+100000}' "http://localhost:3001/faucet" | jq -r '.txId')
+usdttxid3=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket3'", "asset": "'$usdt'", "amount":
+100000}' "http://localhost:3001/faucet" | jq -r '.txId')
 sleep 5
 
-shitvout1=$(curl -s -X GET "http://localhost:3001/address/$addressmarket1/utxo" | jq -r '.[0].vout')
-shitvout2=$(curl -s -X GET "http://localhost:3001/address/$addressmarket2/utxo" | jq -r '.[0].vout')
-shitvout3=$(curl -s -X GET "http://localhost:3001/address/$addressmarket3/utxo" | jq -r '.[0].vout')
+usdtvout1=$(curl -s -X GET "http://localhost:3001/address/$addressmarket1/utxo" | jq -r '.[0].vout')
+usdtvout2=$(curl -s -X GET "http://localhost:3001/address/$addressmarket2/utxo" | jq -r '.[0].vout')
+usdtvout3=$(curl -s -X GET "http://localhost:3001/address/$addressmarket3/utxo" | jq -r '.[0].vout')
 
 echo ""
-echo "market quote outpoint 1: ${shittxid1} ${shitvout1}"
-echo "market quote outpoint 2: ${shittxid2} ${shitvout2}"
-echo "market quote outpoint 3: ${shittxid3} ${shitvout3}"
+echo "market quote outpoint 1: ${usdttxid1} ${usdtvout1}"
+echo "market quote outpoint 2: ${usdttxid2} ${usdtvout2}"
+echo "market quote outpoint 3: ${usdttxid3} ${usdtvout3}"
 
 $tdex config set base_asset $TDEX_BASE_ASSET &>/dev/null
-$tdex config set quote_asset $shitcoin &>/dev/null
+$tdex config set quote_asset $usdt &>/dev/null
 
-$tdex claimmarket --outpoints '[{"hash":"'$btctxid'", "index":'$btcvout'}, {"hash":"'$shittxid1'", "index":'$shitvout1'}, {"hash":"'$shittxid2'", "index":'$shitvout2'}, {"hash":"'$shittxid3'", "index":'$shitvout3'}]'
+$tdex claimmarket --outpoints '[{"hash":"'$btctxid'", "index":'$btcvout'}, {"hash":"'$usdttxid1'", "index":'$usdtvout1'},
+{"hash":"'$usdttxid2'", "index":'$usdtvout2'}, {"hash":"'$usdttxid3'", "index":'$usdtvout3'}]'
 sleep 1
 
 echo ""
 echo "opening market"
 $tdex open
-
-echo '{"market": {"baseAsset": "'$TDEX_BASE_ASSET'","quoteAsset": "'$shitcoin'"}} ' >./test/fixtures/trade.integration.json
 
 echo ""
 echo "////////////////////////"
@@ -155,34 +158,40 @@ btcvout=$(curl -s -X GET "http://localhost:3001/address/$addressmarket0/utxo" | 
 echo "market base outpoint: ${btctxid} ${btcvout}"
 
 addressnigiri=$(curl -s -X GET "http://localhost:3001/getnewaddress" | jq -r '.address')
-shitcoin=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":300000, "name": "Liquid CAD",
+lcad=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":300000, "name": "Liquid CAD",
 "ticker":"LCAD"}' "http://localhost:3001/mint" | jq -r '.asset')
 sleep 5
 
-echo "market quote asset: ${shitcoin}"
+echo "market quote asset: ${lcad}"
 
-shittxid1=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket1'", "asset": "'$shitcoin'", "amount": 100000}' "http://localhost:3001/faucet" | jq -r '.txId')
-shittxid2=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket2'", "asset": "'$shitcoin'", "amount": 100000}' "http://localhost:3001/faucet" | jq -r '.txId')
-shittxid3=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket3'", "asset": "'$shitcoin'", "amount": 100000}' "http://localhost:3001/faucet" | jq -r '.txId')
+lcadtxid1=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket1'", "asset": "'$lcad'", "amount":
+100000}' "http://localhost:3001/faucet" | jq -r '.txId')
+lcadtxid2=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket2'", "asset": "'$lcad'", "amount":
+100000}' "http://localhost:3001/faucet" | jq -r '.txId')
+lcadtxid3=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressmarket3'", "asset": "'$lcad'", "amount":
+100000}' "http://localhost:3001/faucet" | jq -r '.txId')
 sleep 5
 
-shitvout1=$(curl -s -X GET "http://localhost:3001/address/$addressmarket1/utxo" | jq -r '.[0].vout')
-shitvout2=$(curl -s -X GET "http://localhost:3001/address/$addressmarket2/utxo" | jq -r '.[0].vout')
-shitvout3=$(curl -s -X GET "http://localhost:3001/address/$addressmarket3/utxo" | jq -r '.[0].vout')
+lcadvout1=$(curl -s -X GET "http://localhost:3001/address/$addressmarket1/utxo" | jq -r '.[0].vout')
+lcadvout2=$(curl -s -X GET "http://localhost:3001/address/$addressmarket2/utxo" | jq -r '.[0].vout')
+lcadvout3=$(curl -s -X GET "http://localhost:3001/address/$addressmarket3/utxo" | jq -r '.[0].vout')
 
 echo ""
-echo "market quote outpoint 1: ${shittxid1} ${shitvout1}"
-echo "market quote outpoint 2: ${shittxid2} ${shitvout2}"
-echo "market quote outpoint 3: ${shittxid3} ${shitvout3}"
+echo "market quote outpoint 1: ${lcadtxid1} ${lcadvout1}"
+echo "market quote outpoint 2: ${lcadtxid2} ${lcadvout2}"
+echo "market quote outpoint 3: ${lcadtxid3} ${lcadvout3}"
 
 $tdex config set base_asset $TDEX_BASE_ASSET &>/dev/null
-$tdex config set quote_asset $shitcoin &>/dev/null
+$tdex config set quote_asset $lcad &>/dev/null
 
-$tdex claimmarket --outpoints '[{"hash":"'$btctxid'", "index":'$btcvout'}, {"hash":"'$shittxid1'", "index":'$shitvout1'}, {"hash":"'$shittxid2'", "index":'$shitvout2'}, {"hash":"'$shittxid3'", "index":'$shitvout3'}]'
+$tdex claimmarket --outpoints '[{"hash":"'$btctxid'", "index":'$btcvout'}, {"hash":"'$lcadtxid1'", "index":'$lcadvout1'},
+{"hash":"'$lcadtxid2'",
+"index":'$lcadvout2'}, {"hash":"'$lcadtxid3'", "index":'$lcadvout3'}]'
 sleep 1
 
 echo ""
 echo "opening market"
 $tdex open
 
-echo '{"market": {"baseAsset": "'$TDEX_BASE_ASSET'","quoteAsset": "'$shitcoin'"}} ' >./test/fixtures/trade.integration.json
+echo '[{"market": {"baseAsset": "'$TDEX_BASE_ASSET'","quoteAsset": "'$usdt'"}}, {"market": {"baseAsset": "'$TDEX_BASE_ASSET'",
+"quoteAsset": "'$lcad'"}}]' > ./test/fixtures/trade.integration.json
