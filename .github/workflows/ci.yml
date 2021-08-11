@@ -20,11 +20,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: "12"
-      - name: Install Nigiri
-        run: |
-          mkdir -p tmp; cd tmp
-          curl https://travis.nigiri.network | bash; cd ..
-          docker-compose -f  tmp/docker-compose.yml up -d
+          
+      - name: Nigiri Bitcoin
+        uses: vulpemventures/nigiri-github-action@v1
+        
       - run: yarn
       - run: yarn build
       - run: yarn lint
