@@ -4,17 +4,16 @@ import {
   MnemonicOpts,
   AddressInterface,
   Mnemonic,
-  // Mnemonic,
 } from 'ldk';
-import { Trade, IdentityType, greedyCoinSelector } from '../src/index';
-import { TDEXMnemonic } from '../src/tdexMnemonic';
+import { Trade, IdentityType, greedyCoinSelector } from '../src';
+import { TDEXMnemonic } from '../src';
 
 import tradeFixture from './fixtures/trade.integration.json';
 import { faucet } from './_regtest';
 
 import { sleep } from './_regtest';
 
-const market = tradeFixture.market;
+const market = tradeFixture[0].market;
 
 const identityOpts: IdentityOpts<MnemonicOpts> = {
   chain: 'regtest',
