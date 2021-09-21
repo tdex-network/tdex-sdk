@@ -1,3 +1,5 @@
+import { BalanceWithFee } from 'tdex-protobuf/generated/js/types_pb';
+
 export default interface TraderClientInterface {
   providerUrl: string;
   client: any;
@@ -41,10 +43,5 @@ export default interface TraderClientInterface {
   }: {
     baseAsset: string;
     quoteAsset: string;
-  }): Promise<
-    Array<{
-      balance?: { baseAmount: number; quoteAmount: number };
-      fee?: { basisPoint: number };
-    }>
-  >;
+  }): Promise<BalanceWithFee.AsObject[]>;
 }

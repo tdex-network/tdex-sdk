@@ -151,7 +151,7 @@ export class TraderClient implements TraderClientInterface {
   }: {
     baseAsset: string;
     quoteAsset: string;
-  }): Promise<Array<types.BalanceWithFee.AsObject>> {
+  }): Promise<types.BalanceWithFee.AsObject[]> {
     const market = new types.Market();
     market.setBaseAsset(baseAsset);
     market.setQuoteAsset(quoteAsset);

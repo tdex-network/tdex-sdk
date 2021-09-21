@@ -5,3 +5,5 @@ export * from './tradeCore';
 export * from './grpcClient';
 export * from './transaction';
 export * from './tdexMnemonic';
+export * from './discoverer';
+export * from './discovery';
