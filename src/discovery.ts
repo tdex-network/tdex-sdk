@@ -75,3 +75,46 @@ export const bestBalanceDiscovery: Discovery = async (
 
   return bestTraders;
 };
+
+// bestPriceDiscovery returns the clients with the lower price.
+export const bestPriceDiscovery: Discovery = async (
+  clients: TraderClientInterface[],
+  opts: DiscoveryOpts,
+  errorHandler?: (err: any) => Promise<void>
+) => {
+  const pricesPromises = clients.map(client =>
+    client
+      .marketPrice(opts.market, opts.type, opts.amount, opts.asset)
+      .then(response => ({ client, amount: response[0].amount }))
+  );
+  const pricesResults = await Promise.allSettled(pricesPromises);
+
+  if (errorHandler) {
+    const rejectedResults = pricesResults.filter(
+      result => result.status === 'rejected'
+    );
+    for (const result of rejectedResults) {
+      await errorHandler(
+        (result as PromiseRejectedResult).reason ||
+          'an unknwon error occurs when trying to fetch price'
+      );
+    }
+  }
+
+  const pricesWithClients = pricesResults
+    .filter(result => result.status === 'fulfilled' && result.value)
+    .map(
+      p =>
+        (p as PromiseFulfilledResult<{
+          amount: number;
+          client: TraderClientInterface;
+        }>).value
+    );
+
+  const sorted = pricesWithClients.sort((p0, p1) => p0.amount - p1.amount);
+
+  const bestAmount = sorted[0].amount;
+  return sorted
+    .filter(({ amount }) => amount === bestAmount)
+    .map(({ client }) => client);
+};
