@@ -1,5 +1,6 @@
-import { MarketInterface, TradeType } from 'tradeCore';
+import { MarketInterface, TradeType } from './tradeCore';
 import TraderClientInterface from './grpcClientInterface';
+import { BalanceWithFee } from 'tdex-protobuf/generated/js/types_pb';
 
 export interface DiscoveryOpts {
   market: MarketInterface;
@@ -39,41 +40,49 @@ export const bestBalanceDiscovery: Discovery = async (
   opts: DiscoveryOpts,
   errorHandler?: (err: any) => Promise<void>
 ) => {
-  const balancesPromises = clients.map(client => client.balances(opts.market));
-  const balancesPromisesResults = await Promise.allSettled(balancesPromises);
-
-  let bestTraders: TraderClientInterface[] = [];
-  let maxAmount = 0;
-
-  let index = 0;
-  for (const result of balancesPromisesResults) {
-    if (result.status === 'fulfilled') {
-      const balance = result.value[0].balance;
-      if (!balance) {
-        if (errorHandler)
-          await errorHandler('unknown error, balance is undefined');
-        continue;
-      }
-
+  const balancesPromises = clients.map(client =>
+    client.balances(opts.market).then((balances: BalanceWithFee.AsObject[]) => {
+      const balance = balances[0].balance;
+      if (!balance) throw new Error('unknow error');
       const amount =
         opts.type === TradeType.BUY ? balance.baseAmount : balance.quoteAmount;
+      return {
+        amount,
+        client,
+      };
+    })
+  );
 
-      if (maxAmount < amount) {
-        maxAmount = amount;
-        bestTraders = [clients[index]];
-      }
+  const balancesPromisesResults = await Promise.allSettled(balancesPromises);
 
-      if (amount === maxAmount) {
-        bestTraders.push(clients[index]);
-      }
-    } else if (result.status === 'rejected' && errorHandler) {
-      await errorHandler(result.reason);
+  if (errorHandler) {
+    const rejectedResults = balancesPromisesResults.filter(
+      result => result.status === 'rejected'
+    );
+    for (const result of rejectedResults) {
+      await errorHandler(
+        (result as PromiseRejectedResult).reason ||
+          'an unknwon error occurs when trying to fetch balance'
+      );
     }
-
-    index++;
   }
 
-  return bestTraders;
+  const balancesWithClients = balancesPromisesResults
+    .filter(result => result.status === 'fulfilled' && result.value)
+    .map(
+      p =>
+        (p as PromiseFulfilledResult<{
+          amount: number;
+          client: TraderClientInterface;
+        }>).value
+    );
+
+  const sorted = balancesWithClients.sort((p0, p1) => p1.amount - p0.amount);
+
+  const bestAmount = sorted[0].amount;
+  return sorted
+    .filter(({ amount }) => amount === bestAmount)
+    .map(({ client }) => client);
 };
 
 // bestPriceDiscovery returns the clients with the lower price.
@@ -111,7 +120,7 @@ export const bestPriceDiscovery: Discovery = async (
         }>).value
     );
 
-  const sorted = pricesWithClients.sort((p0, p1) => p0.amount - p1.amount);
+  const sorted = pricesWithClients.sort((p0, p1) => p1.amount - p0.amount);
 
   const bestAmount = sorted[0].amount;
   return sorted
