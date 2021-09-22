@@ -5,11 +5,16 @@ import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
 import TraderClientInterface from './grpcClientInterface';
 import { getClearTextTorProxyUrl, rejectIfSwapFail } from './utils';
 
+const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
+
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.TradeClient;
 
-  constructor(providerUrl: string) {
+  constructor(
+    providerUrl: string,
+    torProxyEndpoint: string = DEFAULT_TOR_PROXY
+  ) {
     this.providerUrl = providerUrl;
     const url = new URL(providerUrl);
 
@@ -19,8 +24,6 @@ export class TraderClient implements TraderClientInterface {
       // We use the HTTP1 cleartext endpoint here provided by the public tor reverse proxy
       // https://pkg.go.dev/github.com/tdex-network/tor-proxy@v0.0.3/pkg/torproxy#NewTorProxy
       //host:port/<just_onion_host_without_dot_onion>/[<grpc_package>.<grpc_service>/<grpc_method>]
-      let torProxyEndpoint =
-        process.env.TOR_PROXY_ENDPOINT || 'https://proxy.tdex.network';
       this.providerUrl = getClearTextTorProxyUrl(torProxyEndpoint, url);
     }
 
