@@ -8,9 +8,10 @@ import { rejectIfSwapFail } from './utils';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
+
   client: services.TradeClient;
 
-  constructor(providerUrlString: string) {
+  constructor(providerUrlString: string, _torProxyEndpoint?: string) {
     let creds = grpc.credentials.createInsecure();
 
     this.providerUrl = providerUrlString;
