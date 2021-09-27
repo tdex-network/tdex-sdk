@@ -11,7 +11,11 @@ export class TraderClient implements TraderClientInterface {
 
   client: services.TradeClient;
 
-  constructor(providerUrlString: string, _torProxyEndpoint?: string) {
+  constructor(
+    providerUrlString: string, 
+    // @ts-ignore
+    torProxyEndpoint?: string
+  ) {
     let creds = grpc.credentials.createInsecure();
 
     this.providerUrl = providerUrlString;
