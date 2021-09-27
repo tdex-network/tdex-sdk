@@ -12,7 +12,7 @@ export class TraderClient implements TraderClientInterface {
   client: services.TradeClient;
 
   constructor(
-    providerUrlString: string, 
+    providerUrlString: string,
     // @ts-ignore
     torProxyEndpoint?: string
   ) {
