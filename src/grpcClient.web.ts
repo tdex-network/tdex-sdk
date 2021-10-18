@@ -53,19 +53,19 @@ export class TraderClient implements TraderClientInterface {
         SwapRequest.deserializeBinary(swapRequestSerialized)
       );
 
-      const call = this.client.tradePropose(request);
-
-      let data: Uint8Array;
-      call.on('data', (reply: messages.TradeProposeReply) => {
-        if (rejectIfSwapFail(reply, reject)) {
-          return;
+      this.client.tradePropose(
+        request,
+        null,
+        (err, response) => {
+          if (err) return reject(err);
+          if (rejectIfSwapFail(response!, reject)) {
+            return;
+          }
+          const swapAcceptMsg = response!.getSwapAccept();
+          const data = swapAcceptMsg!.serializeBinary();
+          return resolve(data);
         }
-        const swapAcceptMsg = reply!.getSwapAccept();
-        data = swapAcceptMsg!.serializeBinary();
-      });
-
-      call.on('end', () => resolve(data));
-      call.on('error', (e: any) => reject(e));
+      );
     });
   }
 
@@ -79,16 +79,17 @@ export class TraderClient implements TraderClientInterface {
       request.setSwapComplete(
         SwapComplete.deserializeBinary(swapCompleteSerialized)
       );
-      const call = this.client.tradeComplete(request);
-      let data: string;
-      call.on('data', (reply: messages.TradeCompleteReply) => {
-        if (rejectIfSwapFail(reply, reject)) {
-          return;
+      this.client.tradeComplete(
+        request,
+        null,
+        (err, response) => {
+          if (err) return reject(err);
+          if (rejectIfSwapFail(response!, reject)) {
+            return;
+          }
+          return resolve(response!.getTxid())
         }
-        data = reply!.getTxid();
-      });
-      call.on('end', () => resolve(data));
-      call.on('error', (e: any) => reject(e));
+      );
     });
   }
 
