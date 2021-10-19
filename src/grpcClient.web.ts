@@ -53,19 +53,15 @@ export class TraderClient implements TraderClientInterface {
         SwapRequest.deserializeBinary(swapRequestSerialized)
       );
 
-      this.client.tradePropose(
-        request,
-        null,
-        (err, response) => {
-          if (err) return reject(err);
-          if (rejectIfSwapFail(response!, reject)) {
-            return;
-          }
-          const swapAcceptMsg = response!.getSwapAccept();
-          const data = swapAcceptMsg!.serializeBinary();
-          return resolve(data);
+      this.client.tradePropose(request, null, (err, response) => {
+        if (err) return reject(err);
+        if (rejectIfSwapFail(response!, reject)) {
+          return;
         }
-      );
+        const swapAcceptMsg = response!.getSwapAccept();
+        const data = swapAcceptMsg!.serializeBinary();
+        return resolve(data);
+      });
     });
   }
 
@@ -79,17 +75,13 @@ export class TraderClient implements TraderClientInterface {
       request.setSwapComplete(
         SwapComplete.deserializeBinary(swapCompleteSerialized)
       );
-      this.client.tradeComplete(
-        request,
-        null,
-        (err, response) => {
-          if (err) return reject(err);
-          if (rejectIfSwapFail(response!, reject)) {
-            return;
-          }
-          return resolve(response!.getTxid())
+      this.client.tradeComplete(request, null, (err, response) => {
+        if (err) return reject(err);
+        if (rejectIfSwapFail(response!, reject)) {
+          return;
         }
-      );
+        return resolve(response!.getTxid());
+      });
     });
   }
 

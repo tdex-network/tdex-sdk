@@ -50,7 +50,7 @@ export class TraderClient implements TraderClientInterface {
         SwapRequest.deserializeBinary(swapRequestSerialized)
       );
 
-      this.client.tradePropose(request,(err, response) =>  {
+      this.client.tradePropose(request, (err, response) => {
         if (err) return reject(err);
         if (rejectIfSwapFail(response!, reject)) {
           return;
@@ -77,7 +77,7 @@ export class TraderClient implements TraderClientInterface {
         if (rejectIfSwapFail(response!, reject)) {
           return;
         }
-        return resolve(response!.getTxid())
+        return resolve(response!.getTxid());
       });
     });
   }
