@@ -71,7 +71,7 @@
     "ldk": "^0.3.12",
     "liquidjs-lib": "^5.1.17",
     "slip77": "^0.1.1",
-    "tdex-protobuf": "altafan/tdex-protobuf#update-trade-interface",
+    "tdex-protobuf": "tdex-network/tdex-protobuf#develop",
     "tslib": "^2.3.0"
   }
 }

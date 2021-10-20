@@ -6100,9 +6100,9 @@ table@^5.2.3:
     slice-ansi "^2.1.0"
     string-width "^3.0.0"
 
-tdex-protobuf@altafan/tdex-protobuf#update-trade-interface:
+tdex-protobuf@tdex-network/tdex-protobuf#develop:
   version "2.0.0"
-  resolved "https://codeload.github.com/altafan/tdex-protobuf/tar.gz/726b7bd4437690d8582c8b8121559e759b1c54e8"
+  resolved "https://codeload.github.com/tdex-network/tdex-protobuf/tar.gz/010c28e721225e9e1e7f1dcb85a5ff5a1f0e1235"
   dependencies:
     grpc-web "1.2.0"
 
