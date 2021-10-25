@@ -36,7 +36,7 @@ export class TraderClient implements TraderClientInterface {
    * @param tradeType
    * @param swapRequestSerialized
    */
-   tradePropose(
+  tradePropose(
     { baseAsset, quoteAsset }: any,
     tradeType: number,
     swapRequestSerialized: Uint8Array
@@ -91,7 +91,6 @@ export class TraderClient implements TraderClientInterface {
       call.on('error', (e: any) => reject(e));
     });
   }
-
 
   /**
    * proposeTrade
