@@ -18,6 +18,18 @@ export default interface TraderClientInterface {
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array>;
   tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string>;
+  proposeTrade(
+    {
+      baseAsset,
+      quoteAsset,
+    }: {
+      baseAsset: string;
+      quoteAsset: string;
+    },
+    tradeType: number,
+    swapRequestSerialized: Uint8Array
+  ): Promise<Uint8Array>;
+  completeTrade(swapCompleteSerialized: Uint8Array): Promise<string>;
   markets(): Promise<
     Array<{ baseAsset: string; quoteAsset: string; feeBasisPoint: number }>
   >;

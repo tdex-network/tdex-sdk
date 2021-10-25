@@ -36,7 +36,70 @@ export class TraderClient implements TraderClientInterface {
    * @param tradeType
    * @param swapRequestSerialized
    */
-  tradePropose(
+   tradePropose(
+    { baseAsset, quoteAsset }: any,
+    tradeType: number,
+    swapRequestSerialized: Uint8Array
+  ): Promise<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const market = new types.Market();
+      market.setBaseAsset(baseAsset);
+      market.setQuoteAsset(quoteAsset);
+
+      const request = new messages.TradeProposeRequest();
+      request.setMarket(market);
+      request.setType(tradeType);
+      request.setSwapRequest(
+        SwapRequest.deserializeBinary(swapRequestSerialized)
+      );
+
+      const call = this.client.tradePropose(request);
+
+      let data: Uint8Array;
+      call.on('data', (reply: messages.TradeProposeReply) => {
+        if (rejectIfSwapFail(reply, reject)) {
+          return;
+        }
+        const swapAcceptMsg = reply!.getSwapAccept();
+        data = swapAcceptMsg!.serializeBinary();
+      });
+
+      call.on('end', () => resolve(data));
+      call.on('error', (e: any) => reject(e));
+    });
+  }
+
+  /**
+   * tradeComplete
+   * @param swapCompleteSerialized
+   */
+  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const request = new messages.TradeCompleteRequest();
+      request.setSwapComplete(
+        SwapComplete.deserializeBinary(swapCompleteSerialized)
+      );
+      const call = this.client.tradeComplete(request);
+      let data: string;
+      call.on('data', (reply: messages.TradeCompleteReply) => {
+        if (rejectIfSwapFail(reply, reject)) {
+          return;
+        }
+        data = reply!.getTxid();
+      });
+      call.on('end', () => resolve(data));
+      call.on('error', (e: any) => reject(e));
+    });
+  }
+
+
+  /**
+   * proposeTrade
+   * @param market
+   * @param tradeType
+   * @param swapRequestSerialized
+   */
+  proposeTrade(
     { baseAsset, quoteAsset }: any,
     tradeType: number,
     swapRequestSerialized: Uint8Array
@@ -66,10 +129,10 @@ export class TraderClient implements TraderClientInterface {
   }
 
   /**
-   * tradeComplete
+   * completeTrade
    * @param swapCompleteSerialized
    */
-  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string> {
+  completeTrade(swapCompleteSerialized: Uint8Array): Promise<string> {
     return new Promise((resolve, reject) => {
       const request = new messages.CompleteTradeRequest();
       request.setSwapComplete(
