@@ -46,14 +46,14 @@ export class TraderClient implements TraderClientInterface {
       market.setBaseAsset(baseAsset);
       market.setQuoteAsset(quoteAsset);
 
-      const request = new messages.TradeProposeRequest();
+      const request = new messages.ProposeTradeRequest();
       request.setMarket(market);
       request.setType(tradeType);
       request.setSwapRequest(
         SwapRequest.deserializeBinary(swapRequestSerialized)
       );
 
-      this.client.tradePropose(request, null, (err, response) => {
+      this.client.proposeTrade(request, null, (err, response) => {
         if (err) return reject(err);
         if (rejectIfSwapFail(response!, reject)) {
           return;
@@ -71,11 +71,11 @@ export class TraderClient implements TraderClientInterface {
    */
   tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string> {
     return new Promise((resolve, reject) => {
-      const request = new messages.TradeCompleteRequest();
+      const request = new messages.CompleteTradeRequest();
       request.setSwapComplete(
         SwapComplete.deserializeBinary(swapCompleteSerialized)
       );
-      this.client.tradeComplete(request, null, (err, response) => {
+      this.client.completeTrade(request, null, (err, response) => {
         if (err) return reject(err);
         if (rejectIfSwapFail(response!, reject)) {
           return;
