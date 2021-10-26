@@ -48,12 +48,13 @@ export function getClearTextTorProxyUrl(
 }
 
 /**
- * used to inspect TradePropose or TradeComplete reply messages
+ * used to inspect TradePropose/TradeComplete or ProposeTrade/CompleteTrade
+ * reply messages
  * @param tradeReply TradePropose or TradeComplete protobuf messages
  * @param reject the promise's reject function
  */
 export function rejectIfSwapFail(
-  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply,
+  tradeReply: messages.TradeProposeReply | messages.TradeCompleteReply | messages.ProposeTradeReply | messages.CompleteTradeReply,
   reject: (reason?: any) => void
 ): boolean {
   const swapFail = tradeReply.getSwapFail();

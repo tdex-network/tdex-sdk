@@ -207,7 +207,7 @@ export class TradeCore extends Core implements TradeInterface {
     });
 
     // 0 === Buy === receiving base_asset; 1 === sell === receiving base_asset
-    const swapAcceptSerialized: Uint8Array = await this.grpcClient.tradePropose(
+    const swapAcceptSerialized: Uint8Array = await this.grpcClient.proposeTrade(
       market,
       tradeType,
       swapRequestSerialized
@@ -237,7 +237,7 @@ export class TradeCore extends Core implements TradeInterface {
     });
 
     // Trader call the tradeComplete endpoint to finalize the swap
-    const txid = await this.grpcClient.tradeComplete(swapCompleteSerialized);
+    const txid = await this.grpcClient.completeTrade(swapCompleteSerialized);
     return txid;
   }
 }
