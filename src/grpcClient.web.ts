@@ -37,7 +37,7 @@ export class TraderClient implements TraderClientInterface {
    * @param swapRequestSerialized
    */
   tradePropose(
-    { baseAsset, quoteAsset }: any,
+    { baseAsset, quoteAsset }: types.Market.AsObject,
     tradeType: number,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
@@ -99,7 +99,7 @@ export class TraderClient implements TraderClientInterface {
    * @param swapRequestSerialized
    */
   proposeTrade(
-    { baseAsset, quoteAsset }: any,
+    { baseAsset, quoteAsset }: types.Market.AsObject,
     tradeType: number,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
