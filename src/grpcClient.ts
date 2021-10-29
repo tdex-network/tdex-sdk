@@ -36,7 +36,7 @@ export class TraderClient implements TraderClientInterface {
    */
   tradePropose(
     { baseAsset, quoteAsset }: types.Market.AsObject,
-    tradeType: number,
+    tradeType: messages.TradeType,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -97,7 +97,7 @@ export class TraderClient implements TraderClientInterface {
    */
   proposeTrade(
     { baseAsset, quoteAsset }: types.Market.AsObject,
-    tradeType: number,
+    tradeType: messages.TradeType,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -163,14 +163,8 @@ export class TraderClient implements TraderClientInterface {
   }
 
   marketPrice(
-    {
-      baseAsset,
-      quoteAsset,
-    }: {
-      baseAsset: string;
-      quoteAsset: string;
-    },
-    tradeType: number,
+    { baseAsset, quoteAsset }: types.Market.AsObject,
+    tradeType: messages.TradeType,
     amount: number,
     asset: string
   ): Promise<Array<types.PriceWithFee.AsObject>> {
@@ -199,10 +193,7 @@ export class TraderClient implements TraderClientInterface {
   balances({
     baseAsset,
     quoteAsset,
-  }: {
-    baseAsset: string;
-    quoteAsset: string;
-  }): Promise<Array<types.BalanceWithFee.AsObject>> {
+  }: types.Market.AsObject): Promise<Array<types.BalanceWithFee.AsObject>> {
     const market = new types.Market();
     market.setBaseAsset(baseAsset);
     market.setQuoteAsset(quoteAsset);
