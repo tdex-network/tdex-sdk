@@ -114,3 +114,4 @@ dist-web
 .prettierignore
 
 /tdexd/
+test/fixtures/trade.integration.json

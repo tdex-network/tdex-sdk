@@ -34,6 +34,16 @@ export default class MockTraderClientInterface
   tradeComplete(_: Uint8Array): Promise<string> {
     throw new Error('Method not implemented.');
   }
+  proposeTrade(
+    _: { baseAsset: string; quoteAsset: string },
+    __: number,
+    ___: Uint8Array
+  ): Promise<Uint8Array> {
+    throw new Error('Method not implemented.');
+  }
+  completeTrade(_: Uint8Array): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
   markets(): Promise<
     { baseAsset: string; quoteAsset: string; feeBasisPoint: number }[]
   > {
