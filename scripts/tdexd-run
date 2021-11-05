@@ -21,7 +21,7 @@ echo ""
 
 docker run -it -d --name tdexd \
 -p 9945:9945 -p 9000:9000 \
--v "$(pwd)/tdexd:/.tdex-daemon" \
+-v "$(pwd)/tdexd:/home/user/.tdex-daemon" \
 -e TDEX_NETWORK="regtest" \
 -e TDEX_BASE_ASSET="$TDEX_BASE_ASSET" \
 -e TDEX_LOG_LEVEL=5 \
