@@ -43,7 +43,10 @@ export const bestBalanceDiscovery: Discovery = async (
       .balances(market)
       .then((balances: BalanceWithFee.AsObject[]) => {
         const balance = balances[0].balance;
-        if (!balance) throw new Error('unknow error');
+        if (!balance)
+          throw new Error(
+            `no balances for market ${market.baseAsset}/${market.quoteAsset} using provider: ${traderClient.providerUrl}`
+          );
         const balanceAmount =
           type === TradeType.BUY ? balance.baseAmount : balance.quoteAmount;
         return {
