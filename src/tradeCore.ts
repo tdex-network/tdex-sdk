@@ -9,9 +9,16 @@ import {
 import TraderClientInterface from './grpcClientInterface';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
 import { SwapTransaction } from './transaction';
+
 export interface MarketInterface {
   baseAsset: string;
   quoteAsset: string;
+}
+
+export interface TradeOrder {
+  type: TradeType;
+  market: MarketInterface;
+  traderClient: TraderClientInterface;
 }
 
 export interface TradeInterface extends CoreInterface {
