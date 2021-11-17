@@ -1,28 +1,28 @@
-import { Discovery, DiscoveryOpts } from 'discovery';
-import TraderClientInterface from 'grpcClientInterface';
+import { Discovery, DiscoveryOpts } from './discovery';
+import { TradeOrder } from './tradeCore';
 
 export interface DiscovererInterface {
-  clients: TraderClientInterface[];
+  orders: TradeOrder[];
   discovery: Discovery;
-  discover(opts: DiscoveryOpts): Promise<TraderClientInterface[]>;
+  discover(opts: DiscoveryOpts): Promise<TradeOrder[]>;
 }
 
 export class Discoverer implements DiscovererInterface {
-  clients: TraderClientInterface[];
+  orders: TradeOrder[];
   discovery: Discovery;
   errorHandler?: (err: any) => Promise<void>;
 
   constructor(
-    clients: TraderClientInterface[],
+    orders: TradeOrder[],
     discovery: Discovery,
     errorHandler?: (err: any) => Promise<void>
   ) {
-    this.clients = clients;
+    this.orders = orders;
     this.discovery = discovery;
     this.errorHandler = errorHandler;
   }
 
-  async discover(opts: DiscoveryOpts): Promise<TraderClientInterface[]> {
-    return this.discovery(this.clients, opts, this.errorHandler);
+  async discover(opts: DiscoveryOpts): Promise<TradeOrder[]> {
+    return this.discovery(this.orders, opts, this.errorHandler);
   }
 }
