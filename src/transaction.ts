@@ -4,6 +4,7 @@ import {
   address,
   IdentityInterface,
   CoinSelector,
+  CoinSelectorErrorFn,
 } from 'ldk';
 import { confidential, Psbt } from 'liquidjs-lib';
 
@@ -40,7 +41,16 @@ export class SwapTransaction implements SwapTransactionInterface {
     addressForChangeOutput: string,
     coinSelector: CoinSelector
   ) {
-    const { selectedUtxos, changeOutputs } = coinSelector(
+    const throwErrorHandler: CoinSelectorErrorFn = (
+      asset: string,
+      need: number,
+      has: number
+    ) => {
+      throw new Error(
+        `not enough funds to fill ${need}sats of ${asset} (amount selected: ${has})`
+      );
+    };
+    const { selectedUtxos, changeOutputs } = coinSelector(throwErrorHandler)(
       unspents,
       [
         {
@@ -49,7 +59,7 @@ export class SwapTransaction implements SwapTransactionInterface {
           address: '',
         },
       ],
-      (_: string) => addressForChangeOutput
+      () => addressForChangeOutput
     );
 
     for (const utxo of selectedUtxos) {
