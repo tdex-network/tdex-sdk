@@ -1,10 +1,10 @@
 import {
-  UtxoInterface,
   networks,
   address,
   IdentityInterface,
   CoinSelector,
   CoinSelectorErrorFn,
+  UnblindedOutput,
 } from 'ldk';
 import { confidential, Psbt } from 'liquidjs-lib';
 
@@ -32,7 +32,9 @@ export class SwapTransaction implements SwapTransactionInterface {
   }
 
   async create(
-    unspents: Array<UtxoInterface>,
+    unspents: Array<
+      UnblindedOutput & { redeemScript?: Buffer; witnessScript?: Buffer }
+    >,
     amountToBeSent: number,
     amountToReceive: number,
     assetToBeSent: string,
@@ -69,13 +71,9 @@ export class SwapTransaction implements SwapTransactionInterface {
         index: utxo.vout,
         //We put here the blinded prevout
         witnessUtxo: utxo.prevout,
+        ...utxo,
       };
-      if (utxo.redeemScript) {
-        inputData.redeemScript = utxo.redeemScript;
-      }
-      if (utxo.witnessScript) {
-        inputData.witnessScript = utxo.witnessScript;
-      }
+
       this.pset.addInput(inputData);
 
       if (!utxo.prevout) {

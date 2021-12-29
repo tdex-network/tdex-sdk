@@ -1,11 +1,17 @@
-import { SwapTransaction, UtxoInterface } from '../src';
-import { proposerBlindPubKey, proposerPubKey } from './fixtures/swap.keys';
-import { greedyCoinSelector, networks, payments, address } from 'ldk';
+import { SwapTransaction } from '../src';
+import {
+  greedyCoinSelector,
+  address,
+  UnblindedOutput,
+  networks,
+  payments,
+} from 'ldk';
 import {
   proposerP2PKH,
   proposerP2SH,
   proposerP2WPKH,
 } from './fixtures/identities';
+import { proposerPubKey, proposerBlindPubKey } from './fixtures/swap.keys';
 
 jest.setTimeout(30000);
 
@@ -13,7 +19,7 @@ describe('SwapTransaction', () => {
   test('should create a swap tx with p2pkh inputs', async () => {
     const addr: any = await proposerP2PKH.getNextAddress();
     const script: Buffer = address.toOutputScript(addr.confidentialAddress);
-    const utxos: UtxoInterface[] = mockUtxos(script);
+    const utxos = mockUtxos(script);
     const swaptx = new SwapTransaction(proposerP2PKH);
 
     await swaptx.create(
@@ -33,7 +39,7 @@ describe('SwapTransaction', () => {
   test('should create a swap tx with p2wpkh inputs', async () => {
     const addr = await proposerP2WPKH.getNextAddress();
     const script: Buffer = address.toOutputScript(addr.confidentialAddress);
-    const utxos: UtxoInterface[] = mockUtxos(script);
+    const utxos = mockUtxos(script);
 
     const swaptx = new SwapTransaction(proposerP2WPKH);
 
@@ -64,16 +70,12 @@ describe('SwapTransaction', () => {
 
     const addr = await proposerP2SH.getNextAddress();
     const script: Buffer = address.toOutputScript(addr.confidentialAddress);
-    const utxos: UtxoInterface[] = mockUtxos(script);
-
-    utxos.forEach((u: any) => {
-      u.redeemScript = redeemScript;
-    });
+    const utxos = mockUtxos(script);
 
     const swaptx = new SwapTransaction(proposerP2SH);
 
     await swaptx.create(
-      utxos,
+      utxos.map(u => ({ ...u, redeemScript })),
       100000,
       20_00000000,
       '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
@@ -87,13 +89,11 @@ describe('SwapTransaction', () => {
   });
 });
 
-function mockUtxos(script: Buffer): UtxoInterface[] {
+function mockUtxos(script: Buffer): UnblindedOutput[] {
   return [
     {
       txid: '0dad7ad63886e2c490aab6464b4768a90aa2af1176c4393acb31b3912c346794',
       vout: 1,
-      asset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-      value: 100000000,
       unblindData: {
         value: '100000000',
         asset: Buffer.from(

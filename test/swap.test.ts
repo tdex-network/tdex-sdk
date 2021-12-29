@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
 import { faucet, fetchUtxos, mint, fetchTxHex } from './_regtest';
 import { proposer, responder } from './fixtures/swap.keys';
-import { UtxoInterface, networks, address } from 'ldk';
+import { UnblindedOutput, networks, address } from 'ldk';
 
 const toOutputScript = (addr: string) =>
   address.toOutputScript(addr, networks.regtest);
@@ -93,7 +93,7 @@ describe('Swap', () => {
 
       altcoin = mintResult.asset;
 
-      const utxoProposer: UtxoInterface = (
+      const utxoProposer: UnblindedOutput = (
         await fetchUtxos(proposerAddress)
       )[0];
 

@@ -1,7 +1,7 @@
 import Core, { CoreInterface } from './core';
 import { Swap } from './swap';
 import {
-  UtxoInterface,
+  UnblindedOutput,
   IdentityInterface,
   CoinSelector,
   isValidAmount,
@@ -22,7 +22,7 @@ export interface TradeOrder {
 }
 
 export interface TradeInterface extends CoreInterface {
-  utxos: Array<UtxoInterface>;
+  utxos: Array<UnblindedOutput>;
   coinSelector: CoinSelector;
 }
 
@@ -34,7 +34,7 @@ export enum TradeType {
 export interface TradeOpts {
   providerUrl: string;
   explorerUrl: string;
-  utxos: Array<UtxoInterface>;
+  utxos: Array<UnblindedOutput>;
   coinSelector: CoinSelector;
 }
 
@@ -51,7 +51,7 @@ type TraderClientInterfaceFactory = (
 
 export class TradeCore extends Core implements TradeInterface {
   grpcClient: TraderClientInterface;
-  utxos: Array<UtxoInterface>;
+  utxos: Array<UnblindedOutput>;
   coinSelector: CoinSelector;
 
   constructor(
