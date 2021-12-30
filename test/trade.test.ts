@@ -4,7 +4,7 @@ import {
   IdentityOpts,
   PrivateKey,
   PrivateKeyOpts,
-  UtxoInterface,
+  UnblindedOutput,
 } from 'ldk';
 import * as TDEX from '../src/index';
 import { Trade, IdentityType } from '../src/index';
@@ -34,7 +34,7 @@ const identityOpts: IdentityOpts<PrivateKeyOpts> = {
 const identity = new PrivateKey(identityOpts);
 
 describe('TDEX SDK', () => {
-  let utxos: UtxoInterface[] = [];
+  let utxos: UnblindedOutput[] = [];
 
   beforeAll(async () => {
     const addr = await identity.getNextAddress();
