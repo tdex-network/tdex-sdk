@@ -76,7 +76,7 @@ echo "////////////////////////"
 echo "/// LBTC-USDt Market"
 
 addressnigiri=$(curl -s -X GET "http://localhost:3001/getnewaddress" | jq -r '.address')
-usdt=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":300000, "name": "Liquid Tether",
+usdt=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":500000, "name": "Liquid Tether",
 "ticker":"USDt"}' "http://localhost:3001/mint" | jq -r '.asset')
 sleep 7
 
@@ -132,7 +132,7 @@ echo "////////////////////////"
 echo "/// LBTC-LCAD Market"
 
 addressnigiri=$(curl -s -X GET "http://localhost:3001/getnewaddress" | jq -r '.address')
-lcad=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":300000, "name": "Liquid CAD",
+lcad=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"address":"'$addressnigiri'", "amount":500000, "name": "Liquid CAD",
 "ticker":"LCAD"}' "http://localhost:3001/mint" | jq -r '.asset')
 sleep 7
 
