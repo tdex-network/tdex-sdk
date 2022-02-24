@@ -9,7 +9,11 @@ const makeOrder = (type: TradeType) => (
   trader: TraderClientInterface
 ): TradeOrder => ({
   traderClient: trader,
-  market: { quoteAsset: '', baseAsset: '' },
+  market: {
+    quoteAsset: '',
+    baseAsset: '',
+    provider: { name: '', endpoint: '' },
+  },
   type,
 });
 
