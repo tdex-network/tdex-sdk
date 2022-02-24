@@ -10,14 +10,28 @@ import TraderClientInterface from './grpcClientInterface';
 import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
 import { SwapTransaction } from './transaction';
 
+export interface TDEXProvider {
+  name: string;
+  endpoint: string;
+}
+
 export interface MarketInterface {
   baseAsset: string;
   quoteAsset: string;
 }
 
+export interface TDEXMarket {
+  baseAsset: string;
+  quoteAsset: string;
+  provider: TDEXProvider;
+  baseAmount?: number;
+  quoteAmount?: number;
+  feeBasisPoint?: number;
+}
+
 export interface TradeOrder {
   type: TradeType;
-  market: MarketInterface;
+  market: TDEXMarket;
   traderClient: TraderClientInterface;
 }
 
