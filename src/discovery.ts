@@ -110,7 +110,7 @@ export const bestPriceDiscovery: Discovery = async (
     for (const result of rejectedResults) {
       await errorHandler(
         (result as PromiseRejectedResult).reason ||
-          'an unknwon error occurs when trying to fetch price'
+          'an unknown error occurs when trying to fetch price'
       );
     }
   }
@@ -124,6 +124,10 @@ export const bestPriceDiscovery: Discovery = async (
           order: TradeOrder;
         }>).value
     );
+
+  if (pricesWithClients.length === 0) {
+    throw new Error('No valid trade order has been found');
+  }
 
   const sorted = pricesWithClients.sort((p0, p1) => p1.amount - p0.amount);
 
