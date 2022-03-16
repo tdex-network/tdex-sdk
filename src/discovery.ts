@@ -126,7 +126,9 @@ export const bestPriceDiscovery: Discovery = async (
     );
 
   if (pricesWithClients.length === 0) {
-    throw new Error('Not enough liquidity across providers for the requested amount');
+    throw new Error(
+      'Not enough liquidity across providers for the requested amount'
+    );
   }
 
   const sorted = pricesWithClients.sort((p0, p1) => p1.amount - p0.amount);
