@@ -1,7 +1,7 @@
-import * as services from 'tdex-protobuf/generated/js/TradeServiceClientPb';
-import * as messages from 'tdex-protobuf/generated/js/trade_pb';
-import * as types from 'tdex-protobuf/generated/js/types_pb';
-import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
+import * as services from './api-spec/generated/js/tdex/v1/TradeServiceClientPb';
+import * as messages from './api-spec/generated/js/tdex/v1/trade_pb';
+import * as types from './api-spec/generated/js/tdex/v1/types_pb';
+import { SwapRequest, SwapComplete } from './api-spec/generated/js/tdex/v1/swap_pb';
 import TraderClientInterface from './grpcClientInterface';
 import { getClearTextTorProxyUrl, rejectIfSwapFail } from './utils';
 

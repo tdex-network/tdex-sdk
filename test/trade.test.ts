@@ -11,8 +11,8 @@ import { Trade, IdentityType } from '../src/index';
 import {
   CompleteTradeReply,
   ProposeTradeReply,
-} from 'tdex-protobuf/generated/js/trade_pb';
-import { SwapFail } from 'tdex-protobuf/generated/js/swap_pb';
+} from './api-spec/generated/js/tdex/v1/trade_pb';
+import { SwapFail } from './api-spec/generated/js/tdex/v1/swap_pb';
 import * as assert from 'assert';
 import { faucet, sleep } from './_regtest';
 import { rejectIfSwapFail } from '../src/utils';

@@ -2,8 +2,8 @@ import {
   BalanceWithFee,
   PriceWithFee,
   Market,
-} from 'tdex-protobuf/generated/js/types_pb';
-import { TradeType } from 'tdex-protobuf/generated/js/trade_pb';
+} from './api-spec/generated/js/tdex/v1/types_pb';
+import { TradeType } from './api-spec/generated/js/tdex/v1/trade_pb';
 
 export default interface TraderClientInterface {
   providerUrl: string;
