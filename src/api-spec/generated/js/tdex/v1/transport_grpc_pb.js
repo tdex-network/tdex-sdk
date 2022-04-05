@@ -1,7 +1,7 @@
 // GENERATED CODE -- DO NOT EDIT!
 
 'use strict';
-var grpc = require('@grpc/grpc-js');
+var grpc = require('grpc');
 var tdex_v1_transport_pb = require('../../tdex/v1/transport_pb.js');
 var google_api_annotations_pb = require('../../google/api/annotations_pb.js');
 
