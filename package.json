@@ -22,7 +22,7 @@
     "lint": "tsdx lint src test",
     "lint:fix": "tsdx lint src test --fix",
     "prepare": "tsdx build",
-    "preinstall": "yarn buf-generate"
+    "postinstall": "yarn build:proto"
   },
   "peerDependencies": {},
   "jest": {
