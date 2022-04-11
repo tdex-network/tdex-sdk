@@ -1,19 +1,22 @@
-import * as jspb from 'google-protobuf'
+// package: tdex.v1
+// file: tdex/v1/types.proto
 
-
+import * as jspb from "google-protobuf";
 
 export class Fee extends jspb.Message {
   getBasisPoint(): number;
-  setBasisPoint(value: number): Fee;
+  setBasisPoint(value: number): void;
 
-  getFixed(): Fixed | undefined;
-  setFixed(value?: Fixed): Fee;
   hasFixed(): boolean;
-  clearFixed(): Fee;
+  clearFixed(): void;
+  getFixed(): Fixed | undefined;
+  setFixed(value?: Fixed): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Fee.AsObject;
   static toObject(includeInstance: boolean, msg: Fee): Fee.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: Fee, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): Fee;
   static deserializeBinaryFromReader(message: Fee, reader: jspb.BinaryReader): Fee;
@@ -28,14 +31,16 @@ export namespace Fee {
 
 export class Fixed extends jspb.Message {
   getBaseFee(): number;
-  setBaseFee(value: number): Fixed;
+  setBaseFee(value: number): void;
 
   getQuoteFee(): number;
-  setQuoteFee(value: number): Fixed;
+  setQuoteFee(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Fixed.AsObject;
   static toObject(includeInstance: boolean, msg: Fixed): Fixed.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: Fixed, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): Fixed;
   static deserializeBinaryFromReader(message: Fixed, reader: jspb.BinaryReader): Fixed;
@@ -50,14 +55,16 @@ export namespace Fixed {
 
 export class Balance extends jspb.Message {
   getBaseAmount(): number;
-  setBaseAmount(value: number): Balance;
+  setBaseAmount(value: number): void;
 
   getQuoteAmount(): number;
-  setQuoteAmount(value: number): Balance;
+  setQuoteAmount(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Balance.AsObject;
   static toObject(includeInstance: boolean, msg: Balance): Balance.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: Balance, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): Balance;
   static deserializeBinaryFromReader(message: Balance, reader: jspb.BinaryReader): Balance;
@@ -71,19 +78,21 @@ export namespace Balance {
 }
 
 export class BalanceWithFee extends jspb.Message {
-  getBalance(): Balance | undefined;
-  setBalance(value?: Balance): BalanceWithFee;
   hasBalance(): boolean;
-  clearBalance(): BalanceWithFee;
+  clearBalance(): void;
+  getBalance(): Balance | undefined;
+  setBalance(value?: Balance): void;
 
-  getFee(): Fee | undefined;
-  setFee(value?: Fee): BalanceWithFee;
   hasFee(): boolean;
-  clearFee(): BalanceWithFee;
+  clearFee(): void;
+  getFee(): Fee | undefined;
+  setFee(value?: Fee): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): BalanceWithFee.AsObject;
   static toObject(includeInstance: boolean, msg: BalanceWithFee): BalanceWithFee.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: BalanceWithFee, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): BalanceWithFee;
   static deserializeBinaryFromReader(message: BalanceWithFee, reader: jspb.BinaryReader): BalanceWithFee;
@@ -98,14 +107,16 @@ export namespace BalanceWithFee {
 
 export class Market extends jspb.Message {
   getBaseAsset(): string;
-  setBaseAsset(value: string): Market;
+  setBaseAsset(value: string): void;
 
   getQuoteAsset(): string;
-  setQuoteAsset(value: string): Market;
+  setQuoteAsset(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Market.AsObject;
   static toObject(includeInstance: boolean, msg: Market): Market.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: Market, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): Market;
   static deserializeBinaryFromReader(message: Market, reader: jspb.BinaryReader): Market;
@@ -119,19 +130,21 @@ export namespace Market {
 }
 
 export class MarketWithFee extends jspb.Message {
-  getMarket(): Market | undefined;
-  setMarket(value?: Market): MarketWithFee;
   hasMarket(): boolean;
-  clearMarket(): MarketWithFee;
+  clearMarket(): void;
+  getMarket(): Market | undefined;
+  setMarket(value?: Market): void;
 
-  getFee(): Fee | undefined;
-  setFee(value?: Fee): MarketWithFee;
   hasFee(): boolean;
-  clearFee(): MarketWithFee;
+  clearFee(): void;
+  getFee(): Fee | undefined;
+  setFee(value?: Fee): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): MarketWithFee.AsObject;
   static toObject(includeInstance: boolean, msg: MarketWithFee): MarketWithFee.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: MarketWithFee, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): MarketWithFee;
   static deserializeBinaryFromReader(message: MarketWithFee, reader: jspb.BinaryReader): MarketWithFee;
@@ -146,20 +159,22 @@ export namespace MarketWithFee {
 
 export class Price extends jspb.Message {
   getBasePriceDeprecated(): number;
-  setBasePriceDeprecated(value: number): Price;
+  setBasePriceDeprecated(value: number): void;
 
   getQuotePriceDeprecated(): number;
-  setQuotePriceDeprecated(value: number): Price;
+  setQuotePriceDeprecated(value: number): void;
 
   getBasePrice(): number;
-  setBasePrice(value: number): Price;
+  setBasePrice(value: number): void;
 
   getQuotePrice(): number;
-  setQuotePrice(value: number): Price;
+  setQuotePrice(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Price.AsObject;
   static toObject(includeInstance: boolean, msg: Price): Price.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: Price, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): Price;
   static deserializeBinaryFromReader(message: Price, reader: jspb.BinaryReader): Price;
@@ -175,30 +190,32 @@ export namespace Price {
 }
 
 export class PriceWithFee extends jspb.Message {
-  getPrice(): Price | undefined;
-  setPrice(value?: Price): PriceWithFee;
   hasPrice(): boolean;
-  clearPrice(): PriceWithFee;
+  clearPrice(): void;
+  getPrice(): Price | undefined;
+  setPrice(value?: Price): void;
 
-  getFee(): Fee | undefined;
-  setFee(value?: Fee): PriceWithFee;
   hasFee(): boolean;
-  clearFee(): PriceWithFee;
+  clearFee(): void;
+  getFee(): Fee | undefined;
+  setFee(value?: Fee): void;
 
   getAmount(): number;
-  setAmount(value: number): PriceWithFee;
+  setAmount(value: number): void;
 
   getAsset(): string;
-  setAsset(value: string): PriceWithFee;
+  setAsset(value: string): void;
 
-  getBalance(): Balance | undefined;
-  setBalance(value?: Balance): PriceWithFee;
   hasBalance(): boolean;
-  clearBalance(): PriceWithFee;
+  clearBalance(): void;
+  getBalance(): Balance | undefined;
+  setBalance(value?: Balance): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PriceWithFee.AsObject;
   static toObject(includeInstance: boolean, msg: PriceWithFee): PriceWithFee.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: PriceWithFee, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): PriceWithFee;
   static deserializeBinaryFromReader(message: PriceWithFee, reader: jspb.BinaryReader): PriceWithFee;
@@ -216,14 +233,16 @@ export namespace PriceWithFee {
 
 export class AddressWithBlindingKey extends jspb.Message {
   getAddress(): string;
-  setAddress(value: string): AddressWithBlindingKey;
+  setAddress(value: string): void;
 
   getBlinding(): string;
-  setBlinding(value: string): AddressWithBlindingKey;
+  setBlinding(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): AddressWithBlindingKey.AsObject;
   static toObject(includeInstance: boolean, msg: AddressWithBlindingKey): AddressWithBlindingKey.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
   static serializeBinaryToWriter(message: AddressWithBlindingKey, writer: jspb.BinaryWriter): void;
   static deserializeBinary(bytes: Uint8Array): AddressWithBlindingKey;
   static deserializeBinaryFromReader(message: AddressWithBlindingKey, reader: jspb.BinaryReader): AddressWithBlindingKey;

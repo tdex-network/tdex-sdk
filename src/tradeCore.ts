@@ -7,7 +7,7 @@ import {
   isValidAmount,
 } from 'ldk';
 import TraderClientInterface from './grpcClientInterface';
-import { SwapAccept } from './api-spec/generated/js/tdex/v1/swap_pb';
+import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';
 
 export interface TDEXProvider {

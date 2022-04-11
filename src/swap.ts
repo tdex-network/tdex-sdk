@@ -1,6 +1,6 @@
 import Core from './core';
 import { confidential, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
-import * as proto from './api-spec/generated/js/tdex/v1/swap_pb';
+import * as proto from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import * as jspb from 'google-protobuf';
 import { isConfidentialOutput } from 'ldk';
 import { makeid, decodePsbt } from './utils';

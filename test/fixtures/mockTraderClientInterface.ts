@@ -1,7 +1,7 @@
 import {
   PriceWithFee,
   BalanceWithFee,
-} from './api-spec/generated/js/tdex/v1/types_pb';
+} from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import TraderClientInterface from '../../src/grpcClientInterface';
 
 interface Args {

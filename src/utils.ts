@@ -1,5 +1,5 @@
 import { Psbt, Transaction } from 'liquidjs-lib';
-import * as messages from './api-spec/generated/js/tdex/v1/trade_pb';
+import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 
 /**
  * Generates a random id of a fixed length.
