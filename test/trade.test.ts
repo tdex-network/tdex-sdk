@@ -9,10 +9,10 @@ import {
 import * as TDEX from '../src/index';
 import { Trade, IdentityType } from '../src';
 import {
-  CompleteTradeReply,
-  ProposeTradeReply,
-} from 'api-spec/protobuf/gen/js/tdex/v1/trade';
-import { SwapFail } from 'api-spec/protobuf/gen/js/tdex/v1/swap';
+  CompleteTradeResponse,
+  ProposeTradeResponse,
+} from '../test/api-spec/protobuf/gen/js/tdex/v1/trade_pb';
+import { SwapFail } from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import * as assert from 'assert';
 import { faucet, sleep } from './_regtest';
 import { rejectIfSwapFail } from '../src/utils';
@@ -78,50 +78,50 @@ describe('TDEX SDK', () => {
     swapFail.setFailureMessage('COVID');
 
     describe('ProposeTrade', () => {
-      const proposeTradeReply = new ProposeTradeReply();
-      proposeTradeReply.setSwapFail(swapFail);
+      const proposeTradeResponse = new ProposeTradeResponse();
+      proposeTradeResponse.setSwapFail(swapFail);
 
-      const proposeTradeReplyWithoutSwapFail = new ProposeTradeReply();
+      const proposeTradeResponseWithoutSwapFail = new ProposeTradeResponse();
 
-      it('should throw an error if there is SwapFail in ProposeTradeReply', () => {
+      it('should throw an error if there is SwapFail in ProposeTradeResponse', () => {
         assert.rejects(
           () =>
             new Promise((_, reject) =>
-              rejectIfSwapFail(proposeTradeReply, reject)
+              rejectIfSwapFail(proposeTradeResponse, reject)
             )
         );
       });
 
-      it('should not throw an error if there is no SwapFail in ProposeTradeReply', () => {
+      it('should not throw an error if there is no SwapFail in ProposeTradeResponse', () => {
         assert.doesNotReject(
           () =>
             new Promise((_, reject) =>
-              rejectIfSwapFail(proposeTradeReplyWithoutSwapFail, reject)
+              rejectIfSwapFail(proposeTradeResponseWithoutSwapFail, reject)
             )
         );
       });
     });
 
     describe('TradeComplete', () => {
-      const completeTradeReply = new CompleteTradeReply();
-      completeTradeReply.setSwapFail(swapFail);
+      const completeTradeResponse = new CompleteTradeResponse();
+      completeTradeResponse.setSwapFail(swapFail);
 
-      const completeTradeReplyWithoutSwapFail = new CompleteTradeReply();
+      const completeTradeResponseWithoutSwapFail = new CompleteTradeResponse();
 
-      it('should throw an error if there is SwapFail in CompleteTradeReply', () => {
+      it('should throw an error if there is SwapFail in CompleteTradeResponse', () => {
         assert.rejects(
           () =>
             new Promise((_, reject) =>
-              rejectIfSwapFail(completeTradeReply, reject)
+              rejectIfSwapFail(completeTradeResponse, reject)
             )
         );
       });
 
-      it('should not throw an error if there is no SwapFail in CompleteTradeReply', () => {
+      it('should not throw an error if there is no SwapFail in CompleteTradeResponse', () => {
         assert.doesNotReject(
           () =>
             new Promise((_, reject) =>
-              rejectIfSwapFail(completeTradeReplyWithoutSwapFail, reject)
+              rejectIfSwapFail(completeTradeResponseWithoutSwapFail, reject)
             )
         );
       });

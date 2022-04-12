@@ -1,8 +1,8 @@
 import * as grpc from '@grpc/grpc-js';
-import * as services from 'api-spec/protobuf/gen/js/tdex/v1/trade.grpc-client';
-import * as messages from 'api-spec/protobuf/gen/js/tdex/v1/trade';
-import * as types from 'api-spec/protobuf/gen/js/tdex/v1/types';
-import { SwapRequest, SwapComplete } from 'api-spec/protobuf/gen/js/tdex/v1/swap';
+import * as services from 'api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
+import * as messages from 'api-spec/protobuf/gen/js/tdex/v1/trade_pb';
+import * as types from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { SwapRequest, SwapComplete } from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import TraderClientInterface from './grpcClientInterface';
 import { rejectIfSwapFail } from 'utils';
 
