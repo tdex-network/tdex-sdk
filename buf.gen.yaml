@@ -5,9 +5,9 @@ plugins:
     opt:
       - client_grpc1
       - add_pb_suffix
+      - eslint_disable
+      - ts_nocheck
       #- generate_dependencies
       #- long_type_string
-      #- eslint_disable
-      #- ts_nocheck
       #- server_grpc1
       #- server_generic
