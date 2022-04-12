@@ -1,7 +1,7 @@
-import * as services from 'tdex-protobuf/generated/js/TradeServiceClientPb';
-import * as messages from 'tdex-protobuf/generated/js/trade_pb';
-import * as types from 'tdex-protobuf/generated/js/types_pb';
-import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
+import * as services from 'api-spec/protobuf/gen/js/tdex/v1/trade.grpc-client';
+import * as messages from 'api-spec/protobuf/gen/js/tdex/v1/trade';
+import * as types from 'api-spec/protobuf/gen/js/tdex/v1/types';
+import { SwapRequest, SwapComplete } from 'api-spec/protobuf/gen/js/tdex/v1/swap';
 import TraderClientInterface from './grpcClientInterface';
 import { getClearTextTorProxyUrl, rejectIfSwapFail } from './utils';
 
@@ -9,7 +9,7 @@ const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
-  client: services.TradeClient;
+  client: services.ITradeServiceClient;
 
   constructor(
     providerUrl: string,
@@ -27,7 +27,7 @@ export class TraderClient implements TraderClientInterface {
       this.providerUrl = getClearTextTorProxyUrl(torProxyEndpoint, url);
     }
 
-    this.client = new services.TradeClient(this.providerUrl);
+    this.client = new services.TradeServiceClient(this.providerUrl);
   }
 
   /**

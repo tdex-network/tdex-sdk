@@ -1,15 +1,15 @@
 import * as grpc from '@grpc/grpc-js';
-import * as services from 'tdex-protobuf/generated/js/trade_grpc_pb';
-import * as messages from 'tdex-protobuf/generated/js/trade_pb';
-import * as types from 'tdex-protobuf/generated/js/types_pb';
-import { SwapRequest, SwapComplete } from 'tdex-protobuf/generated/js/swap_pb';
+import * as services from 'api-spec/protobuf/gen/js/tdex/v1/trade.grpc-client';
+import * as messages from 'api-spec/protobuf/gen/js/tdex/v1/trade';
+import * as types from 'api-spec/protobuf/gen/js/tdex/v1/types';
+import { SwapRequest, SwapComplete } from 'api-spec/protobuf/gen/js/tdex/v1/swap';
 import TraderClientInterface from './grpcClientInterface';
-import { rejectIfSwapFail } from './utils';
+import { rejectIfSwapFail } from 'utils';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
 
-  client: services.TradeClient;
+  client: services.ITradeServiceClient;
 
   constructor(
     providerUrlString: string,
@@ -20,11 +20,11 @@ export class TraderClient implements TraderClientInterface {
 
     this.providerUrl = providerUrlString;
     const url = new URL(providerUrlString);
-    this.client = new services.TradeClient(this.providerUrl, creds);
+    this.client = new services.TradeServiceClient(this.providerUrl, creds);
 
     if (url.protocol.includes('https')) {
       creds = grpc.credentials.createSsl();
-      this.client = new services.TradeClient(url.host, creds);
+      this.client = new services.TradeServiceClient(url.host, creds);
     }
   }
 

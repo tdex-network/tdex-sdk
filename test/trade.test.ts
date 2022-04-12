@@ -7,12 +7,12 @@ import {
   UnblindedOutput,
 } from 'ldk';
 import * as TDEX from '../src/index';
-import { Trade, IdentityType } from '../src/index';
+import { Trade, IdentityType } from '../src';
 import {
   CompleteTradeReply,
   ProposeTradeReply,
-} from 'tdex-protobuf/generated/js/trade_pb';
-import { SwapFail } from 'tdex-protobuf/generated/js/swap_pb';
+} from 'api-spec/protobuf/gen/js/tdex/v1/trade';
+import { SwapFail } from 'api-spec/protobuf/gen/js/tdex/v1/swap';
 import * as assert from 'assert';
 import { faucet, sleep } from './_regtest';
 import { rejectIfSwapFail } from '../src/utils';

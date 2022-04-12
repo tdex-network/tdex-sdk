@@ -16,11 +16,13 @@
     "build": "yarn build-web && yarn build-node",
     "build-node": "tsdx build --tsconfig tsconfig.json --entry src/index.ts ",
     "build-web": "tsdx build --tsconfig tsconfig.web.json --entry src/index.web.ts && rm -rf dist-web && mv dist dist-web",
+    "build:proto": "buf generate buf.build/tdex-network/tdex-protobuf",
     "test": "tsdx test",
     "test:debug": "tsdx test --no-cache --runInBand",
     "lint": "tsdx lint src test",
     "lint:fix": "tsdx lint src test --fix",
-    "prepare": "tsdx build"
+    "prepare": "tsdx build",
+    "postinstall": "yarn build:proto"
   },
   "peerDependencies": {},
   "jest": {
@@ -66,12 +68,13 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.3.3",
+    "@protobuf-ts/runtime": "^2.4.0",
+    "@protobuf-ts/runtime-rpc": "^2.4.0",
     "@types/google-protobuf": "^3.15.2",
     "google-protobuf": "^3.17.3",
     "ldk": "0.4.2",
     "liquidjs-lib": "5.2.3",
     "slip77": "0.1.1",
-    "tdex-protobuf": "tdex-network/tdex-protobuf",
     "tslib": "^2.3.0"
   },
   "resolutions": {
