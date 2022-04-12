@@ -7,11 +7,12 @@
     "src/*.web.ts"
   ],
   "compilerOptions": {
-    "module": "esnext",
+    "module": "ES2020",
+    "target": "ES2020",
     "lib": [
-      "dom",
-      "es2019",
-      "esnext"
+      "DOM",
+      "ES2020",
+      "ESNext"
     ],
     "importHelpers": true,
     "declaration": true,
