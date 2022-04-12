@@ -1,9 +1,9 @@
 import Core from './core';
-import { confidential, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
+import {confidential, Psbt, Transaction, TxOutput} from 'liquidjs-lib';
 import * as proto from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import * as jspb from 'google-protobuf';
-import { isConfidentialOutput } from 'ldk';
-import { makeid, decodePsbt } from './utils';
+import {isConfidentialOutput} from 'ldk';
+import {decodePsbt, makeid} from 'utils';
 
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
@@ -39,43 +39,44 @@ export class Swap extends Core {
    * @param args the args of swap.request see requestOpts.
    */
   async request({
-    amountToBeSent,
-    assetToBeSent,
-    amountToReceive,
-    assetToReceive,
-    psetBase64,
-    inputBlindingKeys,
-    outputBlindingKeys,
-  }: requestOpts): Promise<Uint8Array> {
+                  amountToBeSent,
+                  assetToBeSent,
+                  amountToReceive,
+                  assetToReceive,
+                  psetBase64,
+                  inputBlindingKeys,
+                  outputBlindingKeys,
+                }: requestOpts): Promise<Uint8Array> {
     // Check amounts
-    const msg = new proto.SwapRequest();
-    msg.setId(makeid(8));
-    msg.setAmountP(amountToBeSent);
-    msg.setAssetP(assetToBeSent);
-    msg.setAmountR(amountToReceive);
-    msg.setAssetR(assetToReceive);
-    msg.setTransaction(psetBase64);
+    const msg = proto.SwapRequest.create({
+      id: makeid(8),
+      amountP: BigInt(amountToBeSent),
+      assetP: assetToBeSent,
+      amountR: BigInt(amountToReceive),
+      assetR: assetToReceive,
+      transaction: psetBase64
+    });
 
     if (inputBlindingKeys) {
       // set the input blinding keys
       Object.entries(inputBlindingKeys).forEach(([key, value]) => {
-        msg.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msg.inputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     if (outputBlindingKeys) {
       // set the output blinding keys
       Object.entries(outputBlindingKeys).forEach(([key, value]) => {
-        msg.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msg.outputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     // check the message content and transaction.
     await compareMessagesAndTransaction(msg);
 
-    if (this.verbose) console.log(msg.toObject());
+    if (this.verbose) console.log(proto.SwapRequest.toJsonString(msg));
 
-    return msg.serializeBinary();
+    return proto.SwapRequest.toBinary(msg);
   }
 
   /**
@@ -83,30 +84,27 @@ export class Swap extends Core {
    * @param args the Swap.accept args, see AcceptOpts.
    */
   async accept({
-    message,
-    psetBase64,
-    inputBlindingKeys,
-    outputBlindingKeys,
-  }: acceptOpts): Promise<Uint8Array> {
+                 message,
+                 psetBase64,
+                 inputBlindingKeys,
+                 outputBlindingKeys,
+               }: acceptOpts): Promise<Uint8Array> {
     // deserialize message parameter to get the SwapRequest message.
-    const msgRequest = proto.SwapRequest.deserializeBinary(message);
+    const msgRequest = proto.SwapRequest.fromBinary(message);
     // Build Swap Accept message
-    const msgAccept = new proto.SwapAccept();
-    msgAccept.setId(makeid(8));
-    msgAccept.setRequestId(msgRequest.getId());
-    msgAccept.setTransaction(psetBase64);
+    const msgAccept = proto.SwapAccept.create({id: makeid(8), requestId: msgRequest.id, transaction: psetBase64});
 
     if (inputBlindingKeys) {
       // set the input blinding keys
       Object.entries(inputBlindingKeys).forEach(([key, value]) => {
-        msgAccept.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msgAccept.inputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     if (outputBlindingKeys) {
       // set the output blinding keys
       Object.entries(outputBlindingKeys).forEach(([key, value]) => {
-        msgAccept.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msgAccept.outputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
@@ -124,9 +122,9 @@ export class Swap extends Core {
    * @param args contains the SwapAccept message + the base64 encoded transaction.
    */
   complete({
-    message,
-    psetBase64OrHex,
-  }: {
+             message,
+             psetBase64OrHex,
+           }: {
     message: Uint8Array;
     psetBase64OrHex: string;
   }): Uint8Array {
@@ -161,7 +159,7 @@ async function compareMessagesAndTransaction(
       const vout: number = decodedFromRequest.transaction.ins[inputIndex].index;
       const witnessUtxo: TxOutput = Transaction.fromHex(i.nonWitnessUtxo).outs[
         vout
-      ];
+        ];
       i.witnessUtxo = witnessUtxo;
     }
   });
@@ -318,10 +316,10 @@ async function countUtxos(
   );
 
   // filter inputs by asset and return the the count
-  const filteredByAsset = unblindedUtxos.filter(({ asset }) =>
+  const filteredByAsset = unblindedUtxos.filter(({asset}) =>
     assetBuffer.equals(asset.length === 33 ? asset.slice(1) : asset)
   );
-  const queryValues = filteredByAsset.map(({ value }) => {
+  const queryValues = filteredByAsset.map(({value}) => {
     const valAsNumber: number =
       value instanceof Buffer
         ? confidential.confidentialValueToSatoshi(value)
@@ -335,9 +333,9 @@ async function countUtxos(
 }
 
 function parse({
-  message,
-  type,
-}: {
+                 message,
+                 type,
+               }: {
   message: Uint8Array;
   type: string;
 }): string {
