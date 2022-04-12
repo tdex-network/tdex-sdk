@@ -111,10 +111,10 @@ export class Swap extends Core {
     // compare messages and transaction data
     await compareMessagesAndTransaction(msgRequest, msgAccept);
 
-    if (this.verbose) console.log(msgAccept.toObject());
+    if (this.verbose) console.log(proto.SwapAccept.toJsonString(msgAccept));
 
     // serialize the SwapAccept message.
-    return msgAccept.serializeBinary();
+    return proto.SwapAccept.toBinary(msgAccept);
   }
 
   /**
@@ -128,16 +128,17 @@ export class Swap extends Core {
     message: Uint8Array;
     psetBase64OrHex: string;
   }): Uint8Array {
-    const msgAccept = proto.SwapAccept.deserializeBinary(message);
+    const msgAccept = proto.SwapAccept.fromBinary(message);
     //Build SwapComplete
-    const msgComplete = new proto.SwapComplete();
-    msgComplete.setId(makeid(8));
-    msgComplete.setAcceptId(msgAccept.getId());
-    msgComplete.setTransaction(psetBase64OrHex);
+    const msgComplete = proto.SwapComplete.create({
+      id: makeid(8),
+      acceptId: msgAccept.id,
+      transaction: psetBase64OrHex
+    });
 
-    if (this.verbose) console.log(msgAccept.toObject());
+    if (this.verbose) console.log(proto.SwapAccept.toJsonString(msgAccept));
 
-    return msgComplete.serializeBinary();
+    return proto.SwapComplete.toBinary(msgComplete);
   }
 }
 
@@ -151,7 +152,7 @@ async function compareMessagesAndTransaction(
   msgAccept?: proto.SwapAccept
 ): Promise<void> {
   // decode the transaction.
-  const decodedFromRequest = decodePsbt(msgRequest.getTransaction());
+  const decodedFromRequest = decodePsbt(msgRequest.transaction);
 
   // nonWitnessUtxo to witnessUtxoutxos
   decodedFromRequest.psbt.data.inputs.forEach((i: any, inputIndex: number) => {
@@ -167,8 +168,8 @@ async function compareMessagesAndTransaction(
   // check the amount of the transaction
   const totalP = await countUtxos(
     decodedFromRequest.psbt,
-    msgRequest.getAssetP(),
-    blindKeysMap(msgRequest.getInputBlindingKeyMap())
+    msgRequest.assetP,
+    blindKeysMap(msgRequest.inputBlindingKey)
   );
 
   if (totalP < msgRequest.getAmountP()) {
@@ -180,21 +181,21 @@ async function compareMessagesAndTransaction(
   // check if the output if found in the transaction
   const outputRFound: boolean = await outputFoundInTransaction(
     decodedFromRequest.transaction.outs,
-    msgRequest.getAmountR(),
-    msgRequest.getAssetR(),
-    blindKeysMap(msgRequest.getOutputBlindingKeyMap())
+    Number(msgRequest.amountR),
+    msgRequest.assetR,
+    blindKeysMap(msgRequest.outputBlindingKey)
   );
 
   if (!outputRFound)
     throw new Error(
-      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.getAmountR()}, asset: ${msgRequest.getAssetR()})`
+      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.amountR.toString()}, asset: ${msgRequest.assetR})`
     );
 
   // msg accept
   if (msgAccept) {
     // decode the tx and check the msg's ids
-    const decodedFromAccept = decodePsbt(msgAccept.getTransaction());
-    if (msgRequest.getId() !== msgAccept.getRequestId())
+    const decodedFromAccept = decodePsbt(msgAccept.transaction);
+    if (msgRequest.id !== msgAccept.requestId)
       throw new Error(
         'SwapRequest.id and SwapAccept.request_id are not the same'
       );
@@ -202,11 +203,11 @@ async function compareMessagesAndTransaction(
     // check the amount of utxos.
     const totalR = await countUtxos(
       decodedFromAccept.psbt,
-      msgRequest.getAssetR(),
-      blindKeysMap(msgAccept.getInputBlindingKeyMap())
+      msgRequest.assetR,
+      blindKeysMap(msgAccept.inputBlindingKey)
     );
 
-    if (totalR < msgRequest.getAmountR()) {
+    if (totalR < msgRequest.amountR) {
       throw new Error(
         'Cumulative utxos count is not enough to cover SwapRequest.amount_r'
       );
@@ -215,14 +216,14 @@ async function compareMessagesAndTransaction(
     // check if there is an output found in the transaction.
     const outputPFound = outputFoundInTransaction(
       decodedFromAccept.transaction.outs,
-      msgRequest.getAmountP(),
-      msgRequest.getAssetP(),
-      blindKeysMap(msgAccept.getOutputBlindingKeyMap())
+      Number(msgRequest.amountP),
+      msgRequest.assetP,
+      blindKeysMap(msgAccept.outputBlindingKey)
     );
 
     if (!outputPFound)
       throw new Error(
-        `Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt amount=${msgRequest.getAmountP()} asset=${msgRequest.getAssetP()}`
+        `Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt amount=${msgRequest.amountP} asset=${msgRequest.assetP}`
       );
   }
 }

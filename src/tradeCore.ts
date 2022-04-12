@@ -168,17 +168,21 @@ export class TradeCore extends Core implements TradeInterface {
     if (tradeType === TradeType.BUY) {
       return {
         assetToBeSent: quoteAsset,
-        amountToBeSent: asset === baseAsset ? previewedAmount : amount,
+        amountToBeSent:
+          asset === baseAsset ? Number(previewedAmount) : Number(amount),
         assetToReceive: baseAsset,
-        amountToReceive: asset === baseAsset ? amount : previewedAmount,
+        amountToReceive:
+          asset === baseAsset ? Number(amount) : Number(previewedAmount),
       };
     }
 
     return {
       assetToBeSent: baseAsset,
-      amountToBeSent: asset === quoteAsset ? previewedAmount : amount,
+      amountToBeSent:
+        asset === quoteAsset ? Number(previewedAmount) : Number(amount),
       assetToReceive: quoteAsset,
-      amountToReceive: asset === quoteAsset ? amount : previewedAmount,
+      amountToReceive:
+        asset === quoteAsset ? Number(amount) : Number(previewedAmount),
     };
   }
 
@@ -256,20 +260,15 @@ export class TradeCore extends Core implements TradeInterface {
   ): Promise<string> {
     // trader need to check the signed inputs by the provider
     // and add his own inputs if all is correct
-    const swapAcceptMessage = SwapAccept.deserializeBinary(
-      swapAcceptSerialized
-    );
-    const transaction = swapAcceptMessage.getTransaction();
-
+    const swapAcceptMessage = SwapAccept.fromBinary(swapAcceptSerialized);
+    const transaction = swapAcceptMessage.transaction;
     const signedHex = await identity.signPset(transaction);
-
     // Trader  adds his signed inputs to the transaction
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
       message: swapAcceptSerialized,
       psetBase64OrHex: signedHex,
     });
-
     // Trader call the tradeComplete endpoint to finalize the swap
     let txid: string;
     try {
@@ -281,7 +280,6 @@ export class TradeCore extends Core implements TradeInterface {
         throw e;
       }
     }
-
     return txid;
   }
 }

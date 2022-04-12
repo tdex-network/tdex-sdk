@@ -41,7 +41,7 @@ export const bestBalanceDiscovery: Discovery = async (
     const { traderClient, market, type } = order;
     return traderClient
       .balances(market)
-      .then((balances: BalanceWithFee.AsObject[]) => {
+      .then((balances: BalanceWithFee[]) => {
         const balance = balances[0].balance;
         if (!balance)
           throw new Error(
@@ -75,13 +75,13 @@ export const bestBalanceDiscovery: Discovery = async (
     .map(
       p =>
         (p as PromiseFulfilledResult<{
-          balanceAmount: number;
+          balanceAmount: bigint;
           order: TradeOrder;
         }>).value
     );
 
   const sorted = balancesWithClients.sort(
-    (p0, p1) => p1.balanceAmount - p0.balanceAmount
+    (p0, p1) => Number(p1.balanceAmount - p0.balanceAmount)
   );
 
   const bestAmount = sorted[0].balanceAmount;
