@@ -51,9 +51,9 @@ export interface GetMarketBalanceRequest {
  */
 export interface GetMarketBalanceResponse {
     /**
-     * @generated from protobuf field: tdex.v1.BalanceWithFee balances = 1;
+     * @generated from protobuf field: tdex.v1.BalanceWithFee balance = 1;
      */
-    balances?: BalanceWithFee;
+    balance?: BalanceWithFee;
 }
 /**
  * @generated from protobuf message tdex.v1.PreviewTradeRequest
@@ -269,7 +269,7 @@ export const GetMarketBalanceRequest = new GetMarketBalanceRequest$Type();
 class GetMarketBalanceResponse$Type extends MessageType<GetMarketBalanceResponse> {
     constructor() {
         super("tdex.v1.GetMarketBalanceResponse", [
-            { no: 1, name: "balances", kind: "message", T: () => BalanceWithFee }
+            { no: 1, name: "balance", kind: "message", T: () => BalanceWithFee }
         ]);
     }
     create(value?: PartialMessage<GetMarketBalanceResponse>): GetMarketBalanceResponse {
@@ -284,8 +284,8 @@ class GetMarketBalanceResponse$Type extends MessageType<GetMarketBalanceResponse
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* tdex.v1.BalanceWithFee balances */ 1:
-                    message.balances = BalanceWithFee.internalBinaryRead(reader, reader.uint32(), options, message.balances);
+                case /* tdex.v1.BalanceWithFee balance */ 1:
+                    message.balance = BalanceWithFee.internalBinaryRead(reader, reader.uint32(), options, message.balance);
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -299,9 +299,9 @@ class GetMarketBalanceResponse$Type extends MessageType<GetMarketBalanceResponse
         return message;
     }
     internalBinaryWrite(message: GetMarketBalanceResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* tdex.v1.BalanceWithFee balances = 1; */
-        if (message.balances)
-            BalanceWithFee.internalBinaryWrite(message.balances, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* tdex.v1.BalanceWithFee balance = 1; */
+        if (message.balance)
+            BalanceWithFee.internalBinaryWrite(message.balance, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
