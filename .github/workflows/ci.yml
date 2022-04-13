@@ -20,6 +20,9 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: "14"
+
+      - name: Install Buf
+        uses: bufbuild/buf-setup-action@v1.3.1
           
       - name: Nigiri Bitcoin
         uses: vulpemventures/nigiri-github-action@v1
