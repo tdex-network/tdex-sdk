@@ -22,11 +22,9 @@ export class TraderClient implements TraderClientInterface {
     torProxyEndpoint?: string
   ) {
     let creds = grpc.credentials.createInsecure();
-
     this.providerUrl = providerUrlString;
     const url = new URL(providerUrlString);
     this.client = new services.TradeServiceClient(this.providerUrl, creds);
-
     if (url.protocol.includes('https')) {
       creds = grpc.credentials.createSsl();
       this.client = new services.TradeServiceClient(url.host, creds);
@@ -60,7 +58,6 @@ export class TraderClient implements TraderClientInterface {
         const swapAcceptMsg = reply!.swapAccept;
         data = SwapAccept.toBinary(swapAcceptMsg!);
       });
-
       call.on('end', () => resolve(data));
       call.on('error', (e: any) => reject(e));
     });
@@ -108,7 +105,6 @@ export class TraderClient implements TraderClientInterface {
         type: tradeType,
         swapRequest: SwapRequest.fromBinary(swapRequestSerialized),
       });
-
       this.client.proposeTrade(request, (err, response) => {
         if (err) return reject(err);
         if (rejectIfSwapFail(response!, reject)) {
@@ -174,7 +170,6 @@ export class TraderClient implements TraderClientInterface {
       amount: BigInt(amount),
       asset: asset,
     });
-
     return new Promise((resolve, reject) => {
       this.client.previewTrade(request, (err, response) => {
         if (err) return reject(err);

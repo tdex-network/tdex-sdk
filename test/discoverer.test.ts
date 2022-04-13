@@ -1,7 +1,11 @@
 import MockTraderClientInterface from './fixtures/mockTraderClientInterface';
-import { Discoverer } from '../src/discoverer';
-import { bestBalanceDiscovery, bestPriceDiscovery } from '../src/discovery';
-import { TradeOrder, TradeType } from '../src/tradeCore';
+import {
+  bestBalanceDiscovery,
+  bestPriceDiscovery,
+  Discoverer,
+  TradeOrder,
+  TradeType,
+} from '../src';
 import assert from 'assert';
 import TraderClientInterface from '../src/grpcClientInterface';
 
@@ -25,20 +29,24 @@ describe('discoverer', () => {
   beforeAll(() => {
     trader1 = new MockTraderClientInterface({
       providerUrl: 'trader1',
-      balance: { balance: { baseAmount: 1, quoteAmount: 1000 } },
-      price: { amount: 10, asset: '' },
+      balance: {
+        balance: { baseAmount: BigInt(1), quoteAmount: BigInt(1000) },
+      },
+      preview: { amount: BigInt(10), asset: '' },
     });
 
     trader2 = new MockTraderClientInterface({
       providerUrl: 'trader2',
-      balance: { balance: { baseAmount: 10, quoteAmount: 10 } },
-      price: { amount: 100, asset: '' },
+      balance: { balance: { baseAmount: BigInt(10), quoteAmount: BigInt(10) } },
+      preview: { amount: BigInt(100), asset: '' },
     });
 
     trader3 = new MockTraderClientInterface({
       providerUrl: 'trader3',
-      balance: { balance: { baseAmount: 100, quoteAmount: 100 } },
-      price: { amount: 1000, asset: '' },
+      balance: {
+        balance: { baseAmount: BigInt(100), quoteAmount: BigInt(100) },
+      },
+      preview: { amount: BigInt(1000), asset: '' },
     });
   });
 

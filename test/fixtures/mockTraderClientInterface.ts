@@ -1,26 +1,26 @@
 import {
-  PriceWithFee,
+  Preview,
   BalanceWithFee,
 } from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import TraderClientInterface from '../../src/grpcClientInterface';
 
 interface Args {
-  balance?: BalanceWithFee.AsObject;
-  price?: PriceWithFee.AsObject;
+  balance: BalanceWithFee;
+  preview?: Preview;
   providerUrl?: string;
 }
 
 export default class MockTraderClientInterface
   implements TraderClientInterface {
-  balance?: BalanceWithFee.AsObject;
-  price?: PriceWithFee.AsObject;
+  balanceWithFee: BalanceWithFee;
+  preview?: Preview;
 
   providerUrl: string;
   client: any;
 
-  constructor({ balance, price, providerUrl }: Args) {
-    this.balance = balance;
-    this.price = price;
+  constructor({ balance, preview, providerUrl }: Args) {
+    this.balanceWithFee = balance;
+    this.preview = preview;
     this.providerUrl = providerUrl ?? '';
   }
 
@@ -54,15 +54,15 @@ export default class MockTraderClientInterface
     __: number,
     ___: number,
     ____: string
-  ): Promise<PriceWithFee.AsObject[]> {
-    if (!this.price) throw new Error('u need to set up a mocked price');
-    return Promise.resolve([this.price]);
+  ): Promise<Preview[]> {
+    if (!this.preview) throw new Error('u need to set up a mocked preview');
+    return Promise.resolve([this.preview]);
   }
-  balances(_: {
+  balance(_: {
     baseAsset: string;
     quoteAsset: string;
-  }): Promise<BalanceWithFee.AsObject[]> {
+  }): Promise<BalanceWithFee> {
     if (!this.balance) throw new Error('u need to set up a mocked balance');
-    return Promise.resolve([this.balance]);
+    return Promise.resolve(this.balanceWithFee);
   }
 }

@@ -37,7 +37,8 @@
     "paths": {
       "*": [
         "src/*",
-        "node_modules/*"
+        "node_modules/*",
+        "test/fixtures/*"
       ]
     },
     "jsx": "react",
