@@ -51,7 +51,7 @@ export class TraderClient implements TraderClientInterface {
         type: tradeType,
         swapRequest: SwapRequest.fromBinary(swapRequestSerialized),
       });
-      const call = this.client.proposeTrade(request);
+      const call = this.client.proposeTrade(request, err => console.error(err));
       let data: Uint8Array;
       call.on('data', (reply: messages.ProposeTradeResponse) => {
         if (rejectIfSwapFail(reply, reject)) {
@@ -75,7 +75,9 @@ export class TraderClient implements TraderClientInterface {
       const request = messages.CompleteTradeRequest.create({
         swapComplete: SwapComplete.fromBinary(swapCompleteSerialized),
       });
-      const call = this.client.completeTrade(request);
+      const call = this.client.completeTrade(request, err =>
+        console.error(err)
+      );
       let data: string;
       call.on('data', (reply: messages.CompleteTradeResponse) => {
         if (rejectIfSwapFail(reply, reject)) {
@@ -184,7 +186,7 @@ export class TraderClient implements TraderClientInterface {
     });
   }
 
-  balances({
+  balance({
     baseAsset,
     quoteAsset,
   }: types.Market): Promise<types.BalanceWithFee> {

@@ -39,21 +39,20 @@ export const bestBalanceDiscovery: Discovery = async (
 ) => {
   const balancesPromises = orders.map(order => {
     const { traderClient, market, type } = order;
-    return traderClient
-      .balances(market)
-      .then((balances: BalanceWithFee[]) => {
-        const balance = balances[0].balance;
-        if (!balance)
-          throw new Error(
-            `no balances for market ${market.baseAsset}/${market.quoteAsset} using provider: ${traderClient.providerUrl}`
-          );
-        const balanceAmount =
-          type === TradeType.BUY ? balance.baseAmount : balance.quoteAmount;
-        return {
-          balanceAmount,
-          order,
-        };
-      });
+    return traderClient.balance(market).then((balance: BalanceWithFee) => {
+      if (!balance.balance)
+        throw new Error(
+          `no balances for market ${market.baseAsset}/${market.quoteAsset} using provider: ${traderClient.providerUrl}`
+        );
+      const balanceAmount =
+        type === TradeType.BUY
+          ? balance.balance.baseAmount
+          : balance.balance.quoteAmount;
+      return {
+        balanceAmount,
+        order,
+      };
+    });
   });
 
   const balancesPromisesResults = await Promise.allSettled(balancesPromises);
@@ -80,8 +79,8 @@ export const bestBalanceDiscovery: Discovery = async (
         }>).value
     );
 
-  const sorted = balancesWithClients.sort(
-    (p0, p1) => Number(p1.balanceAmount - p0.balanceAmount)
+  const sorted = balancesWithClients.sort((p0, p1) =>
+    Number(p1.balanceAmount - p0.balanceAmount)
   );
 
   const bestAmount = sorted[0].balanceAmount;
@@ -120,7 +119,7 @@ export const bestPriceDiscovery: Discovery = async (
     .map(
       p =>
         (p as PromiseFulfilledResult<{
-          amount: number;
+          amount: bigint;
           order: TradeOrder;
         }>).value
     );
@@ -131,7 +130,9 @@ export const bestPriceDiscovery: Discovery = async (
     );
   }
 
-  const sorted = pricesWithClients.sort((p0, p1) => p1.amount - p0.amount);
+  const sorted = pricesWithClients.sort((p0, p1) =>
+    Number(p1.amount - p0.amount)
+  );
 
   const bestAmount = sorted[0].amount;
   return sorted

@@ -1,9 +1,8 @@
 import Core from './core';
-import {confidential, Psbt, Transaction, TxOutput} from 'liquidjs-lib';
+import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
 import * as proto from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
-import * as jspb from 'google-protobuf';
-import {isConfidentialOutput} from 'ldk';
-import {decodePsbt, makeid} from 'utils';
+import { isConfidentialOutput } from 'ldk';
+import { decodePsbt, makeid } from 'utils';
 
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
@@ -39,14 +38,14 @@ export class Swap extends Core {
    * @param args the args of swap.request see requestOpts.
    */
   async request({
-                  amountToBeSent,
-                  assetToBeSent,
-                  amountToReceive,
-                  assetToReceive,
-                  psetBase64,
-                  inputBlindingKeys,
-                  outputBlindingKeys,
-                }: requestOpts): Promise<Uint8Array> {
+    amountToBeSent,
+    assetToBeSent,
+    amountToReceive,
+    assetToReceive,
+    psetBase64,
+    inputBlindingKeys,
+    outputBlindingKeys,
+  }: requestOpts): Promise<Uint8Array> {
     // Check amounts
     const msg = proto.SwapRequest.create({
       id: makeid(8),
@@ -54,7 +53,7 @@ export class Swap extends Core {
       assetP: assetToBeSent,
       amountR: BigInt(amountToReceive),
       assetR: assetToReceive,
-      transaction: psetBase64
+      transaction: psetBase64,
     });
 
     if (inputBlindingKeys) {
@@ -84,15 +83,19 @@ export class Swap extends Core {
    * @param args the Swap.accept args, see AcceptOpts.
    */
   async accept({
-                 message,
-                 psetBase64,
-                 inputBlindingKeys,
-                 outputBlindingKeys,
-               }: acceptOpts): Promise<Uint8Array> {
+    message,
+    psetBase64,
+    inputBlindingKeys,
+    outputBlindingKeys,
+  }: acceptOpts): Promise<Uint8Array> {
     // deserialize message parameter to get the SwapRequest message.
     const msgRequest = proto.SwapRequest.fromBinary(message);
     // Build Swap Accept message
-    const msgAccept = proto.SwapAccept.create({id: makeid(8), requestId: msgRequest.id, transaction: psetBase64});
+    const msgAccept = proto.SwapAccept.create({
+      id: makeid(8),
+      requestId: msgRequest.id,
+      transaction: psetBase64,
+    });
 
     if (inputBlindingKeys) {
       // set the input blinding keys
@@ -122,9 +125,9 @@ export class Swap extends Core {
    * @param args contains the SwapAccept message + the base64 encoded transaction.
    */
   complete({
-             message,
-             psetBase64OrHex,
-           }: {
+    message,
+    psetBase64OrHex,
+  }: {
     message: Uint8Array;
     psetBase64OrHex: string;
   }): Uint8Array {
@@ -133,7 +136,7 @@ export class Swap extends Core {
     const msgComplete = proto.SwapComplete.create({
       id: makeid(8),
       acceptId: msgAccept.id,
-      transaction: psetBase64OrHex
+      transaction: psetBase64OrHex,
     });
 
     if (this.verbose) console.log(proto.SwapAccept.toJsonString(msgAccept));
@@ -160,7 +163,7 @@ async function compareMessagesAndTransaction(
       const vout: number = decodedFromRequest.transaction.ins[inputIndex].index;
       const witnessUtxo: TxOutput = Transaction.fromHex(i.nonWitnessUtxo).outs[
         vout
-        ];
+      ];
       i.witnessUtxo = witnessUtxo;
     }
   });
@@ -172,7 +175,7 @@ async function compareMessagesAndTransaction(
     blindKeysMap(msgRequest.inputBlindingKey)
   );
 
-  if (totalP < msgRequest.getAmountP()) {
+  if (totalP < msgRequest.amountP) {
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
@@ -188,7 +191,9 @@ async function compareMessagesAndTransaction(
 
   if (!outputRFound)
     throw new Error(
-      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.amountR.toString()}, asset: ${msgRequest.assetR})`
+      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.amountR.toString()}, asset: ${
+        msgRequest.assetR
+      })`
     );
 
   // msg accept
@@ -317,10 +322,10 @@ async function countUtxos(
   );
 
   // filter inputs by asset and return the the count
-  const filteredByAsset = unblindedUtxos.filter(({asset}) =>
+  const filteredByAsset = unblindedUtxos.filter(({ asset }) =>
     assetBuffer.equals(asset.length === 33 ? asset.slice(1) : asset)
   );
-  const queryValues = filteredByAsset.map(({value}) => {
+  const queryValues = filteredByAsset.map(({ value }) => {
     const valAsNumber: number =
       value instanceof Buffer
         ? confidential.confidentialValueToSatoshi(value)
@@ -334,9 +339,9 @@ async function countUtxos(
 }
 
 function parse({
-                 message,
-                 type,
-               }: {
+  message,
+  type,
+}: {
   message: Uint8Array;
   type: string;
 }): string {
@@ -351,20 +356,15 @@ function parse({
 }
 
 /**
- * Convert jspb's Map type to BlindKeysMap.
- * @param jspbMap the map to convert.
+ * Convert jspb's obj type to BlindKeysMap.
+ * @param jspbObj the object to convert.
  */
 export function blindKeysMap(
-  jspbMap: jspb.Map<string, string | Uint8Array>
+  obj: Record<string, Uint8Array>
 ): BlindKeysMap | undefined {
   const map: BlindKeysMap = {};
-  jspbMap.forEach((entry: string | Uint8Array, key: string) => {
-    const value: Buffer =
-      entry instanceof Uint8Array
-        ? Buffer.from(entry)
-        : Buffer.from(entry, 'hex');
-
-    map[key] = value;
+  Object.entries(obj).forEach(([k, v]) => {
+    map[k] = Buffer.from(v);
   });
   return map;
 }

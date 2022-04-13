@@ -29,5 +29,5 @@ export default interface TraderClientInterface {
     amount: number,
     asset: string
   ): Promise<Preview[]>;
-  balances({ baseAsset, quoteAsset }: Market): Promise<BalanceWithFee[]>;
+  balance({ baseAsset, quoteAsset }: Market): Promise<BalanceWithFee>;
 }
