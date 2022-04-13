@@ -11,8 +11,8 @@ import { Trade, IdentityType } from '../src';
 import {
   CompleteTradeResponse,
   ProposeTradeResponse,
-} from '../test/api-spec/protobuf/gen/js/tdex/v1/trade_pb';
-import { SwapFail } from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
+} from '../src/api-spec/protobuf/gen/js/tdex/v1/trade_pb';
+import { SwapFail } from '../src/api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import * as assert from 'assert';
 import { faucet, sleep } from './_regtest';
 import { rejectIfSwapFail } from '../src/utils';
@@ -72,16 +72,16 @@ describe('TDEX SDK', () => {
   });
 
   describe('TraderClient', () => {
-    const swapFail = new SwapFail();
-    swapFail.setId('00011101');
-    swapFail.setFailureCode(666);
-    swapFail.setFailureMessage('COVID');
-
+    const swapFail = SwapFail.create({
+      id: '00011101',
+      failureCode: 666,
+      failureMessage: 'COVID',
+    });
     describe('ProposeTrade', () => {
-      const proposeTradeResponse = new ProposeTradeResponse();
-      proposeTradeResponse.setSwapFail(swapFail);
-
-      const proposeTradeResponseWithoutSwapFail = new ProposeTradeResponse();
+      const proposeTradeResponse = ProposeTradeResponse.create({
+        swapFail: swapFail,
+      });
+      const proposeTradeResponseWithoutSwapFail = ProposeTradeResponse.create();
 
       it('should throw an error if there is SwapFail in ProposeTradeResponse', () => {
         assert.rejects(
@@ -103,10 +103,10 @@ describe('TDEX SDK', () => {
     });
 
     describe('TradeComplete', () => {
-      const completeTradeResponse = new CompleteTradeResponse();
-      completeTradeResponse.setSwapFail(swapFail);
-
-      const completeTradeResponseWithoutSwapFail = new CompleteTradeResponse();
+      const completeTradeResponse = CompleteTradeResponse.create({
+        swapFail: swapFail,
+      });
+      const completeTradeResponseWithoutSwapFail = CompleteTradeResponse.create();
 
       it('should throw an error if there is SwapFail in CompleteTradeResponse', () => {
         assert.rejects(

@@ -1,15 +1,14 @@
 import * as grpc from '@grpc/grpc-js';
-import * as services from 'api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
-import * as messages from 'api-spec/protobuf/gen/js/tdex/v1/trade_pb';
-import * as types from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
+import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
+import * as types from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import {
   SwapRequest,
   SwapComplete,
   SwapAccept,
-} from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
+} from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import TraderClientInterface from './grpcClientInterface';
-import { rejectIfSwapFail } from 'utils';
-import { TradeType } from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { rejectIfSwapFail } from './utils';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
@@ -39,7 +38,7 @@ export class TraderClient implements TraderClientInterface {
    */
   tradePropose(
     { baseAsset, quoteAsset }: types.Market,
-    tradeType: TradeType,
+    tradeType: types.TradeType,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -95,7 +94,7 @@ export class TraderClient implements TraderClientInterface {
    */
   proposeTrade(
     { baseAsset, quoteAsset }: types.Market,
-    tradeType: TradeType,
+    tradeType: types.TradeType,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -159,7 +158,7 @@ export class TraderClient implements TraderClientInterface {
 
   marketPrice(
     { baseAsset, quoteAsset }: types.Market,
-    tradeType: TradeType,
+    tradeType: types.TradeType,
     amount: number,
     asset: string
   ): Promise<Array<types.Preview>> {

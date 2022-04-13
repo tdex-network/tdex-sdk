@@ -1,8 +1,8 @@
 import Core from './core';
 import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
-import * as proto from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
+import * as proto from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { isConfidentialOutput } from 'ldk';
-import { decodePsbt, makeid } from 'utils';
+import { decodePsbt, makeid } from './utils';
 
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
