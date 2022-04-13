@@ -195,7 +195,7 @@ export class TraderClient implements TraderClientInterface {
     return new Promise((resolve, reject) => {
       this.client.getMarketBalance(request, (err, response) => {
         if (err) return reject(err);
-        resolve(response!.balances!);
+        resolve(response!.balance!);
       });
     });
   }
