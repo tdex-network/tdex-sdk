@@ -19,8 +19,8 @@
     "build:proto": "buf generate buf.build/tdex-network/tdex-protobuf",
     "test": "tsdx test",
     "test:debug": "tsdx test --no-cache --runInBand",
-    "lint": "tsdx lint src test",
-    "lint:fix": "tsdx lint src test --fix",
+    "lint": "tsdx lint src test --ignore-pattern src/api-spec/*",
+    "lint:fix": "tsdx lint src test --fix --ignore-pattern src/api-spec/*",
     "prepare": "tsdx build",
     "postinstall": "yarn build:proto"
   },
