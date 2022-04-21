@@ -31,62 +31,6 @@ export class TraderClient implements TraderClientInterface {
   }
 
   /**
-   * tradePropose
-   * @param market
-   * @param tradeType
-   * @param swapRequestSerialized
-   */
-  tradePropose(
-    { baseAsset, quoteAsset }: types.Market,
-    tradeType: types.TradeType,
-    swapRequestSerialized: Uint8Array
-  ): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      const market = types.Market.create({ baseAsset, quoteAsset });
-      const request = messages.ProposeTradeRequest.create({
-        market: market,
-        type: tradeType,
-        swapRequest: SwapRequest.fromBinary(swapRequestSerialized),
-      });
-      const call = this.client.proposeTrade(request, err => console.error(err));
-      let data: Uint8Array;
-      call.on('data', (reply: messages.ProposeTradeResponse) => {
-        if (rejectIfSwapFail(reply, reject)) {
-          return;
-        }
-        const swapAcceptMsg = reply!.swapAccept;
-        data = SwapAccept.toBinary(swapAcceptMsg!);
-      });
-      call.on('end', () => resolve(data));
-      call.on('error', (e: any) => reject(e));
-    });
-  }
-
-  /**
-   * tradeComplete
-   * @param swapCompleteSerialized
-   */
-  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const request = messages.CompleteTradeRequest.create({
-        swapComplete: SwapComplete.fromBinary(swapCompleteSerialized),
-      });
-      const call = this.client.completeTrade(request, err =>
-        console.error(err)
-      );
-      let data: string;
-      call.on('data', (reply: messages.CompleteTradeResponse) => {
-        if (rejectIfSwapFail(reply, reject)) {
-          return;
-        }
-        data = reply!.txid;
-      });
-      call.on('end', () => resolve(data));
-      call.on('error', (e: any) => reject(e));
-    });
-  }
-
-  /**
    * proposeTrade
    * @param market
    * @param tradeType

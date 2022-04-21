@@ -8,12 +8,6 @@ import {
 export default interface TraderClientInterface {
   providerUrl: string;
   client: any;
-  tradePropose(
-    { baseAsset, quoteAsset }: Market,
-    tradeType: TradeType,
-    swapRequestSerialized: Uint8Array
-  ): Promise<Uint8Array>;
-  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string>;
   proposeTrade(
     { baseAsset, quoteAsset }: Market,
     tradeType: TradeType,
