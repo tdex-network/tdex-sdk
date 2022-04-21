@@ -7,7 +7,3 @@ plugins:
       - add_pb_suffix
       - eslint_disable
       - ts_nocheck
-      #- generate_dependencies
-      #- long_type_string
-      #- server_grpc1
-      #- server_generic
