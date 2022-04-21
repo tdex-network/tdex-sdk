@@ -240,15 +240,7 @@ export class TradeCore extends Core implements TradeInterface {
         swapRequestSerialized
       );
     } catch (e) {
-      if ((e as any).code && (e as any).code === 12) {
-        swapAcceptSerialized = await this.grpcClient.tradePropose(
-          market,
-          tradeType,
-          swapRequestSerialized
-        );
-      } else {
-        throw e;
-      }
+      throw e;
     }
 
     return swapAcceptSerialized;
@@ -269,16 +261,12 @@ export class TradeCore extends Core implements TradeInterface {
       message: swapAcceptSerialized,
       psetBase64OrHex: signedHex,
     });
-    // Trader call the tradeComplete endpoint to finalize the swap
+    // Trader call the completeTrade endpoint to finalize the swap
     let txid: string;
     try {
       txid = await this.grpcClient.completeTrade(swapCompleteSerialized);
     } catch (e) {
-      if ((e as any).code && (e as any).code === 12) {
-        txid = await this.grpcClient.tradeComplete(swapCompleteSerialized);
-      } else {
-        throw e;
-      }
+      throw e;
     }
     return txid;
   }

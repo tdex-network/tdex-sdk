@@ -48,9 +48,9 @@ export function getClearTextTorProxyUrl(
 }
 
 /**
- * used to inspect TradePropose/TradeComplete or ProposeTrade/CompleteTrade
+ * used to inspect ProposeTrade/CompleteTrade
  * reply messages
- * @param tradeReply TradePropose or TradeComplete protobuf messages
+ * @param tradeReply ProposeTrade/CompleteTrade protobuf messages
  * @param reject the promise's reject function
  */
 export function rejectIfSwapFail(

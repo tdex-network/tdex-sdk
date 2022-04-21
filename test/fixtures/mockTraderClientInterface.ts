@@ -24,16 +24,6 @@ export default class MockTraderClientInterface
     this.providerUrl = providerUrl ?? '';
   }
 
-  tradePropose(
-    _: { baseAsset: string; quoteAsset: string },
-    __: number,
-    ___: Uint8Array
-  ): Promise<Uint8Array> {
-    throw new Error('Method not implemented.');
-  }
-  tradeComplete(_: Uint8Array): Promise<string> {
-    throw new Error('Method not implemented.');
-  }
   proposeTrade(
     _: { baseAsset: string; quoteAsset: string },
     __: number,

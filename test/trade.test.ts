@@ -102,7 +102,7 @@ describe('TDEX SDK', () => {
       });
     });
 
-    describe('TradeComplete', () => {
+    describe('CompleteTrade', () => {
       const completeTradeResponse = CompleteTradeResponse.create({
         swapFail: swapFail,
       });
