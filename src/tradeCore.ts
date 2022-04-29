@@ -7,7 +7,7 @@ import {
   isValidAmount,
 } from 'ldk';
 import TraderClientInterface from './grpcClientInterface';
-import { SwapAccept } from 'tdex-protobuf/generated/js/swap_pb';
+import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';
 
 export interface TDEXProvider {
@@ -168,17 +168,21 @@ export class TradeCore extends Core implements TradeInterface {
     if (tradeType === TradeType.BUY) {
       return {
         assetToBeSent: quoteAsset,
-        amountToBeSent: asset === baseAsset ? previewedAmount : amount,
+        amountToBeSent:
+          asset === baseAsset ? Number(previewedAmount) : Number(amount),
         assetToReceive: baseAsset,
-        amountToReceive: asset === baseAsset ? amount : previewedAmount,
+        amountToReceive:
+          asset === baseAsset ? Number(amount) : Number(previewedAmount),
       };
     }
 
     return {
       assetToBeSent: baseAsset,
-      amountToBeSent: asset === quoteAsset ? previewedAmount : amount,
+      amountToBeSent:
+        asset === quoteAsset ? Number(previewedAmount) : Number(amount),
       assetToReceive: quoteAsset,
-      amountToReceive: asset === quoteAsset ? amount : previewedAmount,
+      amountToReceive:
+        asset === quoteAsset ? Number(amount) : Number(previewedAmount),
     };
   }
 
@@ -236,15 +240,7 @@ export class TradeCore extends Core implements TradeInterface {
         swapRequestSerialized
       );
     } catch (e) {
-      if ((e as any).code && (e as any).code === 12) {
-        swapAcceptSerialized = await this.grpcClient.tradePropose(
-          market,
-          tradeType,
-          swapRequestSerialized
-        );
-      } else {
-        throw e;
-      }
+      throw e;
     }
 
     return swapAcceptSerialized;
@@ -256,32 +252,22 @@ export class TradeCore extends Core implements TradeInterface {
   ): Promise<string> {
     // trader need to check the signed inputs by the provider
     // and add his own inputs if all is correct
-    const swapAcceptMessage = SwapAccept.deserializeBinary(
-      swapAcceptSerialized
-    );
-    const transaction = swapAcceptMessage.getTransaction();
-
+    const swapAcceptMessage = SwapAccept.fromBinary(swapAcceptSerialized);
+    const transaction = swapAcceptMessage.transaction;
     const signedHex = await identity.signPset(transaction);
-
     // Trader  adds his signed inputs to the transaction
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
       message: swapAcceptSerialized,
       psetBase64OrHex: signedHex,
     });
-
-    // Trader call the tradeComplete endpoint to finalize the swap
+    // Trader call the completeTrade endpoint to finalize the swap
     let txid: string;
     try {
       txid = await this.grpcClient.completeTrade(swapCompleteSerialized);
     } catch (e) {
-      if ((e as any).code && (e as any).code === 12) {
-        txid = await this.grpcClient.tradeComplete(swapCompleteSerialized);
-      } else {
-        throw e;
-      }
+      throw e;
     }
-
     return txid;
   }
 }

@@ -9,18 +9,20 @@
     "dist-web"
   ],
   "engines": {
-    "node": ">10"
+    "node": ">=14.5.0"
   },
   "scripts": {
     "start": "tsdx watch",
     "build": "yarn build-web && yarn build-node",
-    "build-node": "tsdx build --tsconfig tsconfig.json --entry src/index.ts ",
+    "build-node": "tsdx build --tsconfig tsconfig.json --entry src/index.ts",
     "build-web": "tsdx build --tsconfig tsconfig.web.json --entry src/index.web.ts && rm -rf dist-web && mv dist dist-web",
+    "build:proto": "buf generate buf.build/tdex-network/tdex-protobuf",
     "test": "tsdx test",
     "test:debug": "tsdx test --no-cache --runInBand",
-    "lint": "tsdx lint src test",
-    "lint:fix": "tsdx lint src test --fix",
-    "prepare": "tsdx build"
+    "lint": "tsdx lint src test --ignore-pattern src/api-spec/*",
+    "lint:fix": "tsdx lint src test --fix --ignore-pattern src/api-spec/*",
+    "prepare": "tsdx build",
+    "postinstall": "yarn build:proto"
   },
   "peerDependencies": {},
   "jest": {
@@ -60,18 +62,16 @@
     "@types/node": "^14.14.2",
     "axios": "^0.21.2",
     "husky": "^4.2.3",
-    "ts-protoc-gen": "^0.12.0",
-    "tsdx": "^0.13.1",
-    "typescript": "^3.8.3"
+    "tsdx": "0.14.0",
+    "typescript": "3.9.10"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.3.3",
-    "@types/google-protobuf": "^3.15.2",
-    "google-protobuf": "^3.17.3",
+    "@protobuf-ts/runtime": "^2.4.0",
+    "@protobuf-ts/runtime-rpc": "^2.4.0",
     "ldk": "0.4.2",
     "liquidjs-lib": "5.2.3",
     "slip77": "0.1.1",
-    "tdex-protobuf": "tdex-network/tdex-protobuf",
     "tslib": "^2.3.0"
   },
   "resolutions": {

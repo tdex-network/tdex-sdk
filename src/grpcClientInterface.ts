@@ -1,21 +1,15 @@
 import {
   BalanceWithFee,
-  PriceWithFee,
   Market,
-} from 'tdex-protobuf/generated/js/types_pb';
-import { TradeType } from 'tdex-protobuf/generated/js/trade_pb';
+  Preview,
+  TradeType,
+} from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
 
 export default interface TraderClientInterface {
   providerUrl: string;
   client: any;
-  tradePropose(
-    { baseAsset, quoteAsset }: Market.AsObject,
-    tradeType: TradeType,
-    swapRequestSerialized: Uint8Array
-  ): Promise<Uint8Array>;
-  tradeComplete(swapCompleteSerialized: Uint8Array): Promise<string>;
   proposeTrade(
-    { baseAsset, quoteAsset }: Market.AsObject,
+    { baseAsset, quoteAsset }: Market,
     tradeType: TradeType,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array>;
@@ -24,13 +18,10 @@ export default interface TraderClientInterface {
     Array<{ baseAsset: string; quoteAsset: string; feeBasisPoint: number }>
   >;
   marketPrice(
-    { baseAsset, quoteAsset }: Market.AsObject,
+    { baseAsset, quoteAsset }: Market,
     tradeType: TradeType,
     amount: number,
     asset: string
-  ): Promise<PriceWithFee.AsObject[]>;
-  balances({
-    baseAsset,
-    quoteAsset,
-  }: Market.AsObject): Promise<BalanceWithFee.AsObject[]>;
+  ): Promise<Preview[]>;
+  balance({ baseAsset, quoteAsset }: Market): Promise<BalanceWithFee>;
 }

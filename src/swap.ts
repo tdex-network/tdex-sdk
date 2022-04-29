@@ -1,9 +1,8 @@
 import Core from './core';
-import { confidential, TxOutput, Transaction, Psbt } from 'liquidjs-lib';
-import * as proto from 'tdex-protobuf/generated/js/swap_pb';
-import * as jspb from 'google-protobuf';
+import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
+import * as proto from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { isConfidentialOutput } from 'ldk';
-import { makeid, decodePsbt } from './utils';
+import { decodePsbt, makeid } from './utils';
 
 // type for BlindingKeys
 type BlindKeysMap = Record<string, Buffer>;
@@ -48,34 +47,35 @@ export class Swap extends Core {
     outputBlindingKeys,
   }: requestOpts): Promise<Uint8Array> {
     // Check amounts
-    const msg = new proto.SwapRequest();
-    msg.setId(makeid(8));
-    msg.setAmountP(amountToBeSent);
-    msg.setAssetP(assetToBeSent);
-    msg.setAmountR(amountToReceive);
-    msg.setAssetR(assetToReceive);
-    msg.setTransaction(psetBase64);
+    const msg = proto.SwapRequest.create({
+      id: makeid(8),
+      amountP: BigInt(amountToBeSent),
+      assetP: assetToBeSent,
+      amountR: BigInt(amountToReceive),
+      assetR: assetToReceive,
+      transaction: psetBase64,
+    });
 
     if (inputBlindingKeys) {
       // set the input blinding keys
       Object.entries(inputBlindingKeys).forEach(([key, value]) => {
-        msg.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msg.inputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     if (outputBlindingKeys) {
       // set the output blinding keys
       Object.entries(outputBlindingKeys).forEach(([key, value]) => {
-        msg.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msg.outputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     // check the message content and transaction.
     await compareMessagesAndTransaction(msg);
 
-    if (this.verbose) console.log(msg.toObject());
+    if (this.verbose) console.log(proto.SwapRequest.toJsonString(msg));
 
-    return msg.serializeBinary();
+    return proto.SwapRequest.toBinary(msg);
   }
 
   /**
@@ -89,34 +89,35 @@ export class Swap extends Core {
     outputBlindingKeys,
   }: acceptOpts): Promise<Uint8Array> {
     // deserialize message parameter to get the SwapRequest message.
-    const msgRequest = proto.SwapRequest.deserializeBinary(message);
+    const msgRequest = proto.SwapRequest.fromBinary(message);
     // Build Swap Accept message
-    const msgAccept = new proto.SwapAccept();
-    msgAccept.setId(makeid(8));
-    msgAccept.setRequestId(msgRequest.getId());
-    msgAccept.setTransaction(psetBase64);
+    const msgAccept = proto.SwapAccept.create({
+      id: makeid(8),
+      requestId: msgRequest.id,
+      transaction: psetBase64,
+    });
 
     if (inputBlindingKeys) {
       // set the input blinding keys
       Object.entries(inputBlindingKeys).forEach(([key, value]) => {
-        msgAccept.getInputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msgAccept.inputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     if (outputBlindingKeys) {
       // set the output blinding keys
       Object.entries(outputBlindingKeys).forEach(([key, value]) => {
-        msgAccept.getOutputBlindingKeyMap().set(key, Uint8Array.from(value));
+        msgAccept.outputBlindingKey[key] = Uint8Array.from(value);
       });
     }
 
     // compare messages and transaction data
     await compareMessagesAndTransaction(msgRequest, msgAccept);
 
-    if (this.verbose) console.log(msgAccept.toObject());
+    if (this.verbose) console.log(proto.SwapAccept.toJsonString(msgAccept));
 
     // serialize the SwapAccept message.
-    return msgAccept.serializeBinary();
+    return proto.SwapAccept.toBinary(msgAccept);
   }
 
   /**
@@ -130,16 +131,17 @@ export class Swap extends Core {
     message: Uint8Array;
     psetBase64OrHex: string;
   }): Uint8Array {
-    const msgAccept = proto.SwapAccept.deserializeBinary(message);
+    const msgAccept = proto.SwapAccept.fromBinary(message);
     //Build SwapComplete
-    const msgComplete = new proto.SwapComplete();
-    msgComplete.setId(makeid(8));
-    msgComplete.setAcceptId(msgAccept.getId());
-    msgComplete.setTransaction(psetBase64OrHex);
+    const msgComplete = proto.SwapComplete.create({
+      id: makeid(8),
+      acceptId: msgAccept.id,
+      transaction: psetBase64OrHex,
+    });
 
-    if (this.verbose) console.log(msgAccept.toObject());
+    if (this.verbose) console.log(proto.SwapAccept.toJsonString(msgAccept));
 
-    return msgComplete.serializeBinary();
+    return proto.SwapComplete.toBinary(msgComplete);
   }
 }
 
@@ -153,7 +155,7 @@ async function compareMessagesAndTransaction(
   msgAccept?: proto.SwapAccept
 ): Promise<void> {
   // decode the transaction.
-  const decodedFromRequest = decodePsbt(msgRequest.getTransaction());
+  const decodedFromRequest = decodePsbt(msgRequest.transaction);
 
   // nonWitnessUtxo to witnessUtxoutxos
   decodedFromRequest.psbt.data.inputs.forEach((i: any, inputIndex: number) => {
@@ -169,11 +171,11 @@ async function compareMessagesAndTransaction(
   // check the amount of the transaction
   const totalP = await countUtxos(
     decodedFromRequest.psbt,
-    msgRequest.getAssetP(),
-    blindKeysMap(msgRequest.getInputBlindingKeyMap())
+    msgRequest.assetP,
+    blindKeysMap(msgRequest.inputBlindingKey)
   );
 
-  if (totalP < msgRequest.getAmountP()) {
+  if (totalP < msgRequest.amountP) {
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
@@ -182,21 +184,23 @@ async function compareMessagesAndTransaction(
   // check if the output if found in the transaction
   const outputRFound: boolean = await outputFoundInTransaction(
     decodedFromRequest.transaction.outs,
-    msgRequest.getAmountR(),
-    msgRequest.getAssetR(),
-    blindKeysMap(msgRequest.getOutputBlindingKeyMap())
+    Number(msgRequest.amountR),
+    msgRequest.assetR,
+    blindKeysMap(msgRequest.outputBlindingKey)
   );
 
   if (!outputRFound)
     throw new Error(
-      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.getAmountR()}, asset: ${msgRequest.getAssetR()})`
+      `Either SwapRequest.amount_r or SwapRequest.asset_r do not match the provided psbt (amount: ${msgRequest.amountR.toString()}, asset: ${
+        msgRequest.assetR
+      })`
     );
 
   // msg accept
   if (msgAccept) {
     // decode the tx and check the msg's ids
-    const decodedFromAccept = decodePsbt(msgAccept.getTransaction());
-    if (msgRequest.getId() !== msgAccept.getRequestId())
+    const decodedFromAccept = decodePsbt(msgAccept.transaction);
+    if (msgRequest.id !== msgAccept.requestId)
       throw new Error(
         'SwapRequest.id and SwapAccept.request_id are not the same'
       );
@@ -204,11 +208,11 @@ async function compareMessagesAndTransaction(
     // check the amount of utxos.
     const totalR = await countUtxos(
       decodedFromAccept.psbt,
-      msgRequest.getAssetR(),
-      blindKeysMap(msgAccept.getInputBlindingKeyMap())
+      msgRequest.assetR,
+      blindKeysMap(msgAccept.inputBlindingKey)
     );
 
-    if (totalR < msgRequest.getAmountR()) {
+    if (totalR < msgRequest.amountR) {
       throw new Error(
         'Cumulative utxos count is not enough to cover SwapRequest.amount_r'
       );
@@ -217,14 +221,14 @@ async function compareMessagesAndTransaction(
     // check if there is an output found in the transaction.
     const outputPFound = outputFoundInTransaction(
       decodedFromAccept.transaction.outs,
-      msgRequest.getAmountP(),
-      msgRequest.getAssetP(),
-      blindKeysMap(msgAccept.getOutputBlindingKeyMap())
+      Number(msgRequest.amountP),
+      msgRequest.assetP,
+      blindKeysMap(msgAccept.outputBlindingKey)
     );
 
     if (!outputPFound)
       throw new Error(
-        `Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt amount=${msgRequest.getAmountP()} asset=${msgRequest.getAssetP()}`
+        `Either SwapRequest.amount_p or SwapRequest.asset_p do not match the provided psbt amount=${msgRequest.amountP} asset=${msgRequest.assetP}`
       );
   }
 }
@@ -352,20 +356,15 @@ function parse({
 }
 
 /**
- * Convert jspb's Map type to BlindKeysMap.
- * @param jspbMap the map to convert.
+ * Convert jspb's obj type to BlindKeysMap.
+ * @param jspbObj the object to convert.
  */
 export function blindKeysMap(
-  jspbMap: jspb.Map<string, string | Uint8Array>
+  obj: Record<string, Uint8Array>
 ): BlindKeysMap | undefined {
   const map: BlindKeysMap = {};
-  jspbMap.forEach((entry: string | Uint8Array, key: string) => {
-    const value: Buffer =
-      entry instanceof Uint8Array
-        ? Buffer.from(entry)
-        : Buffer.from(entry, 'hex');
-
-    map[key] = value;
+  Object.entries(obj).forEach(([k, v]) => {
+    map[k] = Buffer.from(v);
   });
   return map;
 }

@@ -1,5 +1,5 @@
 import { Psbt, confidential } from 'liquidjs-lib';
-import { Swap } from '../src/swap';
+import { Swap } from '../src';
 import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
 import { faucet, fetchUtxos, mint, fetchTxHex } from './_regtest';

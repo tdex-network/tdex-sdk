@@ -9,11 +9,12 @@
     "./src/grpcClient.ts"
   ],
   "compilerOptions": {
-    "module": "esnext",
+    "target": "ES2020",
+    "module": "ESNext",
     "lib": [
-      "dom",
-      "ES2019",
-      "esnext"
+      "DOM",
+      "ES2020",
+      "ESNext"
     ],
     "importHelpers": true,
     "declaration": true,
@@ -36,7 +37,8 @@
     "paths": {
       "*": [
         "src/*",
-        "node_modules/*"
+        "node_modules/*",
+        "test/fixtures/*"
       ]
     },
     "jsx": "react",
