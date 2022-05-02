@@ -1,6 +1,6 @@
-import * as services from 'api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
-import * as messages from 'api-spec/protobuf/gen/js/tdex/v1/trade_pb';
-import * as types from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
+import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
+import * as types from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import {
   SwapRequest,
   SwapComplete,
