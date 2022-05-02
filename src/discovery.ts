@@ -1,5 +1,5 @@
 import { TradeOrder, TradeType } from './tradeCore';
-import { BalanceWithFee } from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { BalanceWithFee } from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 
 export interface DiscoveryOpts {
   amount: number;

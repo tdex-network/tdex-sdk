@@ -5,10 +5,10 @@ import {
   SwapRequest,
   SwapComplete,
   SwapAccept,
-} from 'api-spec/protobuf/gen/js/tdex/v1/swap_pb';
+} from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import TraderClientInterface from './grpcClientInterface';
 import { getClearTextTorProxyUrl, rejectIfSwapFail } from './utils';
-import { TradeType } from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { TradeType } from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import * as grpc from '@grpc/grpc-js';
 
 const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
