@@ -1,15 +1,15 @@
-import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
+import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.client';
 import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 import * as types from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { TradeType } from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import {
-  SwapRequest,
-  SwapComplete,
   SwapAccept,
+  SwapComplete,
+  SwapRequest,
 } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import TraderClientInterface from './grpcClientInterface';
-import { getClearTextTorProxyUrl, rejectIfSwapFail } from './utils';
-import { TradeType } from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
-import * as grpc from '@grpc/grpc-js';
+import { getClearTextTorProxyUrl } from './utils';
+import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
 
@@ -34,8 +34,9 @@ export class TraderClient implements TraderClientInterface {
     }
 
     this.client = new services.TradeServiceClient(
-      this.providerUrl,
-      grpc.ChannelCredentials.createInsecure()
+      new GrpcWebFetchTransport({
+        baseUrl: this.providerUrl,
+      })
     );
   }
 
@@ -45,71 +46,58 @@ export class TraderClient implements TraderClientInterface {
    * @param tradeType
    * @param swapRequestSerialized
    */
-  proposeTrade(
+  async proposeTrade(
     { baseAsset, quoteAsset }: types.Market,
     tradeType: TradeType,
     swapRequestSerialized: Uint8Array
   ): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      const market = types.Market.create({ baseAsset, quoteAsset });
-      const request = messages.ProposeTradeRequest.create({
-        market: market,
-        type: tradeType,
-        swapRequest: SwapRequest.fromBinary(swapRequestSerialized),
-      });
-      this.client.proposeTrade(request, (err, response) => {
-        if (err) return reject(err);
-        if (rejectIfSwapFail(response!, reject)) {
-          return;
-        }
-        const swapAcceptMsg = response!.swapAccept;
-        const data = SwapAccept.toBinary(swapAcceptMsg!);
-        return resolve(data);
-      });
+    const market = types.Market.create({ baseAsset, quoteAsset });
+    const request = messages.ProposeTradeRequest.create({
+      market: market,
+      type: tradeType,
+      swapRequest: SwapRequest.fromBinary(swapRequestSerialized),
     });
+    const call = await this.client.proposeTrade(request);
+    if (call.response.swapFail) {
+      throw new Error(
+        `SwapFail for message id=${call.response.swapFail.id}. Failure code ${call.response.swapFail.failureCode} | reason: ${call.response.swapFail.failureMessage}`
+      );
+    }
+    const swapAcceptMsg = call.response.swapAccept;
+    return SwapAccept.toBinary(swapAcceptMsg!);
   }
 
   /**
    * completeTrade
    * @param swapCompleteSerialized
    */
-  completeTrade(swapCompleteSerialized: Uint8Array): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const request = messages.CompleteTradeRequest.create({
-        swapComplete: SwapComplete.fromBinary(swapCompleteSerialized),
-      });
-      this.client.completeTrade(request, (err, response) => {
-        if (err) return reject(err);
-        if (rejectIfSwapFail(response!, reject)) {
-          return;
-        }
-        return resolve(response!.txid);
-      });
+  async completeTrade(swapCompleteSerialized: Uint8Array): Promise<string> {
+    const request = messages.CompleteTradeRequest.create({
+      swapComplete: SwapComplete.fromBinary(swapCompleteSerialized),
     });
+    const call = await this.client.completeTrade(request);
+    if (call.response.swapFail) {
+      throw new Error(
+        `SwapFail for message id=${call.response.swapFail.id}. Failure code ${call.response.swapFail.failureCode} | reason: ${call.response.swapFail.failureMessage}`
+      );
+    }
+    return call.response.txid;
   }
 
-  markets(): Promise<
+  async markets(): Promise<
     Array<{ baseAsset: string; quoteAsset: string; feeBasisPoint: number }>
   > {
-    return new Promise((resolve, reject) => {
-      this.client.listMarkets(
-        messages.ListMarketsRequest.create(),
-        (err, response) => {
-          if (err) return reject(err);
-          const list = response!.markets.map(
-            (mktWithFee: types.MarketWithFee) => ({
-              baseAsset: mktWithFee!.market!.baseAsset,
-              quoteAsset: mktWithFee!.market!.quoteAsset,
-              feeBasisPoint: Number(mktWithFee!.fee!.basisPoint),
-            })
-          );
-          resolve(list);
-        }
-      );
-    });
+    const call = await this.client.listMarkets(
+      messages.ListMarketsRequest.create()
+    );
+    return call.response!.markets.map((mktWithFee: types.MarketWithFee) => ({
+      baseAsset: mktWithFee!.market!.baseAsset,
+      quoteAsset: mktWithFee!.market!.quoteAsset,
+      feeBasisPoint: Number(mktWithFee!.fee!.basisPoint),
+    }));
   }
 
-  marketPrice(
+  async marketPrice(
     { baseAsset, quoteAsset }: types.Market,
     tradeType: TradeType,
     amount: number,
@@ -122,28 +110,17 @@ export class TraderClient implements TraderClientInterface {
       amount: BigInt(amount),
       asset: asset,
     });
-    return new Promise((resolve, reject) => {
-      this.client.previewTrade(request, (err, response) => {
-        if (err) return reject(err);
-        const list = response!.previews.map(
-          (preview: types.Preview) => preview
-        );
-        resolve(list);
-      });
-    });
+    const call = await this.client.previewTrade(request);
+    return call.response!.previews.map((preview: types.Preview) => preview);
   }
 
-  balance({
+  async balance({
     baseAsset,
     quoteAsset,
   }: types.Market): Promise<types.BalanceWithFee> {
     const market = types.Market.create({ baseAsset, quoteAsset });
     const request = messages.GetMarketBalanceRequest.create({ market });
-    return new Promise((resolve, reject) => {
-      this.client.getMarketBalance(request, (err, response) => {
-        if (err) return reject(err);
-        resolve(response!.balance!);
-      });
-    });
+    const call = await this.client.getMarketBalance(request);
+    return call.response.balance!;
   }
 }
