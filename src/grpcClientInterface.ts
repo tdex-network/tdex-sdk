@@ -3,7 +3,7 @@ import {
   Market,
   Preview,
   TradeType,
-} from 'api-spec/protobuf/gen/js/tdex/v1/types_pb';
+} from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 
 export default interface TraderClientInterface {
   providerUrl: string;
