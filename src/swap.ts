@@ -49,9 +49,9 @@ export class Swap extends Core {
     // Check amounts
     const msg = proto.SwapRequest.create({
       id: makeid(8),
-      amountP: BigInt(amountToBeSent),
+      amountP: String(amountToBeSent),
       assetP: assetToBeSent,
-      amountR: BigInt(amountToReceive),
+      amountR: String(amountToReceive),
       assetR: assetToReceive,
       transaction: psetBase64,
     });
@@ -175,7 +175,7 @@ async function compareMessagesAndTransaction(
     blindKeysMap(msgRequest.inputBlindingKey)
   );
 
-  if (totalP < msgRequest.amountP) {
+  if (totalP < Number(msgRequest.amountP)) {
     throw new Error(
       'Cumulative utxos count is not enough to cover SwapRequest.amount_p'
     );
@@ -212,7 +212,7 @@ async function compareMessagesAndTransaction(
       blindKeysMap(msgAccept.inputBlindingKey)
     );
 
-    if (totalR < msgRequest.amountR) {
+    if (totalR < Number(msgRequest.amountR)) {
       throw new Error(
         'Cumulative utxos count is not enough to cover SwapRequest.amount_r'
       );

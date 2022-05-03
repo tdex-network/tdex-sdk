@@ -7,3 +7,4 @@ plugins:
       - add_pb_suffix
       - eslint_disable
       - ts_nocheck
+      - long_type_string

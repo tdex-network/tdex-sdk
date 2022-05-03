@@ -107,7 +107,7 @@ export class TraderClient implements TraderClientInterface {
     const request = messages.PreviewTradeRequest.create({
       market: market,
       type: tradeType,
-      amount: BigInt(amount),
+      amount: String(amount),
       asset: asset,
     });
     const call = await this.client.previewTrade(request);
