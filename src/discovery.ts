@@ -74,13 +74,13 @@ export const bestBalanceDiscovery: Discovery = async (
     .map(
       p =>
         (p as PromiseFulfilledResult<{
-          balanceAmount: bigint;
+          balanceAmount: string;
           order: TradeOrder;
         }>).value
     );
 
-  const sorted = balancesWithClients.sort((p0, p1) =>
-    Number(p1.balanceAmount - p0.balanceAmount)
+  const sorted = balancesWithClients.sort(
+    (p0, p1) => Number(p1.balanceAmount) - Number(p0.balanceAmount)
   );
 
   const bestAmount = sorted[0].balanceAmount;
@@ -119,7 +119,7 @@ export const bestPriceDiscovery: Discovery = async (
     .map(
       p =>
         (p as PromiseFulfilledResult<{
-          amount: bigint;
+          amount: string;
           order: TradeOrder;
         }>).value
     );
@@ -130,8 +130,8 @@ export const bestPriceDiscovery: Discovery = async (
     );
   }
 
-  const sorted = pricesWithClients.sort((p0, p1) =>
-    Number(p1.amount - p0.amount)
+  const sorted = pricesWithClients.sort(
+    (p0, p1) => Number(p1.amount) - Number(p0.amount)
   );
 
   const bestAmount = sorted[0].amount;

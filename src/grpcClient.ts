@@ -110,7 +110,7 @@ export class TraderClient implements TraderClientInterface {
     const request = messages.PreviewTradeRequest.create({
       market: market,
       type: tradeType,
-      amount: BigInt(amount),
+      amount: String(amount),
       asset: asset,
     });
     return new Promise((resolve, reject) => {
