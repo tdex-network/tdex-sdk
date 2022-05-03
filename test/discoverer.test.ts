@@ -30,23 +30,23 @@ describe('discoverer', () => {
     trader1 = new MockTraderClientInterface({
       providerUrl: 'trader1',
       balance: {
-        balance: { baseAmount: BigInt(1), quoteAmount: BigInt(1000) },
+        balance: { baseAmount: String(1), quoteAmount: String(1000) },
       },
-      preview: { amount: BigInt(10), asset: '' },
+      preview: { amount: String(10), asset: '' },
     });
 
     trader2 = new MockTraderClientInterface({
       providerUrl: 'trader2',
-      balance: { balance: { baseAmount: BigInt(10), quoteAmount: BigInt(10) } },
-      preview: { amount: BigInt(100), asset: '' },
+      balance: { balance: { baseAmount: String(10), quoteAmount: String(10) } },
+      preview: { amount: String(100), asset: '' },
     });
 
     trader3 = new MockTraderClientInterface({
       providerUrl: 'trader3',
       balance: {
-        balance: { baseAmount: BigInt(100), quoteAmount: BigInt(100) },
+        balance: { baseAmount: String(100), quoteAmount: String(100) },
       },
-      preview: { amount: BigInt(1000), asset: '' },
+      preview: { amount: String(1000), asset: '' },
     });
   });
 
