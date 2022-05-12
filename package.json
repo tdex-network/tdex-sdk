@@ -69,8 +69,7 @@
     "@protobuf-ts/grpcweb-transport": "2.5.0",
     "@protobuf-ts/runtime": "2.5.0",
     "@protobuf-ts/runtime-rpc": "2.5.0",
-    "ldk": "0.4.2",
-    "liquidjs-lib": "5.2.3",
+    "ldk": "0.4.12",
     "slip77": "0.1.1",
     "tslib": "^2.3.0"
   },
