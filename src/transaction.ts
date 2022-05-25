@@ -5,6 +5,7 @@ import {
   CoinSelector,
   CoinSelectorErrorFn,
   UnblindedOutput,
+  AssetHash,
 } from 'ldk';
 import { confidential, Psbt } from 'liquidjs-lib';
 
@@ -97,9 +98,9 @@ export class SwapTransaction implements SwapTransactionInterface {
 
     // The receiving output
     this.pset.addOutput({
-      script: receivingScript,
+      script: Buffer.from(receivingScript),
       value: confidential.satoshiToConfidentialValue(amountToReceive),
-      asset: assetToReceive,
+      asset: AssetHash.fromHex(assetToReceive, false).bytes,
       nonce: Buffer.from('00', 'hex'),
     });
 
@@ -115,9 +116,9 @@ export class SwapTransaction implements SwapTransactionInterface {
 
         // Change
         this.pset.addOutput({
-          script: changeScript,
+          script: Buffer.from(changeScript),
           value: confidential.satoshiToConfidentialValue(changeOutput.value),
-          asset: changeOutput.asset,
+          asset: AssetHash.fromHex(changeOutput.asset, false).bytes,
           nonce: Buffer.from('00', 'hex'),
         });
 

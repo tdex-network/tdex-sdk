@@ -66,14 +66,13 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.3.3",
-    "@protobuf-ts/grpcweb-transport": "2.5.0",
-    "@protobuf-ts/runtime": "2.5.0",
-    "@protobuf-ts/runtime-rpc": "2.5.0",
-    "ldk": "0.4.12",
-    "slip77": "0.1.1",
+    "@protobuf-ts/grpcweb-transport": "^2.6.0",
+    "@protobuf-ts/runtime": "^2.6.0",
+    "@protobuf-ts/runtime-rpc": "^2.6.0",
+    "ecpair": "^2.0.1",
+    "ldk": "0.5.0",
+    "slip77": "0.2.0",
+    "tiny-secp256k1": "2.2.1",
     "tslib": "^2.3.0"
-  },
-  "resolutions": {
-    "blech32": "1.0.1"
   }
 }

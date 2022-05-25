@@ -6,6 +6,8 @@ import {
   PrivateKeyOpts,
   UnblindedOutput,
 } from 'ldk';
+import * as ecc from 'tiny-secp256k1';
+
 import * as TDEX from '../src/index';
 import { Trade, IdentityType } from '../src';
 import {
@@ -29,6 +31,7 @@ const identityOpts: IdentityOpts<PrivateKeyOpts> = {
     signingKeyWIF,
     blindingKeyWIF,
   },
+  ecclib: ecc,
 };
 
 const identity = new PrivateKey(identityOpts);
@@ -41,7 +44,7 @@ describe('TDEX SDK', () => {
     await faucet(addr.confidentialAddress);
     await sleep(3000);
     const addresses = await identity.getAddresses();
-    utxos = await fetchAndUnblindUtxos(addresses, 'http://localhost:3001');
+    utxos = await fetchAndUnblindUtxos(ecc, addresses, 'http://localhost:3001');
   });
 
   it('Should throw if no utxos', () => {

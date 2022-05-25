@@ -1,5 +1,9 @@
 import { Mnemonic, IdentityOpts, MnemonicOpts, IdentityInterface } from 'ldk';
-import { ECPair, Psbt } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib';
+import ECPairFactory from 'ecpair';
+import * as ecc from 'tiny-secp256k1';
+
+const ECPair = ECPairFactory(ecc);
 
 /**
  * @class Mnemonic
@@ -53,7 +57,7 @@ export class TDEXMnemonic extends Mnemonic implements IdentityInterface {
     }
     // wait that all signing promise resolved
     await Promise.all(signInputPromises);
-    pset.validateSignaturesOfAllInputs();
+    pset.validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc));
     pset.finalizeAllInputs();
 
     // return the signed raw tx, hex encoded.
