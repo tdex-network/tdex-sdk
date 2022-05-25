@@ -98,7 +98,7 @@ export class SwapTransaction implements SwapTransactionInterface {
 
     // The receiving output
     this.pset.addOutput({
-      script: Buffer.from(receivingScript),
+      script: Buffer.from(receivingScript, 'hex'),
       value: confidential.satoshiToConfidentialValue(amountToReceive),
       asset: AssetHash.fromHex(assetToReceive, false).bytes,
       nonce: Buffer.from('00', 'hex'),
@@ -116,7 +116,7 @@ export class SwapTransaction implements SwapTransactionInterface {
 
         // Change
         this.pset.addOutput({
-          script: Buffer.from(changeScript),
+          script: Buffer.from(changeScript, 'hex'),
           value: confidential.satoshiToConfidentialValue(changeOutput.value),
           asset: AssetHash.fromHex(changeOutput.asset, false).bytes,
           nonce: Buffer.from('00', 'hex'),
