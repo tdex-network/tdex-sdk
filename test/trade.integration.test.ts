@@ -5,6 +5,8 @@ import {
   AddressInterface,
   Mnemonic,
 } from 'ldk';
+import * as ecc from 'tiny-secp256k1';
+
 import { Trade, IdentityType, greedyCoinSelector } from '../src';
 import { TDEXMnemonic } from '../src';
 
@@ -22,6 +24,7 @@ const identityOpts: IdentityOpts<MnemonicOpts> = {
     mnemonic:
       'outer prosper fish exclude pitch jaguar hole water head cream glimpse drive',
   },
+  ecclib: ecc,
 };
 
 const explorerUrl = 'http://localhost:3001';
@@ -41,7 +44,7 @@ describe('Integration tests with a local daemon', () => {
     }, 36000);
 
     test('Should sell some LBTCs with a daemon (TDEXMnemonic)', async () => {
-      let utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+      let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
 
       const tradeSell = new Trade({
         providerUrl: 'localhost:9945',
@@ -62,7 +65,7 @@ describe('Integration tests with a local daemon', () => {
 
       await sleep(1500);
 
-      utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+      utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
       const tradeBuy = new Trade({
         providerUrl: 'localhost:9945',
         explorerUrl,
@@ -94,7 +97,7 @@ describe('Integration tests with a local daemon', () => {
       addresses = await identity.getAddresses();
     }, 36000);
     test('Should sell some LBTCs with a daemon (LDK Mnemonic)', async () => {
-      let utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+      let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
 
       const tradeSell = new Trade({
         providerUrl: 'localhost:9945',
@@ -115,7 +118,7 @@ describe('Integration tests with a local daemon', () => {
 
       await sleep(1500);
 
-      utxos = await fetchAndUnblindUtxos(addresses, explorerUrl);
+      utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
       const tradeBuy = new Trade({
         providerUrl: 'localhost:9945',
         explorerUrl,

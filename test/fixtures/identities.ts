@@ -1,3 +1,4 @@
+import ECPairFactory, { ECPairInterface } from 'ecpair';
 import {
   AddressInterface,
   IdentityInterface,
@@ -7,10 +8,13 @@ import {
   PrivateKey,
   PrivateKeyOpts,
 } from 'ldk';
-import { ECPair, ECPairInterface, payments, Network, Psbt } from 'liquidjs-lib';
+import { payments, NetworkExtended, Psbt } from 'liquidjs-lib';
+import * as ecc from 'tiny-secp256k1';
+
+const ECPair = ECPairFactory(ecc);
 
 class Identity {
-  network: Network;
+  network: NetworkExtended;
   type: IdentityType;
 
   constructor(args: IdentityOpts<any>) {
@@ -22,7 +26,7 @@ class Identity {
       throw new Error('Type is missing or not valid');
     }
 
-    this.network = (networks as Record<string, Network>)[args.chain];
+    this.network = (networks as Record<string, NetworkExtended>)[args.chain];
     this.type = args.type;
   }
 
@@ -299,6 +303,7 @@ export const proposerP2PKH = new Legacy({
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
+  ecclib: ecc,
 });
 
 export const proposerP2SH = new WrappedSegwit({
@@ -308,6 +313,7 @@ export const proposerP2SH = new WrappedSegwit({
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
+  ecclib: ecc,
 });
 
 export const proposerP2WPKH = new PrivateKey({
@@ -317,4 +323,5 @@ export const proposerP2WPKH = new PrivateKey({
     blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
+  ecclib: ecc,
 });

@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
 import { faucet, fetchUtxos, mint, fetchTxHex } from './_regtest';
 import { proposer, responder } from './fixtures/swap.keys';
-import { UnblindedOutput, networks, address } from 'ldk';
+import { UnblindedOutput, networks, address, AssetHash } from 'ldk';
 
 const toOutputScript = (addr: string) =>
   address.toOutputScript(addr, networks.regtest);
@@ -123,13 +123,13 @@ describe('Swap', () => {
         })
         .addOutput({
           value: satoshiToConfidentialValue(100_0000_0000),
-          asset: altcoin,
+          asset: AssetHash.fromHex(altcoin, false).bytes,
           nonce: Buffer.alloc(0),
           script: toOutputScript(proposerAddress),
         })
         .addOutput({
           value: satoshiToConfidentialValue(0),
-          asset: networks.regtest.assetHash,
+          asset: AssetHash.fromHex(networks.regtest.assetHash, false).bytes,
           nonce: Buffer.alloc(0),
           script: Buffer.alloc(0),
         })
