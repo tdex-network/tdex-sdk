@@ -1,9 +1,12 @@
-import { Mnemonic, IdentityOpts, MnemonicOpts, IdentityInterface } from 'ldk';
+import {
+  Mnemonic,
+  IdentityOpts,
+  MnemonicOpts,
+  IdentityInterface,
+  TinySecp256k1Interface,
+} from 'ldk';
 import { Psbt } from 'liquidjs-lib';
-import ECPairFactory from 'ecpair';
-import * as ecc from 'tiny-secp256k1';
-
-const ECPair = ECPairFactory(ecc);
+import ECPairFactory, { ECPairAPI } from 'ecpair';
 
 /**
  * @class Mnemonic
@@ -15,8 +18,12 @@ const ECPair = ECPairFactory(ecc);
  * @member scriptToAddressCache a map scriptPubKey --> address generation.
  */
 export class TDEXMnemonic extends Mnemonic implements IdentityInterface {
+  public ecclib: TinySecp256k1Interface;
+  public ECPair: ECPairAPI;
   constructor(args: IdentityOpts<MnemonicOpts>) {
     super({ ...args });
+    this.ecclib = args.ecclib;
+    this.ECPair = ECPairFactory(args.ecclib);
   }
 
   /**
@@ -29,7 +36,7 @@ export class TDEXMnemonic extends Mnemonic implements IdentityInterface {
     const wif: string = this.masterPrivateKeyNode
       .derivePath(derivationPath)
       .toWIF();
-    const { publicKey, privateKey } = ECPair.fromWIF(wif, this.network);
+    const { publicKey, privateKey } = this.ECPair.fromWIF(wif, this.network);
     return { publicKey: publicKey!, privateKey: privateKey! };
   }
 
@@ -49,7 +56,7 @@ export class TDEXMnemonic extends Mnemonic implements IdentityInterface {
           const privateKeyBuffer = this._derivePath(
             addressGeneration.address.derivationPath!
           ).privateKey;
-          const signingKeyPair = ECPair.fromPrivateKey(privateKeyBuffer);
+          const signingKeyPair = this.ECPair.fromPrivateKey(privateKeyBuffer);
           // add the promise to array
           signInputPromises.push(pset.signInputAsync(index, signingKeyPair));
         }
@@ -57,7 +64,7 @@ export class TDEXMnemonic extends Mnemonic implements IdentityInterface {
     }
     // wait that all signing promise resolved
     await Promise.all(signInputPromises);
-    pset.validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(ecc));
+    pset.validateSignaturesOfAllInputs(Psbt.ECDSASigValidator(this.ecclib));
     pset.finalizeAllInputs();
 
     // return the signed raw tx, hex encoded.
