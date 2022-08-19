@@ -1,5 +1,5 @@
 {
-  "version": "1.7.22",
+  "version": "1.7.23",
   "license": "MIT",
   "main": "dist/index.js",
   "browser": "dist-web/index.js",
@@ -39,23 +39,7 @@
     "trailingComma": "es5"
   },
   "name": "tdex-sdk",
-  "contributors": [
-    {
-      "name": "Marco Argentieri",
-      "email": "marco@vulpem.com",
-      "url": "https://vulpem.com"
-    },
-    {
-      "name": "Pietralberto Mazza",
-      "email": "pietro@vulpem.com",
-      "url": "https://vulpem.com"
-    },
-    {
-      "name": "Louis Singer",
-      "email": "louis@vulpem.com",
-      "url": "https://vulpem.com"
-    }
-  ],
+  "author": "TDEX Developers",
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "@types/node": "^14.14.2",
