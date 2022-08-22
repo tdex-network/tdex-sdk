@@ -1,5 +1,5 @@
 {
-  "version": "1.7.23",
+  "version": "1.7.24",
   "license": "MIT",
   "main": "dist/index.js",
   "browser": "dist-web/index.js",
@@ -55,7 +55,7 @@
     "@protobuf-ts/runtime": "^2.6.0",
     "@protobuf-ts/runtime-rpc": "^2.6.0",
     "ecpair": "^2.0.1",
-    "ldk": "^0.5.5",
+    "ldk": "^0.5.6",
     "slip77": "0.2.0",
     "tslib": "^2.3.0"
   }
