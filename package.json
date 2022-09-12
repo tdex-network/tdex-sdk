@@ -41,7 +41,7 @@
   "name": "tdex-sdk",
   "author": "TDEX Developers",
   "devDependencies": {
-    "@types/jest": "^25.2.1",
+    "@types/jest": "^25.2.3",
     "@types/node": "^14.14.2",
     "axios": "^0.21.2",
     "husky": "^4.2.3",
