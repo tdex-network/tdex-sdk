@@ -10,7 +10,7 @@ import {
 import TraderClientInterface from './grpcClientInterface';
 import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';
-import { isPsetV0, isRawTransaction } from 'utils';
+import { isPsetV0, isRawTransaction } from './utils';
 
 export interface TDEXProvider {
   name: string;
