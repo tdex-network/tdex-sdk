@@ -113,6 +113,24 @@ export class TradeCore extends Core implements TradeInterface {
   }
 
   /**
+   * Trade.buyWihtoutComplete let the trader buy the baseAsset,
+   * sending his own quoteAsset using the current market price wihtout
+   * broadcasting the tx
+   */
+  async buyWithoutComplete({ market, amount, asset, identity }: BuySellOpts): Promise<string> {
+    const swapAccept = await this.marketOrderRequest(
+      market,
+      TradeType.BUY,
+      amount,
+      asset,
+      identity
+    );
+    const autoComplete = true;
+    const txid = await this.marketOrderComplete(swapAccept, identity, autoComplete);
+    return txid;
+  }
+
+  /**
    * Trade.sell let the trader sell the baseAsset,
    * receiving the quoteAsset using the current market price
    */
@@ -130,6 +148,29 @@ export class TradeCore extends Core implements TradeInterface {
       identity
     );
     const txid = await this.marketOrderComplete(swapAccept, identity);
+    return txid;
+  }
+
+  /**
+   * Trade.sellWithoutComplete let the trader sell the baseAsset,
+   * receiving the quoteAsset using the current market price without
+   * broadcasting the tx
+   */
+  async sellWithoutComplete({
+    market,
+    amount,
+    asset,
+    identity,
+  }: BuySellOpts): Promise<string> {
+    const swapAccept = await this.marketOrderRequest(
+      market,
+      TradeType.SELL,
+      amount,
+      asset,
+      identity
+    );
+    const autoComplete = true;
+    const txid = await this.marketOrderComplete(swapAccept, identity, autoComplete);
     return txid;
   }
 
@@ -248,13 +289,19 @@ export class TradeCore extends Core implements TradeInterface {
 
   private async marketOrderComplete(
     swapAcceptSerialized: Uint8Array,
-    identity: IdentityInterface
+    identity: IdentityInterface,
+    autoComplete?: boolean
   ): Promise<string> {
     // trader need to check the signed inputs by the provider
     // and add his own inputs if all is correct
     const swapAcceptMessage = SwapAccept.fromBinary(swapAcceptSerialized);
     const transaction = swapAcceptMessage.transaction;
     const signedHex = await identity.signPset(transaction);
+    
+    if (autoComplete) {
+      return signedHex
+    }
+    
     // Trader  adds his signed inputs to the transaction
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
