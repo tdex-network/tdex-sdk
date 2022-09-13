@@ -5,10 +5,12 @@ import {
   IdentityInterface,
   CoinSelector,
   isValidAmount,
+  Psbt,
 } from 'ldk';
 import TraderClientInterface from './grpcClientInterface';
 import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';
+import { isPsetV0, isRawTransaction } from 'utils';
 
 export interface TDEXProvider {
   name: string;
@@ -312,7 +314,14 @@ export class TradeCore extends Core implements TradeInterface {
     const signedHex = await identity.signPset(transaction);
 
     if (autoComplete) {
-      return signedHex;
+      if (isRawTransaction(signedHex)) {
+        return signedHex;
+      }
+      if (isPsetV0(signedHex)) {
+        const pset = Psbt.fromBase64(signedHex);
+        pset.finalizeAllInputs();
+        return pset.extractTransaction().toHex();
+      }
     }
 
     // Trader  adds his signed inputs to the transaction

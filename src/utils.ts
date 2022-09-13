@@ -66,3 +66,21 @@ export function rejectIfSwapFail(
 
   return false;
 }
+
+export function isRawTransaction(tx: string): boolean {
+  try {
+    Transaction.fromHex(tx);
+    return true;
+  } catch (ignore) {
+    return false;
+  }
+}
+
+export function isPsetV0(tx: string): boolean {
+  try {
+    Psbt.fromBase64(tx);
+    return true;
+  } catch (ignore) {
+    return false;
+  }
+}
