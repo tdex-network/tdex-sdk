@@ -117,7 +117,12 @@ export class TradeCore extends Core implements TradeInterface {
    * sending his own quoteAsset using the current market price wihtout
    * broadcasting the tx
    */
-  async buyWithoutComplete({ market, amount, asset, identity }: BuySellOpts): Promise<string> {
+  async buyWithoutComplete({
+    market,
+    amount,
+    asset,
+    identity,
+  }: BuySellOpts): Promise<string> {
     const swapAccept = await this.marketOrderRequest(
       market,
       TradeType.BUY,
@@ -126,7 +131,11 @@ export class TradeCore extends Core implements TradeInterface {
       identity
     );
     const autoComplete = true;
-    const txid = await this.marketOrderComplete(swapAccept, identity, autoComplete);
+    const txid = await this.marketOrderComplete(
+      swapAccept,
+      identity,
+      autoComplete
+    );
     return txid;
   }
 
@@ -170,7 +179,11 @@ export class TradeCore extends Core implements TradeInterface {
       identity
     );
     const autoComplete = true;
-    const txid = await this.marketOrderComplete(swapAccept, identity, autoComplete);
+    const txid = await this.marketOrderComplete(
+      swapAccept,
+      identity,
+      autoComplete
+    );
     return txid;
   }
 
@@ -297,11 +310,11 @@ export class TradeCore extends Core implements TradeInterface {
     const swapAcceptMessage = SwapAccept.fromBinary(swapAcceptSerialized);
     const transaction = swapAcceptMessage.transaction;
     const signedHex = await identity.signPset(transaction);
-    
+
     if (autoComplete) {
-      return signedHex
+      return signedHex;
     }
-    
+
     // Trader  adds his signed inputs to the transaction
     const swap = new Swap();
     const swapCompleteSerialized = swap.complete({
