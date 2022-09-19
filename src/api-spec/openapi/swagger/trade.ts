@@ -20,7 +20,7 @@ import {
   FetchAPI,
   FetchArgs,
   RequiredError,
-} from 'http/common';
+} from 'api-spec/openapi/swagger/common';
 
 /**
  *

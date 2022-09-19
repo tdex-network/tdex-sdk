@@ -15,7 +15,7 @@
 import * as url from 'url';
 import * as isomorphicFetch from 'isomorphic-fetch';
 import { Configuration } from './configuration';
-import { BASE_PATH, BaseAPI, FetchAPI, FetchArgs } from 'http/common';
+import { BASE_PATH, BaseAPI, FetchAPI, FetchArgs } from 'api-spec/openapi/swagger/common';
 
 /**
  *

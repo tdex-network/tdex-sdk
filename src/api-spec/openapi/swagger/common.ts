@@ -1,4 +1,4 @@
-import { Configuration } from 'http/configuration';
+import { Configuration } from 'api-spec/openapi/swagger/configuration';
 import isomorphicFetch from 'isomorphic-fetch';
 
 export const BASE_PATH = '/'.replace(/\/+$/, '');
