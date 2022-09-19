@@ -20,7 +20,7 @@ import {
   FetchAPI,
   FetchArgs,
   RequiredError,
-} from 'httpJson/common';
+} from 'http/common';
 
 /**
  *

@@ -1,4 +1,4 @@
-import { Configuration } from 'httpJson/configuration';
+import { Configuration } from 'http/configuration';
 import isomorphicFetch from 'isomorphic-fetch';
 
 export const BASE_PATH = '/'.replace(/\/+$/, '');
