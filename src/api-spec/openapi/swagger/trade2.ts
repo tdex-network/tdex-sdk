@@ -33,8 +33,6 @@ export class TradeServiceHttp implements TraderClientInterface {
     return str
   }
 
-
-
   async balance(market: Market): Promise<BalanceWithFee> {
     const path = `/v1/trade/balance`;
     const response = await axios.post(this.providerUrl + path, {market})

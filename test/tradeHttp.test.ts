@@ -1,7 +1,7 @@
-import {Psbt} from 'liquidjs-lib';
-import {TradeServiceHttp} from '../src/api-spec/openapi/swagger/trade2';
-import {Swap} from '../src';
-import {TradeType} from '../src/api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { Psbt } from 'liquidjs-lib';
+import { TradeServiceHttp } from '../src/api-spec/openapi/swagger/trade2';
+import { Swap } from '../src';
+import { TradeType } from '../src/api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import * as fixtures from './fixtures/swap.json';
 
 describe('TradeServiceHttp', () => {
@@ -17,7 +17,7 @@ describe('TradeServiceHttp', () => {
     fixture.accept.inputBlindingKeys.forEach((key: string, index: number) => {
       const script: string = decodedAcceptPsbt.data.inputs[
         index
-        ].witnessUtxo!.script.toString('hex');
+      ].witnessUtxo!.script.toString('hex');
       inKeys[script] = Buffer.from(key, 'hex');
     });
 
@@ -36,8 +36,10 @@ describe('TradeServiceHttp', () => {
     });
     const t = await trade.proposeTrade(
       {
-        baseAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-        quoteAsset: '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
+        baseAsset:
+          '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+        quoteAsset:
+          '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33',
       },
       TradeType.SELL,
       swapRequestSerialized
@@ -47,17 +49,23 @@ describe('TradeServiceHttp', () => {
 
   it('markets', async () => {
     const trade = new TradeServiceHttp('http://localhost:9945');
-    const markets = await trade.markets()
+    const markets = await trade.markets();
     console.log('///markets', markets);
-  })
+  });
 
   it('market price / preview', async () => {
     const trade = new TradeServiceHttp('http://localhost:9945');
-    const preview = await trade.marketPrice({
-        baseAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-        quoteAsset: '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
-      }, TradeType.SELL, 10, '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
-    )
+    const preview = await trade.marketPrice(
+      {
+        baseAsset:
+          '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+        quoteAsset:
+          '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33',
+      },
+      TradeType.SELL,
+      10,
+      '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
+    );
     console.log('///preview', preview);
-  })
+  });
 });
