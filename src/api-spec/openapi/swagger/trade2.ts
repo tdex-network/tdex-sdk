@@ -14,7 +14,7 @@ export class TradeServiceHttp implements TraderClientInterface {
   async completeTrade(swapCompleteSerialized: Uint8Array): Promise<string> {
     const path = `/v1/trade/complete`;
     const response = await axios.post(this.providerUrl + path, {
-     swapCompleteSerialized,
+      swapCompleteSerialized,
     })
     const str = await response.data
     console.log('completeTrade', str);
@@ -24,10 +24,10 @@ export class TradeServiceHttp implements TraderClientInterface {
   async proposeTrade(market: Market, tradeType: TradeType, swapRequestSerialized: Uint8Array): Promise<Uint8Array> {
     const path = `/v1/trade/propose`;
     const response = await axios.post(this.providerUrl + path, {
-        market: market,
-        type: tradeType.toString(),
-        swapRequest: SwapRequest.toJsonString(SwapRequest.fromBinary(swapRequestSerialized)),
-      })
+      market: market,
+      type: tradeType.valueOf(),
+      swapRequest: SwapRequest.toJsonString(SwapRequest.fromBinary(swapRequestSerialized)),
+    })
     const str = await response.data
     console.log('proposeTrade', str);
     return str
@@ -44,10 +44,10 @@ export class TradeServiceHttp implements TraderClientInterface {
   async marketPrice(market: Market, tradeType: TradeType, amount: number, asset: string): Promise<Preview[]> {
     const path = `/v1/trade/preview`;
     const response = await axios.post(this.providerUrl + path, {
-        market,
-        type: tradeType.toString(),
-        amount,
-        asset
+      market,
+      type: tradeType.toString(),
+      amount,
+      asset
     })
     const previewArray = await response.data
     console.log('marketPrice', previewArray);

@@ -3,6 +3,7 @@ import { TradeServiceHttp } from '../src/api-spec/openapi/swagger/trade2';
 import { Swap } from '../src';
 import { TradeType } from '../src/api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import * as fixtures from './fixtures/swap.json';
+import tradeFixture from './fixtures/trade.integration.json';
 
 describe('TradeServiceHttp', () => {
   it('propose trade', async () => {
@@ -35,12 +36,7 @@ describe('TradeServiceHttp', () => {
       outputBlindingKeys: outKeys,
     });
     const t = await trade.proposeTrade(
-      {
-        baseAsset:
-          '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-        quoteAsset:
-          '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33',
-      },
+      tradeFixture[0].market,
       TradeType.SELL,
       swapRequestSerialized
     );
@@ -56,12 +52,7 @@ describe('TradeServiceHttp', () => {
   it('market price / preview', async () => {
     const trade = new TradeServiceHttp('http://localhost:9945');
     const preview = await trade.marketPrice(
-      {
-        baseAsset:
-          '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
-        quoteAsset:
-          '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33',
-      },
+      tradeFixture[0].market,
       TradeType.SELL,
       10,
       '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
