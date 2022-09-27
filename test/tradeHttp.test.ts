@@ -35,7 +35,10 @@ describe('TradeServiceHttp', () => {
       outputBlindingKeys: outKeys,
     });
     const t = await trade.proposeTrade(
-      {baseAsset: '', quoteAsset: ''},
+      {
+        baseAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+        quoteAsset: '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
+      },
       TradeType.SELL,
       swapRequestSerialized
     );
@@ -46,5 +49,15 @@ describe('TradeServiceHttp', () => {
     const trade = new TradeServiceHttp('http://localhost:9945');
     const markets = await trade.markets()
     console.log('///markets', markets);
+  })
+
+  it('market price / preview', async () => {
+    const trade = new TradeServiceHttp('http://localhost:9945');
+    const preview = await trade.marketPrice({
+        baseAsset: '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225',
+        quoteAsset: '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
+      }, TradeType.SELL, 10, '421d0a78577d9a97ba852597a52ef92675c5a1932562aa1c802923492448ad33'
+    )
+    console.log('///preview', preview);
   })
 });
