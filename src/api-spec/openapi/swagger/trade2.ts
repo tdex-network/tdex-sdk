@@ -23,12 +23,10 @@ export class TradeServiceHttp implements TraderClientInterface {
 
   async proposeTrade(market: Market, tradeType: TradeType, swapRequestSerialized: Uint8Array): Promise<Uint8Array> {
     const path = `/v1/trade/propose`;
-    console.log('this.providerUrl', this.providerUrl);
     const response = await axios.post(this.providerUrl + path, {
         market: market,
         type: tradeType.toString(),
         swapRequest: SwapRequest.toJsonString(SwapRequest.fromBinary(swapRequestSerialized)),
-        //swapRequest: Buffer.from(swapRequestSerialized).toString('base64'),
       })
     const str = await response.data
     console.log('proposeTrade', str);

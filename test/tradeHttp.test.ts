@@ -8,7 +8,7 @@ describe('TradeServiceHttp', () => {
   it('propose trade', async () => {
     const fixture = fixtures.confidentialSwaps[0];
     const decodedAcceptPsbt = Psbt.fromBase64(fixture.accept.psbt);
-    const trade = new TradeServiceHttp('https://localhost:9945');
+    const trade = new TradeServiceHttp('http://localhost:9945');
     const swap = new Swap();
     // init blind keys maps
     const inKeys: Record<string, Buffer> = {};
