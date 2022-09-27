@@ -58,7 +58,7 @@ export class TradeServiceHttp implements TraderClientInterface {
 
   async markets(): Promise<Array<{ baseAsset: string; quoteAsset: string; feeBasisPoint: number }>> {
     const path = `/v1/markets`;
-    const response = await axios.get(this.providerUrl + path)
+    const response = await axios.post(this.providerUrl + path)
     const markets = await response.data
     console.log('markets', markets);
     return markets
