@@ -6,8 +6,12 @@ import {
   Mnemonic,
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
-
-import { Trade, IdentityType, greedyCoinSelector } from '../src';
+import {
+  Trade,
+  IdentityType,
+  greedyCoinSelector,
+  TradeClientType,
+} from '../src';
 import { TDEXMnemonic } from '../src';
 
 import tradeFixture from './fixtures/trade.integration.json';
@@ -84,7 +88,7 @@ describe('Integration tests with a local daemon', () => {
     }, 360000);
   });
 
-  describe('With Mnemonic', () => {
+  describe('With Mnemonic and HTTP client', () => {
     const identity = new Mnemonic(identityOpts);
     let addresses: AddressInterface[];
 
@@ -100,10 +104,11 @@ describe('Integration tests with a local daemon', () => {
       let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
 
       const tradeSell = new Trade({
-        providerUrl: 'localhost:9945',
+        providerUrl: 'http://localhost:9945',
         explorerUrl,
         utxos,
         coinSelector: greedyCoinSelector(),
+        clientType: TradeClientType.HTTP,
       });
 
       const txidSell = await tradeSell.sell({
@@ -120,10 +125,11 @@ describe('Integration tests with a local daemon', () => {
 
       utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
       const tradeBuy = new Trade({
-        providerUrl: 'localhost:9945',
+        providerUrl: 'http://localhost:9945',
         explorerUrl,
         utxos,
         coinSelector: greedyCoinSelector(),
+        clientType: TradeClientType.HTTP,
       });
 
       const txidBuy = await tradeBuy.buy({
