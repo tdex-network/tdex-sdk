@@ -6,13 +6,9 @@ import {
   Mnemonic,
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
-import {
-  Trade,
-  IdentityType,
-  greedyCoinSelector,
-  TradeClientType,
-} from '../src';
+import { Trade, IdentityType, greedyCoinSelector } from '../src';
 import { TDEXMnemonic } from '../src';
+import { V1ContentType } from '../src/api-spec/openapi/swagger/transport/data-contracts';
 
 import tradeFixture from './fixtures/trade.integration.json';
 import { faucet } from './_regtest';
@@ -50,7 +46,7 @@ describe('Integration tests with a local daemon', () => {
     test('Should sell some LBTCs with a daemon (TDEXMnemonic)', async () => {
       let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
 
-      const tradeSell = new Trade({
+      const tradeSell = await Trade.create({
         providerUrl: 'localhost:9945',
         explorerUrl,
         utxos,
@@ -70,7 +66,7 @@ describe('Integration tests with a local daemon', () => {
       await sleep(1500);
 
       utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
-      const tradeBuy = new Trade({
+      const tradeBuy = await Trade.create({
         providerUrl: 'localhost:9945',
         explorerUrl,
         utxos,
@@ -103,13 +99,15 @@ describe('Integration tests with a local daemon', () => {
     test('Should sell some LBTCs with a daemon (LDK Mnemonic)', async () => {
       let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
 
-      const tradeSell = new Trade({
-        providerUrl: 'http://localhost:9945',
-        explorerUrl,
-        utxos,
-        coinSelector: greedyCoinSelector(),
-        clientType: TradeClientType.HTTP,
-      });
+      const tradeSell = await Trade.create(
+        {
+          providerUrl: 'http://localhost:9945',
+          explorerUrl,
+          utxos,
+          coinSelector: greedyCoinSelector(),
+        },
+        { clientTypePriority: [V1ContentType.CONTENT_TYPE_JSON] }
+      );
 
       const txidSell = await tradeSell.sell({
         market,
@@ -124,13 +122,15 @@ describe('Integration tests with a local daemon', () => {
       await sleep(1500);
 
       utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
-      const tradeBuy = new Trade({
-        providerUrl: 'http://localhost:9945',
-        explorerUrl,
-        utxos,
-        coinSelector: greedyCoinSelector(),
-        clientType: TradeClientType.HTTP,
-      });
+      const tradeBuy = await Trade.create(
+        {
+          providerUrl: 'http://localhost:9945',
+          explorerUrl,
+          utxos,
+          coinSelector: greedyCoinSelector(),
+        },
+        { clientTypePriority: [V1ContentType.CONTENT_TYPE_JSON] }
+      );
 
       const txidBuy = await tradeBuy.buy({
         market,

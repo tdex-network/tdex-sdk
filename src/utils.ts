@@ -1,6 +1,8 @@
 import { Psbt, Transaction } from 'liquidjs-lib';
 import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 
+export const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
+
 /**
  * Generates a random id of a fixed length.
  * @param length size of the string id.

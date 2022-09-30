@@ -2,7 +2,7 @@ import {
   Preview,
   BalanceWithFee,
 } from '../../src/api-spec/protobuf/gen/js/tdex/v1/types_pb';
-import TraderClientInterface from '../../src/grpcClientInterface';
+import TraderClientInterface from '../../src/clientInterface';
 
 interface Args {
   balance: BalanceWithFee;

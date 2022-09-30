@@ -7,7 +7,7 @@ import {
   TradeType,
 } from '../src';
 import assert from 'assert';
-import TraderClientInterface from '../src/grpcClientInterface';
+import TraderClientInterface from '../src/clientInterface';
 
 const makeOrder = (type: TradeType) => (
   trader: TraderClientInterface

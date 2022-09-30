@@ -7,11 +7,9 @@ import {
   SwapComplete,
   SwapRequest,
 } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
-import TraderClientInterface from './grpcClientInterface';
-import { getClearTextTorProxyUrl } from './utils';
+import TraderClientInterface from './clientInterface';
+import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
-
-const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;

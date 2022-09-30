@@ -2,7 +2,7 @@ export * from 'ldk';
 export * from './swap';
 export * from './trade';
 export * from './tradeCore';
-export * from './grpcClient';
+export * from './client';
 export * from './transaction';
 export * from './tdexMnemonic';
 export * from './discoverer';

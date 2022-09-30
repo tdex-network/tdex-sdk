@@ -7,7 +7,7 @@ import {
   isValidAmount,
   Psbt,
 } from 'ldk';
-import TraderClientInterface from './grpcClientInterface';
+import TraderClientInterface from './clientInterface';
 import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';
 import { isPsetV0, isRawTransaction } from './utils';
@@ -47,17 +47,11 @@ export enum TradeType {
   SELL = 1,
 }
 
-export enum TradeClientType {
-  GRPC = 0,
-  HTTP = 1,
-}
-
 export interface TradeOpts {
   providerUrl: string;
   explorerUrl: string;
   utxos: Array<UnblindedOutput>;
   coinSelector: CoinSelector;
-  clientType?: TradeClientType;
 }
 
 export interface BuySellOpts {

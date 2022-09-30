@@ -1,26 +1,41 @@
+import { V1TradeType } from './api-spec/openapi/swagger/trade/data-contracts';
+import { ContentType } from './api-spec/openapi/swagger/trade/http-client';
+import { V1 } from './api-spec/openapi/swagger/trade/V1';
 import {
   SwapAccept,
   SwapComplete,
   SwapRequest,
 } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
-import { V1 } from './api-spec/openapi/swagger/V1';
 import {
   BalanceWithFee,
   Market,
   Preview,
 } from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
-import TraderClientInterface from './grpcClientInterface';
+import TraderClientInterface from './clientInterface';
 import { TradeType } from './tradeCore';
-import { V1TradeType } from './api-spec/openapi/swagger/data-contracts';
-import { ContentType } from './api-spec/openapi/swagger/http-client';
+import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
 
-export class TraderClientHttp implements TraderClientInterface {
+export class TraderClient implements TraderClientInterface {
   client: V1<unknown>;
   providerUrl: string;
 
-  constructor(providerUrlString: string) {
-    this.providerUrl = providerUrlString;
-    this.client = new V1({ baseURL: providerUrlString });
+  constructor(
+    providerUrl: string,
+    torProxyEndpoint: string = DEFAULT_TOR_PROXY
+  ) {
+    this.providerUrl = providerUrl;
+    const url = new URL(providerUrl);
+
+    // we assume we are in Liquid mainnet
+    // TODO check if socks5 proxy is running (ie. Tor Browser)
+    if (url.hostname.includes('onion') && !url.protocol.includes('https')) {
+      // We use the HTTP1 cleartext endpoint here provided by the public tor reverse proxy
+      // https://pkg.go.dev/github.com/tdex-network/tor-proxy@v0.0.3/pkg/torproxy#NewTorProxy
+      //host:port/<just_onion_host_without_dot_onion>/[<grpc_package>.<grpc_service>/<grpc_method>]
+      this.providerUrl = getClearTextTorProxyUrl(torProxyEndpoint, url);
+    }
+
+    this.client = new V1({ baseURL: this.providerUrl });
   }
 
   async completeTrade(swapCompleteSerialized: Uint8Array): Promise<string> {

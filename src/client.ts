@@ -7,7 +7,7 @@ import {
   SwapComplete,
   SwapAccept,
 } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
-import TraderClientInterface from './grpcClientInterface';
+import TraderClientInterface from './clientInterface';
 import { rejectIfSwapFail } from './utils';
 
 export class TraderClient implements TraderClientInterface {
