@@ -30,13 +30,13 @@ docker run -it -d --name tdexd \
 -e TDEX_NO_OPERATOR_TLS=true \
 -e TDEX_TRADE_EXPIRY_TIME=60 \
 --network="nigiri" \
-ghcr.io/tdex-network/tdexd:latest &>/dev/null 
+ghcr.io/tdex-network/tdexd:latest
 
 echo ""
 echo "init wallet"
 
 tdex='docker exec -it tdexd tdex '
-$tdex config init --network "regtest" --no_macaroons --no_tls
+$tdex config init --no_macaroons --no_tls
 
 mnemonic=$($tdex genseed | grep "\S")
 $tdex init --seed "${mnemonic}" --password secret &>/dev/null
