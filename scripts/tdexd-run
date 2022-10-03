@@ -21,7 +21,7 @@ echo "TDEX_BASE_ASSET: $TDEX_BASE_ASSET";
 
 docker run -it -d --name tdexd \
 -p 9945:9945 -p 9000:9000 \
--v "$(pwd)/tdexd:/home/tdex/.tdex-daemon" \
+-v "$(pwd)/tdexd:/home/tdex/.tdex-daemon:rw" \
 -e TDEX_NETWORK="regtest" \
 -e TDEX_BASE_ASSET="$TDEX_BASE_ASSET" \
 -e TDEX_LOG_LEVEL=5 \
@@ -31,12 +31,6 @@ docker run -it -d --name tdexd \
 -e TDEX_TRADE_EXPIRY_TIME=60 \
 --network="nigiri" \
 ghcr.io/tdex-network/tdexd:latest
-
-docker ps -a
-
-echo ""
-
-docker logs tdexd
 
 echo ""
 echo "init wallet"
