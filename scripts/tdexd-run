@@ -32,6 +32,12 @@ docker run -it -d --name tdexd \
 --network="nigiri" \
 ghcr.io/tdex-network/tdexd:latest
 
+docker ps -a
+
+echo ""
+
+docker logs tdexd
+
 echo ""
 echo "init wallet"
 
