@@ -48,13 +48,14 @@ describe('TDEX SDK', () => {
   });
 
   it('Should throw if no utxos', () => {
-    expect(() =>
-      new TDEX.Trade({
-        utxos: [],
-        explorerUrl: 'https://nigiri.network',
-        providerUrl: 'localhost:9945',
-        coinSelector: greedyCoinSelector(),
-      })
+    expect(
+      () =>
+        new TDEX.Trade({
+          utxos: [],
+          explorerUrl: 'https://nigiri.network',
+          providerUrl: 'localhost:9945',
+          coinSelector: greedyCoinSelector(),
+        })
     ).toThrow();
   });
 

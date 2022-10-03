@@ -15,7 +15,7 @@ import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.ITradeServiceClient;
-  clientType: string = V1ContentType.CONTENT_TYPE_GRPCWEBTEXT
+  clientType: string = V1ContentType.CONTENT_TYPE_GRPCWEBTEXT;
 
   constructor(
     providerUrl: string,

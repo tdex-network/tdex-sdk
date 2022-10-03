@@ -6,7 +6,13 @@ import {
   Mnemonic,
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
-import { Trade, Transport, IdentityType, greedyCoinSelector, V1ContentType } from '../src';
+import {
+  Trade,
+  Transport,
+  IdentityType,
+  greedyCoinSelector,
+  V1ContentType,
+} from '../src';
 import { TDEXMnemonic } from '../src';
 
 import tradeFixture from './fixtures/trade.integration.json';
@@ -97,11 +103,9 @@ describe('Integration tests with a local daemon', () => {
     }, 36000);
     test('Should sell some LBTCs with a daemon (LDK Mnemonic)', async () => {
       let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
-      const transport = new Transport(
-        'http://localhost:9945',
-        undefined,
-        [ V1ContentType.CONTENT_TYPE_JSON ],
-      )
+      const transport = new Transport('http://localhost:9945', undefined, [
+        V1ContentType.CONTENT_TYPE_JSON,
+      ]);
       await transport.connect();
 
       const tradeSell = new Trade(
@@ -112,7 +116,7 @@ describe('Integration tests with a local daemon', () => {
           coinSelector: greedyCoinSelector(),
         },
         undefined,
-        transport.client,
+        transport.client
       );
 
       const txidSell = await tradeSell.sell({
@@ -136,7 +140,7 @@ describe('Integration tests with a local daemon', () => {
           coinSelector: greedyCoinSelector(),
         },
         undefined,
-        transport.client,
+        transport.client
       );
 
       const txidBuy = await tradeBuy.buy({

@@ -1,9 +1,5 @@
 import { TraderClient } from './client.web';
-import {
-  TradeCore,
-  TradeInterface,
-  TradeOpts,
-} from './tradeCore';
+import { TradeCore, TradeInterface, TradeOpts } from './tradeCore';
 import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
 import TraderClientInterface from './clientInterface';
 
@@ -20,7 +16,8 @@ export class Trade extends TradeCore implements TradeInterface {
   ) {
     super(
       args,
-      (provider: string) => client || new TraderClient(provider, torProxyEndpoint),
+      (provider: string) =>
+        client || new TraderClient(provider, torProxyEndpoint)
     );
   }
 }

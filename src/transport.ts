@@ -21,7 +21,7 @@ export class Transport {
   constructor(
     providerUrl: string,
     torProxyEndpoint: string = DEFAULT_TOR_PROXY,
-    clientTypePriority?: V1ContentType[],
+    clientTypePriority?: V1ContentType[]
   ) {
     this.providerUrl = providerUrl;
     const url = new URL(providerUrl);
@@ -34,27 +34,30 @@ export class Transport {
       // https://pkg.go.dev/github.com/tdex-network/tor-proxy@v0.0.3/pkg/torproxy#NewTorProxy
       //host:port/<just_onion_host_without_dot_onion>/[<grpc_package>.<grpc_service>/<grpc_method>]
       this.providerUrl = getClearTextTorProxyUrl(torProxyEndpoint, url);
-      this.torProxyEndpoint = torProxyEndpoint
+      this.torProxyEndpoint = torProxyEndpoint;
     }
 
     this._client = new V1({ baseURL: this.providerUrl });
   }
 
   async connect(): Promise<void> {
-    const supportedTypes = await this.supportedContentTypes()
+    const supportedTypes = await this.supportedContentTypes();
 
     for (let i = 0; i < this.typePriority.length; i++) {
       const clientType = this.typePriority[i];
       if (supportedTypes.includes(clientType)) {
         let client: TraderClientInterface = new TraderClient(this.providerUrl);
         if (clientType === V1ContentType.CONTENT_TYPE_JSON) {
-          client = new TraderClientHttp(this.providerUrl, this.torProxyEndpoint);
+          client = new TraderClientHttp(
+            this.providerUrl,
+            this.torProxyEndpoint
+          );
         }
         this.tradeClient = client;
-        return
+        return;
       }
     }
-    
+
     throw new Error(`Failed to connect to provider ${this.providerUrl}`);
   }
 
@@ -81,8 +84,8 @@ export class Transport {
 
   get client(): TraderClientInterface {
     if (!this.tradeClient) {
-      throw new Error('client is undefined, did you miss to call connect()?')
+      throw new Error('client is undefined, did you miss to call connect()?');
     }
-    return this.tradeClient!
+    return this.tradeClient!;
   }
 }
