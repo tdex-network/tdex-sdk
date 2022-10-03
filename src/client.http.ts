@@ -1,3 +1,4 @@
+import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
 import { V1TradeType } from './api-spec/openapi/swagger/trade/data-contracts';
 import { ContentType } from './api-spec/openapi/swagger/trade/http-client';
 import { V1 } from './api-spec/openapi/swagger/trade/V1';
@@ -18,6 +19,7 @@ import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
 export class TraderClient implements TraderClientInterface {
   client: V1<unknown>;
   providerUrl: string;
+  clientType: string = V1ContentType.CONTENT_TYPE_JSON;
 
   constructor(
     providerUrl: string,

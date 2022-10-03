@@ -49,17 +49,17 @@ describe('TDEX SDK', () => {
 
   it('Should throw if no utxos', () => {
     expect(() =>
-      TDEX.Trade.create({
+      new TDEX.Trade({
         utxos: [],
         explorerUrl: 'https://nigiri.network',
         providerUrl: 'localhost:9945',
         coinSelector: greedyCoinSelector(),
       })
-    ).rejects.toThrow();
+    ).toThrow();
   });
 
-  it('Should not throw', async () => {
-    const trade = await Trade.create({
+  it('Should not throw', () => {
+    const trade = new Trade({
       providerUrl: 'localhost:9945',
       explorerUrl: 'https://nigiri.network',
       coinSelector: greedyCoinSelector(),

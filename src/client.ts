@@ -2,6 +2,7 @@ import * as grpc from '@grpc/grpc-js';
 import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
 import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 import * as types from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
+import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
 import {
   SwapRequest,
   SwapComplete,
@@ -12,8 +13,8 @@ import { rejectIfSwapFail } from './utils';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
-
   client: services.ITradeServiceClient;
+  clientType: string = V1ContentType.CONTENT_TYPE_GRPC;
 
   constructor(
     providerUrlString: string,

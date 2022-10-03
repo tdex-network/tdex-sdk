@@ -17,6 +17,7 @@ export default class MockTraderClientInterface
 
   providerUrl: string;
   client: any;
+  clientType: string = 'MOCK';
 
   constructor({ balance, preview, providerUrl }: Args) {
     this.balanceWithFee = balance;
