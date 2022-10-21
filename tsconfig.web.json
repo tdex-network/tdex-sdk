@@ -6,7 +6,7 @@
   "exclude": [
     "./src/trade.ts",
     "./src/index.ts",
-    "./src/grpcClient.ts"
+    "./src/client.ts"
   ],
   "compilerOptions": {
     "target": "ES2020",

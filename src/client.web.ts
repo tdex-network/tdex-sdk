@@ -1,3 +1,4 @@
+import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.client';
 import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 import * as types from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
@@ -7,15 +8,14 @@ import {
   SwapComplete,
   SwapRequest,
 } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
-import TraderClientInterface from './grpcClientInterface';
-import { getClearTextTorProxyUrl } from './utils';
-import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
-
-const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';
+import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
+import TraderClientInterface from './clientInterface';
+import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.ITradeServiceClient;
+  clientType: string = V1ContentType.CONTENT_TYPE_GRPCWEBTEXT;
 
   constructor(
     providerUrl: string,

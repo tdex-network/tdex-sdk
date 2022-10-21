@@ -16,17 +16,22 @@ do
   esac
 done
 
-echo "TDEX_BASE_ASSET: $TDEX_BASE_ASSET";
 echo ""
+echo "TDEX_BASE_ASSET: $TDEX_BASE_ASSET";
+
+mkdir -p tdexd
+chmod 777 tdexd
 
 docker run -it -d --name tdexd \
 -p 9945:9945 -p 9000:9000 \
--v "$(pwd)/tdexd:/.tdex-daemon" \
+-v "$(pwd)/tdexd:/home/tdex/.tdex-daemon" \
 -e TDEX_NETWORK="regtest" \
 -e TDEX_BASE_ASSET="$TDEX_BASE_ASSET" \
 -e TDEX_LOG_LEVEL=5 \
 -e TDEX_EXPLORER_ENDPOINT="http://chopsticks-liquid:3000" \
 -e TDEX_NO_MACAROONS=true \
+-e TDEX_NO_OPERATOR_TLS=true \
+-e TDEX_TRADE_EXPIRY_TIME=60 \
 --network="nigiri" \
 ghcr.io/tdex-network/tdexd:latest
 
@@ -34,7 +39,7 @@ echo ""
 echo "init wallet"
 
 tdex='docker exec -it tdexd tdex '
-$tdex config init --network "regtest" --no_macaroons
+$tdex config init --no_macaroons --no_tls
 
 mnemonic=$($tdex genseed | grep "\S")
 $tdex init --seed "${mnemonic}" --password secret &>/dev/null

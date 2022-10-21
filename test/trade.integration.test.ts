@@ -6,8 +6,13 @@ import {
   Mnemonic,
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
-
-import { Trade, IdentityType, greedyCoinSelector } from '../src';
+import {
+  Trade,
+  Transport,
+  IdentityType,
+  greedyCoinSelector,
+  V1ContentType,
+} from '../src';
 import { TDEXMnemonic } from '../src';
 
 import tradeFixture from './fixtures/trade.integration.json';
@@ -84,7 +89,7 @@ describe('Integration tests with a local daemon', () => {
     }, 360000);
   });
 
-  describe('With Mnemonic', () => {
+  describe('With Mnemonic and HTTP client', () => {
     const identity = new Mnemonic(identityOpts);
     let addresses: AddressInterface[];
 
@@ -98,13 +103,21 @@ describe('Integration tests with a local daemon', () => {
     }, 36000);
     test('Should sell some LBTCs with a daemon (LDK Mnemonic)', async () => {
       let utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
+      const transport = new Transport('http://localhost:9945', undefined, [
+        V1ContentType.CONTENT_TYPE_JSON,
+      ]);
+      await transport.connect();
 
-      const tradeSell = new Trade({
-        providerUrl: 'localhost:9945',
-        explorerUrl,
-        utxos,
-        coinSelector: greedyCoinSelector(),
-      });
+      const tradeSell = new Trade(
+        {
+          providerUrl: 'http://localhost:9945',
+          explorerUrl,
+          utxos,
+          coinSelector: greedyCoinSelector(),
+        },
+        undefined,
+        transport.client
+      );
 
       const txidSell = await tradeSell.sell({
         market,
@@ -119,12 +132,16 @@ describe('Integration tests with a local daemon', () => {
       await sleep(1500);
 
       utxos = await fetchAndUnblindUtxos(ecc, addresses, explorerUrl);
-      const tradeBuy = new Trade({
-        providerUrl: 'localhost:9945',
-        explorerUrl,
-        utxos,
-        coinSelector: greedyCoinSelector(),
-      });
+      const tradeBuy = new Trade(
+        {
+          providerUrl: 'http://localhost:9945',
+          explorerUrl,
+          utxos,
+          coinSelector: greedyCoinSelector(),
+        },
+        undefined,
+        transport.client
+      );
 
       const txidBuy = await tradeBuy.buy({
         market,

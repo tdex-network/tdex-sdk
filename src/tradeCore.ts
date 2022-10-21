@@ -7,7 +7,7 @@ import {
   isValidAmount,
   Psbt,
 } from 'ldk';
-import TraderClientInterface from './grpcClientInterface';
+import TraderClientInterface from './clientInterface';
 import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';
 import { isPsetV0, isRawTransaction } from './utils';
@@ -61,12 +61,12 @@ export interface BuySellOpts {
   identity: IdentityInterface;
 }
 
-type TraderClientInterfaceFactory = (
+export type TraderClientInterfaceFactory = (
   providerUrl: string
 ) => TraderClientInterface;
 
 export class TradeCore extends Core implements TradeInterface {
-  grpcClient: TraderClientInterface;
+  client: TraderClientInterface;
   utxos: Array<UnblindedOutput>;
   coinSelector: CoinSelector;
 
@@ -79,7 +79,7 @@ export class TradeCore extends Core implements TradeInterface {
     this.validate(args);
     this.utxos = args.utxos;
     this.coinSelector = args.coinSelector;
-    this.grpcClient = factoryTraderClient(args.providerUrl);
+    this.client = factoryTraderClient(args.providerUrl);
   }
 
   validate(args: TradeOpts) {
@@ -110,8 +110,21 @@ export class TradeCore extends Core implements TradeInterface {
       asset,
       identity
     );
-    const txid = await this.marketOrderComplete(swapAccept, identity);
-    return txid;
+
+    // Retry in case we are too early and the provider doesn't find any trade
+    // matching the swapAccept id
+    while (true) {
+      try {
+        const txid = await this.marketOrderComplete(swapAccept, identity);
+        return txid;
+      } catch (e) {
+        const err = e as Error;
+        if (err.message && err.message.includes('not found')) {
+          continue;
+        }
+        throw e;
+      }
+    }
   }
 
   /**
@@ -158,8 +171,21 @@ export class TradeCore extends Core implements TradeInterface {
       asset,
       identity
     );
-    const txid = await this.marketOrderComplete(swapAccept, identity);
-    return txid;
+
+    // Retry in case we are too early and the provider doesn't find any trade
+    // matching the swapAccept id
+    while (true) {
+      try {
+        const txid = await this.marketOrderComplete(swapAccept, identity);
+        return txid;
+      } catch (e) {
+        const err = e as Error;
+        if (err.message && err.message.includes('not found')) {
+          continue;
+        }
+        throw e;
+      }
+    }
   }
 
   /**
@@ -210,7 +236,7 @@ export class TradeCore extends Core implements TradeInterface {
     }
     const { baseAsset, quoteAsset } = market;
 
-    const prices = await this.grpcClient.marketPrice(
+    const prices = await this.client.marketPrice(
       {
         baseAsset,
         quoteAsset,
@@ -290,7 +316,7 @@ export class TradeCore extends Core implements TradeInterface {
     // 0 === Buy === receiving base_asset; 1 === sell === receiving base_asset
     let swapAcceptSerialized: Uint8Array;
     try {
-      swapAcceptSerialized = await this.grpcClient.proposeTrade(
+      swapAcceptSerialized = await this.client.proposeTrade(
         market,
         tradeType,
         swapRequestSerialized
@@ -333,7 +359,7 @@ export class TradeCore extends Core implements TradeInterface {
     // Trader call the completeTrade endpoint to finalize the swap
     let txid: string;
     try {
-      txid = await this.grpcClient.completeTrade(swapCompleteSerialized);
+      txid = await this.client.completeTrade(swapCompleteSerialized);
     } catch (e) {
       throw e;
     }

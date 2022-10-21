@@ -8,6 +8,7 @@ import {
 export default interface TraderClientInterface {
   providerUrl: string;
   client: any;
+  clientType: string;
   proposeTrade(
     { baseAsset, quoteAsset }: Market,
     tradeType: TradeType,
