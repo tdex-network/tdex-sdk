@@ -53,6 +53,7 @@ export enum ContentType {
   Json = 'application/json',
   FormData = 'multipart/form-data',
   UrlEncoded = 'application/x-www-form-urlencoded',
+  Text = 'text/plain',
 }
 
 export class HttpClient<SecurityDataType = unknown> {
@@ -114,7 +115,7 @@ export class HttpClient<SecurityDataType = unknown> {
   protected createFormData(input: Record<string, unknown>): FormData {
     return Object.keys(input || {}).reduce((formData, key) => {
       const property = input[key];
-      const propertyContent: Iterable<any> =
+      const propertyContent: any[] =
         property instanceof Array ? property : [property];
 
       for (const formItem of propertyContent) {
@@ -125,18 +126,6 @@ export class HttpClient<SecurityDataType = unknown> {
         );
       }
 
-      return formData;
-    }, new FormData());
-    return Object.keys(input || {}).reduce((formData, key) => {
-      const property = input[key];
-      formData.append(
-        key,
-        property instanceof Blob
-          ? property
-          : typeof property === 'object' && property !== null
-          ? JSON.stringify(property)
-          : `${property}`
-      );
       return formData;
     }, new FormData());
   }
@@ -167,13 +156,22 @@ export class HttpClient<SecurityDataType = unknown> {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
+    if (
+      type === ContentType.Text &&
+      body &&
+      body !== null &&
+      typeof body !== 'string'
+    ) {
+      body = JSON.stringify(body);
+    }
+
     return this.instance.request({
       ...requestParams,
       headers: {
+        ...(requestParams.headers || {}),
         ...(type && type !== ContentType.FormData
           ? { 'Content-Type': type }
           : {}),
-        ...(requestParams.headers || {}),
       },
       params: query,
       responseType: responseFormat,
