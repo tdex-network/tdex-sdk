@@ -14,6 +14,7 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { ContentType } from "./types_pb";
 /**
  * @generated from protobuf message tdex.v1.SupportedContentTypesRequest
  */
@@ -27,27 +28,6 @@ export interface SupportedContentTypesResponse {
      * @generated from protobuf field: repeated tdex.v1.ContentType accepted_types = 1;
      */
     acceptedTypes: ContentType[];
-}
-/**
- * @generated from protobuf enum tdex.v1.ContentType
- */
-export enum ContentType {
-    /**
-     * @generated from protobuf enum value: CONTENT_TYPE_JSON = 0;
-     */
-    JSON = 0,
-    /**
-     * @generated from protobuf enum value: CONTENT_TYPE_GRPC = 1;
-     */
-    GRPC = 1,
-    /**
-     * @generated from protobuf enum value: CONTENT_TYPE_GRPCWEB = 2;
-     */
-    GRPCWEB = 2,
-    /**
-     * @generated from protobuf enum value: CONTENT_TYPE_GRPCWEBTEXT = 3;
-     */
-    GRPCWEBTEXT = 3
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class SupportedContentTypesRequest$Type extends MessageType<SupportedContentTypesRequest> {
