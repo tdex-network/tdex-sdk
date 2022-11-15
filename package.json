@@ -24,7 +24,7 @@
     "test:debug": "tsdx test --no-cache --runInBand",
     "lint": "tsdx lint src test --ignore-pattern src/api-spec/*",
     "lint:fix": "tsdx lint src test --fix --ignore-pattern src/api-spec/*",
-    "prepare": "yarn build:proto && yarn build:swagger"
+    "prepare": "yarn build:proto && yarn build:swagger && yarn build"
   },
   "peerDependencies": {},
   "jest": {
