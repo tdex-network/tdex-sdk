@@ -11,7 +11,6 @@
 
 export interface ProtobufAny {
   '@type'?: string;
-  [key: string]: any;
 }
 
 export interface RpcStatus {
@@ -21,7 +20,6 @@ export interface RpcStatus {
   details?: ProtobufAny[];
 }
 
-/** @default "CONTENT_TYPE_JSON" */
 export enum V1ContentType {
   CONTENT_TYPE_JSON = 'CONTENT_TYPE_JSON',
   CONTENT_TYPE_GRPC = 'CONTENT_TYPE_GRPC',
