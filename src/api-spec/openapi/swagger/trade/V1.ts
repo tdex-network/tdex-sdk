@@ -28,7 +28,7 @@ export class V1<
 > extends HttpClient<SecurityDataType> {
   /**
  * No description
- *
+ * 
  * @tags TradeService
  * @name TradeServiceGetMarketBalance
  * @summary GetMarketBalance retutns the balance of the two current reserves of the
@@ -61,10 +61,9 @@ given market.
       method: 'POST',
       format: 'json',
       ...params,
-    });
-  /**
+    }); /**
  * No description
- *
+ * 
  * @tags TradeService
  * @name TradeServiceCompleteTrade
  * @summary CompleteTrade can be used by the trader to let the daemon finalizing,
@@ -85,10 +84,9 @@ alternatively.
       type: ContentType.Json,
       format: 'json',
       ...params,
-    });
-  /**
+    }); /**
  * @description The trade type can assume values BUY or SELL and it always refer to the fixed base asset. For example: * if trade type is BUY, it means the trader wants to buy base asset funds. * if trade type is SELL, it means the trader wants to sell base asset funds.
- *
+ * 
  * @tags TradeService
  * @name TradeServicePreviewTrade
  * @summary PreviewTrade returns a counter amount and asset in response to the
@@ -106,10 +104,9 @@ provided ones and a trade type for a market.
       type: ContentType.Json,
       format: 'json',
       ...params,
-    });
-  /**
+    }); /**
  * No description
- *
+ * 
  * @tags TradeService
  * @name TradeServiceProposeTrade
  * @summary ProposeTrade allows a trader to present a SwapRequest. The service answers
