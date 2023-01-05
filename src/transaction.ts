@@ -7,7 +7,8 @@ import {
   UnblindedOutput,
   AssetHash,
 } from 'ldk';
-import { confidential, Psbt } from 'liquidjs-lib';
+import { confidential } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib/src/psbt';
 
 // SwapTransactionInterface defines the minimum needed for implementation to hold data to construct a valid swap transaction.
 interface SwapTransactionInterface {
@@ -100,7 +101,7 @@ export class SwapTransaction implements SwapTransactionInterface {
     this.pset.addOutput({
       script: Buffer.from(receivingScript, 'hex'),
       value: confidential.satoshiToConfidentialValue(amountToReceive),
-      asset: AssetHash.fromHex(assetToReceive, false).bytes,
+      asset: AssetHash.fromHex(assetToReceive).bytes,
       nonce: Buffer.from('00', 'hex'),
     });
 
@@ -118,7 +119,7 @@ export class SwapTransaction implements SwapTransactionInterface {
         this.pset.addOutput({
           script: Buffer.from(changeScript, 'hex'),
           value: confidential.satoshiToConfidentialValue(changeOutput.value),
-          asset: AssetHash.fromHex(changeOutput.asset, false).bytes,
+          asset: AssetHash.fromHex(changeOutput.asset).bytes,
           nonce: Buffer.from('00', 'hex'),
         });
 

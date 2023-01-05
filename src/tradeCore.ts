@@ -5,8 +5,8 @@ import {
   IdentityInterface,
   CoinSelector,
   isValidAmount,
-  Psbt,
 } from 'ldk';
+import { Psbt } from 'liquidjs-lib/src/psbt';
 import TraderClientInterface from './clientInterface';
 import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { SwapTransaction } from './transaction';

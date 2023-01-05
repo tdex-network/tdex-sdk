@@ -1,4 +1,5 @@
-import { Psbt, Transaction } from 'liquidjs-lib';
+import { Transaction } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib/src/psbt';
 import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 
 export const DEFAULT_TOR_PROXY = 'https://proxy.tdex.network';

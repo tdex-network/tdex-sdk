@@ -1,5 +1,8 @@
 import { PrivateKey, IdentityType } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
+import secp256k1 from '@vulpemventures/secp256k1-zkp';
+
+const zkp = await secp256k1();
 
 export const proposer = new PrivateKey({
   chain: 'regtest',
@@ -9,6 +12,7 @@ export const proposer = new PrivateKey({
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
   ecclib: ecc,
+  zkplib: zkp,
 });
 
 export const responder = new PrivateKey({
@@ -19,6 +23,7 @@ export const responder = new PrivateKey({
     signingKeyWIF: 'cVcDj9Td96x8jcG1eudxKL6hdwziCTgvPhqBoazkDeFGSAR8pCG8',
   },
   ecclib: ecc,
+  zkplib: zkp,
 });
 
 export const proposerPubKey = Buffer.from(

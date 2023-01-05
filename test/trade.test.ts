@@ -18,11 +18,14 @@ import { SwapFail } from '../src/api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import * as assert from 'assert';
 import { faucet, sleep } from './_regtest';
 import { rejectIfSwapFail } from '../src/utils';
+import secp256k1 from '@vulpemventures/secp256k1-zkp';
 
 jest.setTimeout(30000);
 
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
+
+const zkp = await secp256k1();
 
 const identityOpts: IdentityOpts<PrivateKeyOpts> = {
   chain: 'regtest',
@@ -32,6 +35,7 @@ const identityOpts: IdentityOpts<PrivateKeyOpts> = {
     blindingKeyWIF,
   },
   ecclib: ecc,
+  zkplib: zkp,
 };
 
 const identity = new PrivateKey(identityOpts);
@@ -44,7 +48,12 @@ describe('TDEX SDK', () => {
     await faucet(addr.confidentialAddress);
     await sleep(3000);
     const addresses = await identity.getAddresses();
-    utxos = await fetchAndUnblindUtxos(ecc, addresses, 'http://localhost:3001');
+    utxos = await fetchAndUnblindUtxos(
+      ecc,
+      zkp,
+      addresses,
+      'http://localhost:3001'
+    );
   });
 
   it('Should throw if no utxos', () => {

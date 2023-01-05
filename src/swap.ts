@@ -1,5 +1,11 @@
 import Core from './core';
-import { confidential, Psbt, Transaction, TxOutput } from 'liquidjs-lib';
+import secp256k1 from '@vulpemventures/secp256k1-zkp';
+import { confidential, Transaction, TxOutput } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib/src/psbt';
+import {
+  Confidential,
+  confidentialValueToSatoshi,
+} from 'liquidjs-lib/src/confidential';
 import * as proto from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import { isConfidentialOutput } from 'ldk';
 import { decodePsbt, makeid } from './utils';
@@ -255,6 +261,8 @@ async function outputFoundInTransaction(
       if (blindKey === undefined)
         throw new Error(`no blind key for ${o.script.toString('hex')}`);
       try {
+        const zkplib = await secp256k1();
+        const confidential = new Confidential(zkplib);
         const {
           value: unblindValue,
           asset: unblindAsset,
@@ -296,6 +304,8 @@ async function countUtxos(
   const filteredByWitness = pset.data.inputs.filter(i => i.witnessUtxo != null);
 
   // unblind confidential prevouts
+  const zkplib = await secp256k1();
+  const confidential = new Confidential(zkplib);
   const unblindedUtxos = await Promise.all(
     filteredByWitness.map(async i => {
       if (i.witnessUtxo && isConfidentialOutput(i.witnessUtxo)) {
@@ -328,7 +338,7 @@ async function countUtxos(
   const queryValues = filteredByAsset.map(({ value }) => {
     const valAsNumber: number =
       value instanceof Buffer
-        ? confidential.confidentialValueToSatoshi(value)
+        ? confidentialValueToSatoshi(value)
         : parseInt(value, 10);
 
     return valAsNumber;

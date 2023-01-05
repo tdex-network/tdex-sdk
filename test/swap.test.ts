@@ -1,4 +1,5 @@
-import { Psbt, confidential } from 'liquidjs-lib';
+import { confidential } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib/src/psbt';
 import { Swap } from '../src';
 import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
@@ -123,13 +124,13 @@ describe('Swap', () => {
         })
         .addOutput({
           value: satoshiToConfidentialValue(100_0000_0000),
-          asset: AssetHash.fromHex(altcoin, false).bytes,
+          asset: AssetHash.fromHex(altcoin).bytes,
           nonce: Buffer.alloc(0),
           script: toOutputScript(proposerAddress),
         })
         .addOutput({
           value: satoshiToConfidentialValue(0),
-          asset: AssetHash.fromHex(networks.regtest.assetHash, false).bytes,
+          asset: AssetHash.fromHex(networks.regtest.assetHash).bytes,
           nonce: Buffer.alloc(0),
           script: Buffer.alloc(0),
         })

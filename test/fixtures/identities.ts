@@ -8,13 +8,17 @@ import {
   PrivateKey,
   PrivateKeyOpts,
 } from 'ldk';
-import { payments, NetworkExtended, Psbt } from 'liquidjs-lib';
+import { payments } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib/src/psbt';
+import { Network } from 'liquidjs-lib/src/networks';
 import * as ecc from 'tiny-secp256k1';
+import secp256k1 from '@vulpemventures/secp256k1-zkp';
 
 const ECPair = ECPairFactory(ecc);
+let zkp = await secp256k1();
 
 class Identity {
-  network: NetworkExtended;
+  network: Network;
   type: IdentityType;
 
   constructor(args: IdentityOpts<any>) {
@@ -26,7 +30,7 @@ class Identity {
       throw new Error('Type is missing or not valid');
     }
 
-    this.network = (networks as Record<string, NetworkExtended>)[args.chain];
+    this.network = (networks as Record<string, Network>)[args.chain];
     this.type = args.type;
   }
 
@@ -304,6 +308,7 @@ export const proposerP2PKH = new Legacy({
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
   ecclib: ecc,
+  zkplib: zkp,
 });
 
 export const proposerP2SH = new WrappedSegwit({
@@ -314,6 +319,7 @@ export const proposerP2SH = new WrappedSegwit({
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
   ecclib: ecc,
+  zkplib: zkp,
 });
 
 export const proposerP2WPKH = new PrivateKey({
@@ -324,4 +330,5 @@ export const proposerP2WPKH = new PrivateKey({
     signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
   },
   ecclib: ecc,
+  zkplib: zkp,
 });

@@ -5,7 +5,7 @@ import {
   IdentityInterface,
   TinySecp256k1Interface,
 } from 'ldk';
-import { Psbt } from 'liquidjs-lib';
+import { Psbt } from 'liquidjs-lib/src/psbt';
 import ECPairFactory, { ECPairAPI } from 'ecpair';
 
 /**

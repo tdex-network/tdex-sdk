@@ -44,24 +44,23 @@
   "name": "tdex-sdk",
   "author": "TDEX Developers",
   "devDependencies": {
-    "@types/jest": "^25.2.3",
     "@types/node": "^14.14.2",
     "axios": "^0.27.2",
     "husky": "^4.2.3",
     "swagger-typescript-api": "^10.0.1",
     "tiny-secp256k1": "^2.2.1",
-    "tsdx": "0.14.0",
+    "tsdx": "0.14.1",
     "typescript": "3.9.10"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.3.3",
-    "@protobuf-ts/grpcweb-transport": "^2.8.1",
-    "@protobuf-ts/runtime": "^2.8.1",
-    "@protobuf-ts/runtime-rpc": "^2.8.1",
-    "ecpair": "^2.0.1",
-    "ldk": "^0.5.8",
+    "@grpc/grpc-js": "^1.8.1",
+    "@protobuf-ts/grpcweb-transport": "^2.8.2",
+    "@protobuf-ts/runtime": "^2.8.2",
+    "@protobuf-ts/runtime-rpc": "^2.8.2",
+    "ecpair": "^2.1.0",
+    "ldk": "https://github.com/Janaka-Steph/ldk.git#fix-confidential",
     "slip77": "0.2.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.4.1"
   },
   "resolutions": {
     "swagger-typescript-api/**/typescript": "4.7.4",
