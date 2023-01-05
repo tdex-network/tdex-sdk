@@ -49,7 +49,7 @@
     "husky": "^4.2.3",
     "swagger-typescript-api": "^10.0.1",
     "tiny-secp256k1": "^2.2.1",
-    "tsdx": "0.14.1",
+    "tsdx": "0.14.0",
     "typescript": "3.9.10"
   },
   "dependencies": {
