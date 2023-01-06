@@ -32,7 +32,6 @@ describe('Swap', () => {
         amountToReceive: 5000000,
         psetBase64,
       });
-
       expect(bytes).toBeDefined();
     });
   });
@@ -87,35 +86,26 @@ describe('Swap', () => {
     const inputBlindingKeys: Record<string, Buffer> = {};
 
     beforeAll(async () => {
-      proposerAddress = (await proposer.getNextAddress()).confidentialAddress;
-      responderAddress = (await responder.getNextAddress()).confidentialAddress;
+      const prop = await proposer();
+      const resp = await responder();
+      proposerAddress = (await prop.getNextAddress()).confidentialAddress;
+      responderAddress = (await resp.getNextAddress()).confidentialAddress;
       await faucet(proposerAddress);
       const mintResult = await mint(responderAddress, 100);
-
       altcoin = mintResult.asset;
-
       const utxoProposer: UnblindedOutput = (
         await fetchUtxos(proposerAddress)
       )[0];
-
       const proposerNonWitnessUtxo: Buffer = Buffer.from(
         await fetchTxHex(utxoProposer.txid),
         'hex'
       );
-
       inputBlindingKeys[
         toOutputScript(responderAddress).toString('hex')
-      ] = Buffer.from(
-        (await responder.getNextAddress()).blindingPrivateKey,
-        'hex'
-      );
+      ] = Buffer.from((await resp.getNextAddress()).blindingPrivateKey, 'hex');
       inputBlindingKeys[
         toOutputScript(proposerAddress).toString('hex')
-      ] = Buffer.from(
-        (await proposer.getNextAddress()).blindingPrivateKey,
-        'hex'
-      );
-
+      ] = Buffer.from((await prop.getNextAddress()).blindingPrivateKey, 'hex');
       requestTx = new Psbt({ network: networks.regtest })
         .addInput({
           hash: utxoProposer.txid,

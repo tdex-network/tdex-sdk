@@ -15,7 +15,6 @@ import * as ecc from 'tiny-secp256k1';
 import secp256k1 from '@vulpemventures/secp256k1-zkp';
 
 const ECPair = ECPairFactory(ecc);
-let zkp = await secp256k1();
 
 class Identity {
   network: Network;
@@ -300,35 +299,44 @@ export class WrappedSegwit extends Identity implements IdentityInterface {
   }
 }
 
-export const proposerP2PKH = new Legacy({
-  chain: 'regtest',
-  type: IdentityType.PrivateKey,
-  opts: {
-    blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
-    signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
-  },
-  ecclib: ecc,
-  zkplib: zkp,
-});
+export const proposerP2PKH = async () => {
+  let zkp = await secp256k1();
+  return new Legacy({
+    chain: 'regtest',
+    type: IdentityType.PrivateKey,
+    opts: {
+      blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
+      signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
+    },
+    ecclib: ecc,
+    zkplib: zkp,
+  });
+};
 
-export const proposerP2SH = new WrappedSegwit({
-  chain: 'regtest',
-  type: IdentityType.PrivateKey,
-  opts: {
-    blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
-    signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
-  },
-  ecclib: ecc,
-  zkplib: zkp,
-});
+export const proposerP2SH = async () => {
+  let zkp = await secp256k1();
+  return new WrappedSegwit({
+    chain: 'regtest',
+    type: IdentityType.PrivateKey,
+    opts: {
+      blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
+      signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
+    },
+    ecclib: ecc,
+    zkplib: zkp,
+  });
+};
 
-export const proposerP2WPKH = new PrivateKey({
-  chain: 'regtest',
-  type: IdentityType.PrivateKey,
-  opts: {
-    blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
-    signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
-  },
-  ecclib: ecc,
-  zkplib: zkp,
-});
+export const proposerP2WPKH = async () => {
+  let zkp = await secp256k1();
+  return new PrivateKey({
+    chain: 'regtest',
+    type: IdentityType.PrivateKey,
+    opts: {
+      blindingKeyWIF: 'cPNMJD4VyFnQjGbGs3kcydRzAbDCXrLAbvH6wTCqs88qg1SkZT3J',
+      signingKeyWIF: 'cRdrvnPMLV7CsEak2pGrgG4MY7S3XN1vjtcgfemCrF7KJRPeGgW6',
+    },
+    ecclib: ecc,
+    zkplib: zkp,
+  });
+};

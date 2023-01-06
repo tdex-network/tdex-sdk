@@ -17,11 +17,11 @@ jest.setTimeout(30000);
 
 describe('SwapTransaction', () => {
   test('should create a swap tx with p2pkh inputs', async () => {
-    const addr: any = await proposerP2PKH.getNextAddress();
+    const prop = await proposerP2PKH();
+    const addr: any = await prop.getNextAddress();
     const script: Buffer = address.toOutputScript(addr.confidentialAddress);
     const utxos = mockUtxos(script);
-    const swaptx = new SwapTransaction(proposerP2PKH);
-
+    const swaptx = new SwapTransaction(prop);
     await swaptx.create(
       utxos,
       100000,
@@ -32,17 +32,15 @@ describe('SwapTransaction', () => {
       addr.confidentialAddress,
       greedyCoinSelector()
     );
-
     expect(swaptx.pset).toBeDefined();
   });
 
   test('should create a swap tx with p2wpkh inputs', async () => {
-    const addr = await proposerP2WPKH.getNextAddress();
+    const prop = await proposerP2WPKH();
+    const addr = await prop.getNextAddress();
     const script: Buffer = address.toOutputScript(addr.confidentialAddress);
     const utxos = mockUtxos(script);
-
-    const swaptx = new SwapTransaction(proposerP2WPKH);
-
+    const swaptx = new SwapTransaction(prop);
     await swaptx.create(
       utxos,
       100000,
@@ -67,13 +65,11 @@ describe('SwapTransaction', () => {
       blindkey: proposerBlindPubKey,
     });
     const redeemScript = p2wpkh.output!;
-
-    const addr = await proposerP2SH.getNextAddress();
+    const prop = await proposerP2SH();
+    const addr = await prop.getNextAddress();
     const script: Buffer = address.toOutputScript(addr.confidentialAddress);
     const utxos = mockUtxos(script);
-
-    const swaptx = new SwapTransaction(proposerP2SH);
-
+    const swaptx = new SwapTransaction(prop);
     await swaptx.create(
       utxos.map(u => ({ ...u, redeemScript })),
       100000,

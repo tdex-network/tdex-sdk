@@ -25,25 +25,26 @@ jest.setTimeout(30000);
 const signingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 const blindingKeyWIF = 'cQ1KJtXR2WB9Mpn6AEmeUK4yWeXAzwVX7UNJgQCF9anj3SrxjryV';
 
-const zkp = await secp256k1();
-
-const identityOpts: IdentityOpts<PrivateKeyOpts> = {
-  chain: 'regtest',
-  type: IdentityType.PrivateKey,
-  opts: {
-    signingKeyWIF,
-    blindingKeyWIF,
-  },
-  ecclib: ecc,
-  zkplib: zkp,
+const identityOpts: () => Promise<IdentityOpts<PrivateKeyOpts>> = async () => {
+  const zkp = await secp256k1();
+  return {
+    chain: 'regtest',
+    type: IdentityType.PrivateKey,
+    opts: {
+      signingKeyWIF,
+      blindingKeyWIF,
+    },
+    ecclib: ecc,
+    zkplib: zkp,
+  };
 };
-
-const identity = new PrivateKey(identityOpts);
 
 describe('TDEX SDK', () => {
   let utxos: UnblindedOutput[] = [];
 
   beforeAll(async () => {
+    const zkp = await secp256k1();
+    const identity = new PrivateKey(await identityOpts());
     const addr = await identity.getNextAddress();
     await faucet(addr.confidentialAddress);
     await sleep(3000);

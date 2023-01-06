@@ -1,48 +1,48 @@
 import {
-  IdentityOpts,
-  fetchAndUnblindUtxos,
-  MnemonicOpts,
   AddressInterface,
+  fetchAndUnblindUtxos,
+  IdentityOpts,
   Mnemonic,
+  MnemonicOpts,
 } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import {
+  greedyCoinSelector,
+  IdentityType,
+  TDEXMnemonic,
   Trade,
   Transport,
-  IdentityType,
-  greedyCoinSelector,
   V1ContentType,
 } from '../src';
-import { TDEXMnemonic } from '../src';
 
 import tradeFixture from './fixtures/trade.integration.json';
-import { faucet } from './_regtest';
-
-import { sleep } from './_regtest';
+import { faucet, sleep } from './_regtest';
 import secp256k1 from '@vulpemventures/secp256k1-zkp';
 
 const market = tradeFixture[0].market;
-const zkp = await secp256k1();
 
-const identityOpts: IdentityOpts<MnemonicOpts> = {
-  chain: 'regtest',
-  type: IdentityType.Mnemonic,
-  opts: {
-    mnemonic:
-      'outer prosper fish exclude pitch jaguar hole water head cream glimpse drive',
-  },
-  ecclib: ecc,
-  zkplib: zkp,
+const identityOpts: () => Promise<IdentityOpts<MnemonicOpts>> = async () => {
+  const zkp = await secp256k1();
+  return {
+    chain: 'regtest',
+    type: IdentityType.Mnemonic,
+    opts: {
+      mnemonic:
+        'outer prosper fish exclude pitch jaguar hole water head cream glimpse drive',
+    },
+    ecclib: ecc,
+    zkplib: zkp,
+  };
 };
 
 const explorerUrl = 'http://localhost:3001';
 
 describe('Integration tests with a local daemon', () => {
   describe('With TDEXMnemonic', () => {
-    const identity = new TDEXMnemonic(identityOpts);
     let addresses: AddressInterface[];
 
     beforeAll(async () => {
+      const identity = new TDEXMnemonic(await identityOpts());
       const proposerAddress = (await identity.getNextAddress())
         .confidentialAddress;
       await faucet(proposerAddress);
@@ -52,6 +52,8 @@ describe('Integration tests with a local daemon', () => {
     }, 36000);
 
     test('Should sell some LBTCs with a daemon (TDEXMnemonic)', async () => {
+      const identity = new TDEXMnemonic(await identityOpts());
+      const zkp = await secp256k1();
       let utxos = await fetchAndUnblindUtxos(ecc, zkp, addresses, explorerUrl);
 
       const tradeSell = new Trade({
@@ -93,18 +95,20 @@ describe('Integration tests with a local daemon', () => {
   });
 
   describe('With Mnemonic and HTTP client', () => {
-    const identity = new Mnemonic(identityOpts);
     let addresses: AddressInterface[];
 
     beforeAll(async () => {
+      const identity = new Mnemonic(await identityOpts());
       const proposerAddress = (await identity.getNextAddress())
         .confidentialAddress;
       await faucet(proposerAddress);
       await sleep(3000);
-
       addresses = await identity.getAddresses();
     }, 36000);
+
     test('Should sell some LBTCs with a daemon (LDK Mnemonic)', async () => {
+      const identity = new Mnemonic(await identityOpts());
+      const zkp = await secp256k1();
       let utxos = await fetchAndUnblindUtxos(ecc, zkp, addresses, explorerUrl);
       const transport = new Transport('http://localhost:9945', undefined, [
         V1ContentType.CONTENT_TYPE_JSON,
