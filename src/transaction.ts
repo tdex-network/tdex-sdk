@@ -1,12 +1,3 @@
-import {
-  networks,
-  address,
-  IdentityInterface,
-  CoinSelector,
-  CoinSelectorErrorFn,
-  UnblindedOutput,
-  AssetHash,
-} from 'ldk';
 import { confidential } from 'liquidjs-lib';
 import { Psbt } from 'liquidjs-lib/src/psbt';
 

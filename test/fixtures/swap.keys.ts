@@ -1,4 +1,3 @@
-import { PrivateKey, IdentityType } from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import secp256k1 from '@vulpemventures/secp256k1-zkp';
 

@@ -1,12 +1,5 @@
 import { SwapTransaction } from '../src';
 import {
-  greedyCoinSelector,
-  address,
-  UnblindedOutput,
-  networks,
-  payments,
-} from 'ldk';
-import {
   proposerP2PKH,
   proposerP2SH,
   proposerP2WPKH,

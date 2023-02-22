@@ -1,13 +1,4 @@
 import ECPairFactory, { ECPairInterface } from 'ecpair';
-import {
-  AddressInterface,
-  IdentityInterface,
-  IdentityOpts,
-  IdentityType,
-  networks,
-  PrivateKey,
-  PrivateKeyOpts,
-} from 'ldk';
 import { payments } from 'liquidjs-lib';
 import { Psbt } from 'liquidjs-lib/src/psbt';
 import { Network } from 'liquidjs-lib/src/networks';

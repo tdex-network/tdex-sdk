@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import * as fixtures from './fixtures/swap.json';
 import { faucet, fetchUtxos, mint, fetchTxHex } from './_regtest';
 import { proposer, responder } from './fixtures/swap.keys';
-import { UnblindedOutput, networks, address, AssetHash } from 'ldk';
 
 const toOutputScript = (addr: string) =>
   address.toOutputScript(addr, networks.regtest);

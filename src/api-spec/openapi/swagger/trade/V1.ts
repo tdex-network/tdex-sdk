@@ -11,15 +11,17 @@
 
 import {
   RpcStatus,
-  V1CompleteTradeRequest,
-  V1CompleteTradeResponse,
-  V1GetMarketBalanceRequest,
-  V1GetMarketBalanceResponse,
-  V1ListMarketsResponse,
-  V1PreviewTradeRequest,
-  V1PreviewTradeResponse,
-  V1ProposeTradeRequest,
-  V1ProposeTradeResponse,
+  Tdexv1CompleteTradeRequest,
+  Tdexv1CompleteTradeResponse,
+  Tdexv1GetMarketBalanceRequest,
+  Tdexv1GetMarketBalanceResponse,
+  Tdexv1GetMarketPriceRequest,
+  Tdexv1GetMarketPriceResponse,
+  Tdexv1ListMarketsResponse,
+  Tdexv1PreviewTradeRequest,
+  Tdexv1PreviewTradeResponse,
+  Tdexv1ProposeTradeRequest,
+  Tdexv1ProposeTradeResponse,
 } from './data-contracts';
 import { ContentType, HttpClient, RequestParams } from './http-client';
 
@@ -36,11 +38,32 @@ given market.
  * @request POST:/v1/market/balance
  */
   tradeServiceGetMarketBalance = (
-    body: V1GetMarketBalanceRequest,
+    body: Tdexv1GetMarketBalanceRequest,
     params: RequestParams = {}
   ) =>
-    this.request<V1GetMarketBalanceResponse, RpcStatus>({
+    this.request<Tdexv1GetMarketBalanceResponse, RpcStatus>({
       path: `/v1/market/balance`,
+      method: 'POST',
+      body: body,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+ * No description
+ *
+ * @tags TradeService
+ * @name TradeServiceGetMarketPrice
+ * @summary GetMarketPrice retutns the spot price for the requested market and its
+minimum tradable amount of base asset.
+ * @request POST:/v1/market/price
+ */
+  tradeServiceGetMarketPrice = (
+    body: Tdexv1GetMarketPriceRequest,
+    params: RequestParams = {}
+  ) =>
+    this.request<Tdexv1GetMarketPriceResponse, RpcStatus>({
+      path: `/v1/market/price`,
       method: 'POST',
       body: body,
       type: ContentType.Json,
@@ -56,7 +79,7 @@ given market.
    * @request POST:/v1/markets
    */
   tradeServiceListMarkets = (params: RequestParams = {}) =>
-    this.request<V1ListMarketsResponse, RpcStatus>({
+    this.request<Tdexv1ListMarketsResponse, RpcStatus>({
       path: `/v1/markets`,
       method: 'POST',
       format: 'json',
@@ -75,10 +98,10 @@ alternatively.
  * @request POST:/v1/trade/complete
  */
   tradeServiceCompleteTrade = (
-    body: V1CompleteTradeRequest,
+    body: Tdexv1CompleteTradeRequest,
     params: RequestParams = {}
   ) =>
-    this.request<V1CompleteTradeResponse, RpcStatus>({
+    this.request<Tdexv1CompleteTradeResponse, RpcStatus>({
       path: `/v1/trade/complete`,
       method: 'POST',
       body: body,
@@ -96,10 +119,10 @@ provided ones and a trade type for a market.
  * @request POST:/v1/trade/preview
  */
   tradeServicePreviewTrade = (
-    body: V1PreviewTradeRequest,
+    body: Tdexv1PreviewTradeRequest,
     params: RequestParams = {}
   ) =>
-    this.request<V1PreviewTradeResponse, RpcStatus>({
+    this.request<Tdexv1PreviewTradeResponse, RpcStatus>({
       path: `/v1/trade/preview`,
       method: 'POST',
       body: body,
@@ -120,10 +143,10 @@ proposal.
  * @request POST:/v1/trade/propose
  */
   tradeServiceProposeTrade = (
-    body: V1ProposeTradeRequest,
+    body: Tdexv1ProposeTradeRequest,
     params: RequestParams = {}
   ) =>
-    this.request<V1ProposeTradeResponse, RpcStatus>({
+    this.request<Tdexv1ProposeTradeResponse, RpcStatus>({
       path: `/v1/trade/propose`,
       method: 'POST',
       body: body,

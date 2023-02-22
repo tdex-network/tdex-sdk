@@ -58,7 +58,6 @@
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "ecpair": "^2.1.0",
-    "ldk": "https://github.com/Janaka-Steph/ldk.git#fix-confidential",
     "slip77": "0.2.0",
     "tslib": "^2.4.1"
   },

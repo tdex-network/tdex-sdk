@@ -20,105 +20,107 @@ export interface RpcStatus {
   details?: ProtobufAny[];
 }
 
-export interface V1Balance {
+export interface Tdexv1Balance {
   /** @format uint64 */
   baseAmount?: string;
   /** @format uint64 */
   quoteAmount?: string;
 }
 
-export interface V1BalanceWithFee {
-  balance?: V1Balance;
-  fee?: V1Fee;
+export interface Tdexv1CompleteTradeRequest {
+  swapComplete?: Tdexv1SwapComplete;
+  swapFail?: Tdexv1SwapFail;
 }
 
-export interface V1CompleteTradeRequest {
-  swapComplete?: V1SwapComplete;
-  swapFail?: V1SwapFail;
-}
-
-export interface V1CompleteTradeResponse {
+export interface Tdexv1CompleteTradeResponse {
   txid?: string;
-  swapFail?: V1SwapFail;
+  swapFail?: Tdexv1SwapFail;
 }
 
-export interface V1Fee {
+/**
+ * Custom Types
+ */
+export interface Tdexv1Fee {
   /** @format int64 */
   basisPoint?: string;
   fixed?: V1Fixed;
 }
 
-export interface V1Fixed {
-  /** @format int64 */
-  baseFee?: string;
-  /** @format int64 */
-  quoteFee?: string;
+export interface Tdexv1GetMarketBalanceRequest {
+  market?: Tdexv1Market;
 }
 
-export interface V1GetMarketBalanceRequest {
-  market?: V1Market;
-}
-
-export interface V1GetMarketBalanceResponse {
+export interface Tdexv1GetMarketBalanceResponse {
   balance?: V1BalanceWithFee;
 }
 
-export interface V1ListMarketsResponse {
-  markets?: V1MarketWithFee[];
+export interface Tdexv1GetMarketPriceRequest {
+  market?: Tdexv1Market;
 }
 
-export interface V1Market {
+export interface Tdexv1GetMarketPriceResponse {
+  /** @format double */
+  spotPrice?: number;
+  /** @format uint64 */
+  minTradableAmount?: string;
+}
+
+export interface Tdexv1ListMarketsResponse {
+  markets?: Tdexv1MarketWithFee[];
+}
+
+export interface Tdexv1Market {
   baseAsset?: string;
   quoteAsset?: string;
 }
 
-export interface V1MarketWithFee {
-  market?: V1Market;
-  fee?: V1Fee;
+export interface Tdexv1MarketWithFee {
+  market?: Tdexv1Market;
+  fee?: Tdexv1Fee;
 }
 
-export interface V1Preview {
-  price?: V1Price;
-  fee?: V1Fee;
+export interface Tdexv1Preview {
+  price?: Tdexv1Price;
+  fee?: Tdexv1Fee;
   /** @format uint64 */
   amount?: string;
   asset?: string;
-  balance?: V1Balance;
+  balance?: Tdexv1Balance;
 }
 
-export interface V1PreviewTradeRequest {
-  market?: V1Market;
-  type?: V1TradeType;
+export interface Tdexv1PreviewTradeRequest {
+  market?: Tdexv1Market;
+  type?: Tdexv1TradeType;
   /** @format uint64 */
   amount?: string;
   asset?: string;
 }
 
-export interface V1PreviewTradeResponse {
-  previews?: V1Preview[];
+export interface Tdexv1PreviewTradeResponse {
+  previews?: Tdexv1Preview[];
 }
 
-export interface V1Price {
+export interface Tdexv1Price {
   /** @format double */
   basePrice?: number;
   /** @format double */
   quotePrice?: number;
 }
 
-export interface V1ProposeTradeRequest {
-  market?: V1Market;
-  type?: V1TradeType;
-  swapRequest?: V1SwapRequest;
+export interface Tdexv1ProposeTradeRequest {
+  market?: Tdexv1Market;
+  type?: Tdexv1TradeType;
+  swapRequest?: Tdexv1SwapRequest;
 }
 
-export interface V1ProposeTradeResponse {
-  swapAccept?: V1SwapAccept;
-  swapFail?: V1SwapFail;
+export interface Tdexv1ProposeTradeResponse {
+  swapAccept?: Tdexv1SwapAccept;
+  swapFail?: Tdexv1SwapFail;
   /** @format uint64 */
   expiryTimeUnix?: string;
 }
 
-export interface V1SwapAccept {
+export interface Tdexv1SwapAccept {
   /** Random unique identifier for the current message */
   id?: string;
   /** indetifier of the SwapRequest message */
@@ -140,14 +142,9 @@ export interface V1SwapAccept {
    * hex encoded.
    */
   outputBlindingKey?: Record<string, string>;
-  /**
-   * In case of psetv2 transaction, the original list of trader's unblinded inputs,
-   * including also those of the inputs added by the provider.
-   */
-  unblindedInputs?: V1UnblindedInput[];
 }
 
-export interface V1SwapComplete {
+export interface Tdexv1SwapComplete {
   /** Random unique identifier for the current message */
   id?: string;
   /** indetifier of the SwapAccept message */
@@ -159,7 +156,7 @@ export interface V1SwapComplete {
   transaction?: string;
 }
 
-export interface V1SwapFail {
+export interface Tdexv1SwapFail {
   /** Random unique identifier for the current message */
   id?: string;
   /** indetifier of either SwapRequest or SwapAccept message. It can be empty */
@@ -173,7 +170,7 @@ export interface V1SwapFail {
   failureMessage?: string;
 }
 
-export interface V1SwapRequest {
+export interface Tdexv1SwapRequest {
   /** Random unique identifier for the current message */
   id?: string;
   /**
@@ -204,27 +201,21 @@ export interface V1SwapRequest {
    * output script hex encoded.
    */
   outputBlindingKey?: Record<string, string>;
-  /**
-   * In case of psetv2 transaction, the list of trader's unblinded inputs data,
-   * even in case they are unconfidential.
-   */
-  unblindedInputs?: V1UnblindedInput[];
 }
 
-export enum V1TradeType {
+export enum Tdexv1TradeType {
   TRADE_TYPE_BUY = 'TRADE_TYPE_BUY',
   TRADE_TYPE_SELL = 'TRADE_TYPE_SELL',
 }
 
-/**
- * Custom Types
- */
-export interface V1UnblindedInput {
+export interface V1BalanceWithFee {
+  balance?: Tdexv1Balance;
+  fee?: Tdexv1Fee;
+}
+
+export interface V1Fixed {
   /** @format int64 */
-  index?: number;
-  asset?: string;
-  /** @format uint64 */
-  amount?: string;
-  assetBlinder?: string;
-  amountBlinder?: string;
+  baseFee?: string;
+  /** @format int64 */
+  quoteFee?: string;
 }

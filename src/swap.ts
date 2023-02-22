@@ -7,7 +7,6 @@ import {
   confidentialValueToSatoshi,
 } from 'liquidjs-lib/src/confidential';
 import * as proto from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
-import { isConfidentialOutput } from 'ldk';
 import { decodePsbt, makeid } from './utils';
 
 // type for BlindingKeys

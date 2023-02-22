@@ -1,4 +1,3 @@
-export * from 'ldk';
 export * from './api-spec/openapi/swagger/transport/data-contracts';
 export * from './swap';
 export * from './trade';

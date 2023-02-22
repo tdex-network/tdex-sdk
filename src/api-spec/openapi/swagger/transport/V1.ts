@@ -9,7 +9,10 @@
  * ---------------------------------------------------------------
  */
 
-import { RpcStatus, V1SupportedContentTypesResponse } from './data-contracts';
+import {
+  RpcStatus,
+  Tdexv1SupportedContentTypesResponse,
+} from './data-contracts';
 import { HttpClient, RequestParams } from './http-client';
 
 export class V1<
@@ -23,7 +26,7 @@ export class V1<
    * @request GET:/v1/transport
    */
   transportServiceSupportedContentTypes = (params: RequestParams = {}) =>
-    this.request<V1SupportedContentTypesResponse, RpcStatus>({
+    this.request<Tdexv1SupportedContentTypesResponse, RpcStatus>({
       path: `/v1/transport`,
       method: 'GET',
       format: 'json',

@@ -1,10 +1,3 @@
-import {
-  Mnemonic,
-  IdentityOpts,
-  MnemonicOpts,
-  IdentityInterface,
-  TinySecp256k1Interface,
-} from 'ldk';
 import { Psbt } from 'liquidjs-lib/src/psbt';
 import ECPairFactory, { ECPairAPI } from 'ecpair';
 

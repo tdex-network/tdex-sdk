@@ -1,10 +1,3 @@
-import {
-  AddressInterface,
-  fetchAndUnblindUtxos,
-  IdentityOpts,
-  Mnemonic,
-  MnemonicOpts,
-} from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 import {
   greedyCoinSelector,

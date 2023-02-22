@@ -20,13 +20,13 @@ export interface RpcStatus {
   details?: ProtobufAny[];
 }
 
-export enum V1ContentType {
+export enum Tdexv1ContentType {
   CONTENT_TYPE_JSON = 'CONTENT_TYPE_JSON',
   CONTENT_TYPE_GRPC = 'CONTENT_TYPE_GRPC',
   CONTENT_TYPE_GRPCWEB = 'CONTENT_TYPE_GRPCWEB',
   CONTENT_TYPE_GRPCWEBTEXT = 'CONTENT_TYPE_GRPCWEBTEXT',
 }
 
-export interface V1SupportedContentTypesResponse {
-  acceptedTypes?: V1ContentType[];
+export interface Tdexv1SupportedContentTypesResponse {
+  acceptedTypes?: Tdexv1ContentType[];
 }

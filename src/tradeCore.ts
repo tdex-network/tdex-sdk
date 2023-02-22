@@ -1,11 +1,5 @@
 import Core, { CoreInterface } from './core';
 import { Swap } from './swap';
-import {
-  UnblindedOutput,
-  IdentityInterface,
-  CoinSelector,
-  isValidAmount,
-} from 'ldk';
 import { Psbt } from 'liquidjs-lib/src/psbt';
 import TraderClientInterface from './clientInterface';
 import { SwapAccept } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';

@@ -1,11 +1,3 @@
-import {
-  fetchAndUnblindUtxos,
-  greedyCoinSelector,
-  IdentityOpts,
-  PrivateKey,
-  PrivateKeyOpts,
-  UnblindedOutput,
-} from 'ldk';
 import * as ecc from 'tiny-secp256k1';
 
 import * as TDEX from '../src/index';
