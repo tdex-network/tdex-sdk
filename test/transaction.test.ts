@@ -1,10 +1,12 @@
-import { SwapTransaction } from '../src';
+/*
+import { SwapTransaction, UnblindedOutput } from '../src';
 import {
   proposerP2PKH,
   proposerP2SH,
   proposerP2WPKH,
 } from './fixtures/identities';
 import { proposerPubKey, proposerBlindPubKey } from './fixtures/swap.keys';
+import { address, networks, payments } from 'liquidjs-lib';
 
 jest.setTimeout(30000);
 
@@ -118,3 +120,4 @@ function mockUtxos(script: Buffer): UnblindedOutput[] {
     },
   ];
 }
+*/

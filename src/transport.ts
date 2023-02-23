@@ -1,27 +1,27 @@
-import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
-import { ContentType } from './api-spec/openapi/swagger/transport/http-client';
-import { V1 } from './api-spec/openapi/swagger/transport/V1';
+import { Tdexv1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
+import { ContentType } from 'api-spec/openapi/swagger/transport/http-client';
+import { V1 } from 'api-spec/openapi/swagger/transport/V1';
 import TraderClientInterface from './clientInterface';
-import { TraderClient } from './client';
+import { TraderClient } from 'client';
 import { TraderClient as TraderClientHttp } from './client.http';
-import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
+import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from 'utils';
 
-const defaultClientTypePriority: V1ContentType[] = [
-  V1ContentType.CONTENT_TYPE_GRPC,
-  V1ContentType.CONTENT_TYPE_JSON,
+const defaultClientTypePriority: Tdexv1ContentType[] = [
+  Tdexv1ContentType.CONTENT_TYPE_GRPC,
+  Tdexv1ContentType.CONTENT_TYPE_JSON,
 ];
 
 export class Transport {
   _client: V1<unknown>;
   providerUrl: string;
-  typePriority: V1ContentType[];
+  typePriority: Tdexv1ContentType[];
   torProxyEndpoint?: string;
   tradeClient?: TraderClientInterface;
 
   constructor(
     providerUrl: string,
     torProxyEndpoint: string = DEFAULT_TOR_PROXY,
-    clientTypePriority?: V1ContentType[]
+    clientTypePriority?: Tdexv1ContentType[]
   ) {
     this.providerUrl = providerUrl;
     const url = new URL(providerUrl);
@@ -47,7 +47,7 @@ export class Transport {
       const clientType = this.typePriority[i];
       if (supportedTypes.includes(clientType)) {
         let client: TraderClientInterface = new TraderClient(this.providerUrl);
-        if (clientType === V1ContentType.CONTENT_TYPE_JSON) {
+        if (clientType === Tdexv1ContentType.CONTENT_TYPE_JSON) {
           client = new TraderClientHttp(
             this.providerUrl,
             this.torProxyEndpoint
@@ -61,7 +61,7 @@ export class Transport {
     throw new Error(`Failed to connect to provider ${this.providerUrl}`);
   }
 
-  private async supportedContentTypes(): Promise<V1ContentType[]> {
+  private async supportedContentTypes(): Promise<Tdexv1ContentType[]> {
     try {
       const {
         data: { acceptedTypes },

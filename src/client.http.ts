@@ -1,5 +1,5 @@
-import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
-import { V1TradeType } from './api-spec/openapi/swagger/trade/data-contracts';
+import { Tdexv1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
+import { Tdexv1TradeType } from './api-spec/openapi/swagger/trade/data-contracts';
 import { ContentType } from './api-spec/openapi/swagger/trade/http-client';
 import { V1 } from './api-spec/openapi/swagger/trade/V1';
 import {
@@ -14,12 +14,12 @@ import {
 } from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
 import TraderClientInterface from './clientInterface';
 import { TradeType } from './tradeCore';
-import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from './utils';
+import { DEFAULT_TOR_PROXY, getClearTextTorProxyUrl } from 'utils/utils';
 
 export class TraderClient implements TraderClientInterface {
   client: V1<unknown>;
   providerUrl: string;
-  clientType: string = V1ContentType.CONTENT_TYPE_JSON;
+  clientType: string = Tdexv1ContentType.CONTENT_TYPE_JSON;
 
   constructor(
     providerUrl: string,
@@ -90,8 +90,8 @@ export class TraderClient implements TraderClientInterface {
     };
     const type =
       tradeType === TradeType.BUY
-        ? V1TradeType.TRADE_TYPE_BUY
-        : V1TradeType.TRADE_TYPE_SELL;
+        ? Tdexv1TradeType.TRADE_TYPE_BUY
+        : Tdexv1TradeType.TRADE_TYPE_SELL;
 
     try {
       const {
@@ -166,8 +166,8 @@ export class TraderClient implements TraderClientInterface {
   ): Promise<Preview[]> {
     const type =
       tradeType === TradeType.BUY
-        ? V1TradeType.TRADE_TYPE_BUY
-        : V1TradeType.TRADE_TYPE_SELL;
+        ? Tdexv1TradeType.TRADE_TYPE_BUY
+        : Tdexv1TradeType.TRADE_TYPE_SELL;
     try {
       const {
         data: { previews },

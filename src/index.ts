@@ -5,6 +5,5 @@ export * from './tradeCore';
 export * from './transport';
 export * from './client';
 export * from './transaction';
-export * from './tdexMnemonic';
 export * from './discoverer';
 export * from './discovery';

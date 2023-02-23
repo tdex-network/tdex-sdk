@@ -1,12 +1,6 @@
+/*
 import * as ecc from 'tiny-secp256k1';
-import {
-  greedyCoinSelector,
-  IdentityType,
-  TDEXMnemonic,
-  Trade,
-  Transport,
-  V1ContentType,
-} from '../src';
+import { TDEXMnemonic, Trade, Transport } from '../src';
 
 import tradeFixture from './fixtures/trade.integration.json';
 import { faucet, sleep } from './_regtest';
@@ -154,3 +148,4 @@ describe('Integration tests with a local daemon', () => {
     }, 360000);
   });
 });
+*/

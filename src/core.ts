@@ -1,15 +1,19 @@
+export type NetworkString = 'liquid' | 'testnet' | 'regtest';
+
 export interface CoreInterface {
   verbose?: Boolean;
-  chain?: string;
+  chain: NetworkString;
   providerUrl?: string;
   explorerUrl?: string;
+  protoVersion: 'v1' | 'v2';
 }
 
 export default class Core {
   public verbose?: Boolean = false;
-  public chain?: string = 'regtest';
+  public chain: NetworkString = 'regtest';
   public providerUrl?: string;
   public explorerUrl?: string;
+  public protoVersion: 'v1' | 'v2' = 'v2';
 
   constructor(data?: SafePick<Core>) {
     Object.assign(this, data);

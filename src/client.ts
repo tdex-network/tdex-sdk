@@ -2,19 +2,19 @@ import * as grpc from '@grpc/grpc-js';
 import * as services from './api-spec/protobuf/gen/js/tdex/v1/trade_pb.grpc-client';
 import * as messages from './api-spec/protobuf/gen/js/tdex/v1/trade_pb';
 import * as types from './api-spec/protobuf/gen/js/tdex/v1/types_pb';
-import { V1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
+import { Tdexv1ContentType } from './api-spec/openapi/swagger/transport/data-contracts';
 import {
   SwapRequest,
   SwapComplete,
   SwapAccept,
 } from './api-spec/protobuf/gen/js/tdex/v1/swap_pb';
 import TraderClientInterface from './clientInterface';
-import { rejectIfSwapFail } from './utils';
+import { rejectIfSwapFailV1 } from 'utils/rejectIfSwapFail';
 
 export class TraderClient implements TraderClientInterface {
   providerUrl: string;
   client: services.ITradeServiceClient;
-  clientType: string = V1ContentType.CONTENT_TYPE_GRPC;
+  clientType: string = Tdexv1ContentType.CONTENT_TYPE_GRPC;
 
   constructor(
     providerUrlString: string,
@@ -51,7 +51,7 @@ export class TraderClient implements TraderClientInterface {
       });
       this.client.proposeTrade(request, (err, response) => {
         if (err) return reject(err);
-        if (rejectIfSwapFail(response!, reject)) {
+        if (rejectIfSwapFailV1(response!, reject)) {
           return;
         }
         const swapAcceptMsg = response!.swapAccept;
@@ -72,7 +72,7 @@ export class TraderClient implements TraderClientInterface {
       });
       this.client.completeTrade(request, (err, response) => {
         if (err) return reject(err);
-        if (rejectIfSwapFail(response!, reject)) {
+        if (rejectIfSwapFailV1(response!, reject)) {
           return;
         }
         return resolve(response!.txid);
